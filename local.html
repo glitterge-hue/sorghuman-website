@@ -296,14 +296,27 @@ var VALID_ZIPS = [
   '18101','18102','18103','18104','18105','18109' // Allentown
 ];
 
-var qtys = [0,0,0,0,0,0];
+var qtys = [0,0,0,0,0,0,0,0];
 var products = [
   'Dried Mustard Green Bun 梅干菜包',
   'Shredded Radish Bun 千顺萝卜包',
   'Bok Choy & Shiitake Bun 上海青香菇包',
   'Chinese Chive & Egg Bun 韭菜鸡蛋包',
   'Adzuki Bean Bun 豆沙包',
-  'Tofu, Bamboo & Shiitake Bun 豆腐竹笋香菇包'
+  'Tofu, Bamboo & Shiitake Bun 豆腐竹笋香菇包',
+  'Sour Plum Soup 酸梅汤 (single bottle)',
+  'Sour Plum Soup 酸梅汤 (case of 20)'
+];
+var productPrices = [4.99, 4.99, 4.99, 4.99, 4.99, 4.99, 2.99, 49.99];
+var PRICE_IDS = [
+  'price_1TSQ1pCuwzUmEt2ZOSgKQahQ', // buns - same price ID used for all buns
+  'price_1TSQ1pCuwzUmEt2ZOSgKQahQ',
+  'price_1TSQ1pCuwzUmEt2ZOSgKQahQ',
+  'price_1TSQ1pCuwzUmEt2ZOSgKQahQ',
+  'price_1TSQ1pCuwzUmEt2ZOSgKQahQ',
+  'price_1TSQ1pCuwzUmEt2ZOSgKQahQ',
+  'price_1TSQLTCuwzUmEt2Zr1NvORg9',  // sour plum single - TO BE UPDATED
+  'price_1TSQMTCuwzUmEt2Z03adrdFD'     // sour plum case - TO BE UPDATED
 ];
 var zipOk = false;
 
@@ -342,9 +355,19 @@ function updateCart() {
   var total = 0;
   for (var i = 0; i < qtys.length; i++) total += qtys[i];
 
-  var freeQty = Math.floor(total / FREE_PACK_AT);
-  var subtotal = total * PRICE_EACH;
-  var delivery = subtotal >= FREE_DELIVERY_MIN ? 0 : (total > 0 ? DELIVERY_FEE : 0);
+  // Count buns only for free pack promo (indices 0-5)
+  var bunTotal = 0;
+  for (var i = 0; i < 6; i++) bunTotal += qtys[i];
+  var freeQty = Math.floor(bunTotal / FREE_PACK_AT);
+
+  // Calculate subtotal with per-product pricing
+  var subtotal = 0;
+  for (var i = 0; i < qtys.length; i++) {
+    subtotal += qtys[i] * productPrices[i];
+  }
+  // Cases of sour plum get free delivery; otherwise apply standard rule
+  var hasCasePlum = qtys[7] > 0;
+  var delivery = (subtotal >= FREE_DELIVERY_MIN || hasCasePlum) ? 0 : (total > 0 ? DELIVERY_FEE : 0);
   var grandTotal = subtotal + delivery;
 
   var empty = document.getElementById('cartEmpty');
@@ -372,14 +395,14 @@ function updateCart() {
   var html = '';
   for (var i = 0; i < qtys.length; i++) {
     if (qtys[i] > 0) {
-      html += '<div class="cart-item"><span class="cart-item-name">' + products[i] + '</span><span class="cart-item-qty">×' + qtys[i] + '</span><span class="cart-item-price">$' + (qtys[i] * PRICE_EACH).toFixed(2) + '</span></div>';
+      html += '<div class="cart-item"><span class="cart-item-name">' + products[i] + '</span><span class="cart-item-qty">×' + qtys[i] + '</span><span class="cart-item-price">&#36;' + (qtys[i] * productPrices[i]).toFixed(2) + '</span></div>';
     }
   }
   items.innerHTML = html;
 
   if (freeQty > 0) {
     freeEl.style.display = 'block';
-    freeEl.textContent = '🎁 You get ' + freeQty + ' free pack' + (freeQty > 1 ? 's' : '') + '! We will include it with your delivery.';
+    freeEl.textContent = '🎁 You get ' + freeQty + ' free bun pack' + (freeQty > 1 ? 's' : '') + '! We will include it with your delivery.';
   } else {
     freeEl.style.display = 'none';
   }
@@ -393,10 +416,10 @@ function updateCart() {
   document.getElementById('cartTotal').textContent = '$' + grandTotal.toFixed(2);
 
   var needed = FREE_DELIVERY_MIN - subtotal;
-  if (needed > 0 && total > 0) {
+  if (needed > 0 && total > 0 && !hasCasePlum) {
     note.style.display = 'block';
     note.textContent = 'Add $' + needed.toFixed(2) + ' more for free delivery! 再加 $' + needed.toFixed(2) + ' 即可免费配送！';
-  } else if (subtotal >= FREE_DELIVERY_MIN) {
+  } else if (subtotal >= FREE_DELIVERY_MIN || hasCasePlum) {
     note.style.display = 'block';
     note.textContent = '🎉 You qualify for free delivery! 已达到免费配送标准！';
   } else {
@@ -431,7 +454,17 @@ function goToCheckout() {
   // We use Payment Links approach - redirect to Stripe checkout
   // with quantity = total packs, price = PRICE_ID
   // For delivery fee we add it as a separate line if needed
-  var lineItems = [{ price: PRICE_ID, quantity: total }];
+  // Build line items per product
+  var lineItems = [];
+  // Buns: all use same price ID
+  var bunQty = 0;
+  for (var i = 0; i < 6; i++) bunQty += qtys[i];
+  if (bunQty > 0) lineItems.push({ price: PRICE_IDS[0], quantity: bunQty });
+  // Sour plum single
+  if (qtys[6] > 0) lineItems.push({ price: PRICE_IDS[6], quantity: qtys[6] });
+  // Sour plum case
+  if (qtys[7] > 0) lineItems.push({ price: PRICE_IDS[7], quantity: qtys[7] });
+  if (lineItems.length === 0) return;
 
   stripe.redirectToCheckout({
     lineItems: lineItems,
