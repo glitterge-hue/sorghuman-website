@@ -33,6 +33,12 @@
   .nav-links { display: flex; gap: 2rem; }
   .nav-links a { text-decoration: none; font-size: 14px; font-weight: 400; color: var(--muted); transition: color 0.2s; letter-spacing: 0.03em; }
   .nav-links a:hover { color: var(--green); }
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
+  .hamburger span { display: block; width: 22px; height: 2px; background: var(--dark); border-radius: 2px; transition: all 0.2s; }
+  .mobile-menu { display: none; position: fixed; top: 64px; left: 0; right: 0; background: var(--cream); border-bottom: 1px solid var(--border); z-index: 99; padding: 1rem 5%; flex-direction: column; gap: 0; }
+  .mobile-menu a { text-decoration: none; font-size: 15px; color: var(--dark); padding: 14px 0; border-bottom: 1px solid var(--border); display: block; }
+  .mobile-menu a:last-child { border-bottom: none; }
+  .mobile-menu.open { display: flex; }
 
   /* HERO */
   .hero {
@@ -124,10 +130,14 @@
     .hero-inner, .about-grid, .contact-grid, .clients-intro { grid-template-columns: 1fr; gap: 40px; }
     .products-grid { grid-template-columns: repeat(2, 1fr); }
     .nav-links { display: none; }
+    .hamburger { display: flex; }
     .hero-img { order: -1; }
   }
   @media (max-width: 480px) {
     .products-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .cta-grid { grid-template-columns: 1fr !important; }
   }
 </style>
 </head>
@@ -146,7 +156,18 @@
     <a href="supplier.html">Suppliers 供应商</a>
     <a href="#contact">Contact</a>
   </div>
+  <button class="hamburger" onclick="toggleMenu()" id="hamburger" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#about" onclick="closeMenu()">About us</a>
+  <a href="#products" onclick="closeMenu()">Products 产品</a>
+  <a href="#clients" onclick="closeMenu()">Clients 客户</a>
+  <a href="order.html">Order now · 立即订购 →</a>
+  <a href="supplier.html">Supplier registration · 供应商入口 →</a>
+  <a href="#contact" onclick="closeMenu()">Contact 联系我们</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -249,6 +270,25 @@
   </div>
 </section>
 
+
+<!-- CTA CARDS -->
+<section style="background:white;padding:0 5% 60px;">
+  <div class="cta-grid" style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+    <a href="order.html" style="display:block;text-decoration:none;background:var(--gold);border-radius:2px;padding:2rem;color:white;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      <p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:0.5rem;">For retailers &amp; individuals</p>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:0.5rem;color:white;">Order online</h3>
+      <p style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.7;margin-bottom:1rem;">Browse our product range, select quantities, and request a quote. We reply by email with pricing and shipping.</p>
+      <span style="font-size:13px;font-weight:500;letter-spacing:0.05em;">在线订购 →</span>
+    </a>
+    <a href="supplier.html" style="display:block;text-decoration:none;background:var(--green);border-radius:2px;padding:2rem;color:white;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      <p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:0.5rem;">For manufacturers in China</p>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:0.5rem;color:white;">Become a supplier</h3>
+      <p style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.7;margin-bottom:1rem;">FDA-registered food manufacturers in China are welcome to apply. Submit your company details and product information.</p>
+      <span style="font-size:13px;font-weight:500;letter-spacing:0.05em;">供应商入口 →</span>
+    </a>
+  </div>
+</section>
+
 <!-- CLIENTS -->
 <section class="clients" id="clients">
   <div class="section-inner">
@@ -327,5 +367,21 @@
   <p>© 2025 Sorghuman Holding LLC · 高仁控股国际有限公司 · <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
 </footer>
 
+<script>
+function toggleMenu() {
+  var m = document.getElementById('mobileMenu');
+  m.classList.toggle('open');
+}
+function closeMenu() {
+  document.getElementById('mobileMenu').classList.remove('open');
+}
+document.addEventListener('click', function(e) {
+  var menu = document.getElementById('mobileMenu');
+  var btn = document.getElementById('hamburger');
+  if (menu.classList.contains('open') && !menu.contains(e.target) && !btn.contains(e.target)) {
+    menu.classList.remove('open');
+  }
+});
+</script>
 </body>
 </html>
