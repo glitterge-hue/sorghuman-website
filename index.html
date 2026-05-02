@@ -168,6 +168,7 @@
   .nav-back:hover{color:var(--green);}
   .nav-back::before{content:'←';font-size:16px;}
 </style>
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 </head>
 <body>
 
@@ -341,6 +342,17 @@ document.addEventListener('click', function(e) {
     menu.classList.remove('open');
   }
 });
+</script>
+<script>
+if (window.netlifyIdentity) {
+  window.netlifyIdentity.on("init", function(user) {
+    if (!user) {
+      window.netlifyIdentity.on("login", function() {
+        document.location.href = "/admin/";
+      });
+    }
+  });
+}
 </script>
 </body>
 </html>
