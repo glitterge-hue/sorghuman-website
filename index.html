@@ -179,7 +179,7 @@
       <h1>Bringing <em>authentic</em> flavors to your table</h1>
       <p class="hero-zh">高仁控股国际有限公司</p>
       <p>Sorghuman Holding LLC imports and distributes premium frozen Chinese food products — steamed buns, dumplings, dim sum, and rice cakes — to Asian supermarkets across the northeastern United States.</p>
-      <a href="#contact" class="hero-cta">Get in touch</a>
+      <a href="local.html" class="hero-cta" style="background:var(--gold);">&#128722; 立即购买 · Shop now</a>
       <a href="order.html" style="display:inline-block;margin-left:12px;border:1px solid var(--green);color:var(--green);text-decoration:none;padding:13px 28px;border-radius:2px;font-size:14px;font-weight:500;letter-spacing:0.05em;transition:background 0.2s;" onmouseover="this.style.background='#f0f7f2'" onmouseout="this.style.background='transparent'">Order now · 立即订购</a>
     </div>
     <div class="hero-img">
@@ -275,19 +275,32 @@
 
 <!-- CTA CARDS -->
 <section style="background:white;padding:0 5% 60px;">
-  <div class="cta-grid" style="max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
-    <a href="order.html" style="display:block;text-decoration:none;background:var(--gold);border-radius:2px;padding:2rem;color:white;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-      <p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:0.5rem;">For retailers &amp; wholesalers · 批发商</p>
-      <h3 style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:0.5rem;color:white;">Bulk order 批量购买</h3>
-      <p style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.7;margin-bottom:1rem;">Browse our product range, select quantities, and request a quote. We reply by email with pricing and shipping.</p>
-      <span style="font-size:13px;font-weight:500;letter-spacing:0.05em;">批量购买 →</span>
+  <div style="max-width:1100px;margin:0 auto;">
+
+    <!-- PRIMARY: Local delivery -->
+    <a href="local.html" style="display:block;text-decoration:none;background:var(--gold);border-radius:2px;padding:2.5rem;color:white;margin-bottom:16px;position:relative;overflow:hidden;" onmouseover="this.style.opacity='0.92'" onmouseout="this.style.opacity='1'">
+      <div style="position:absolute;top:0;right:0;background:rgba(0,0,0,0.15);padding:7px 18px;font-size:11px;font-weight:500;letter-spacing:0.05em;">Lehigh Valley &amp; Philadelphia area</div>
+      <p style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.8);margin-bottom:0.75rem;">&#128722; Shop online &middot; 在线购买</p>
+      <h3 style="font-family:'DM Serif Display',serif;font-size:30px;margin-bottom:0.75rem;color:white;">Order fresh buns &amp; beverages for home delivery</h3>
+      <p style="font-size:14px;color:rgba(255,255,255,0.9);line-height:1.8;margin-bottom:1.5rem;max-width:540px;">Select your favorite steamed buns and sour plum soup, pay securely online, and we deliver to your door.<br>&#127873; Buy 10 packs, get 1 free &nbsp;&middot;&nbsp; Free delivery on orders $30+</p>
+      <span style="display:inline-block;background:white;color:#b8831e;padding:12px 28px;border-radius:2px;font-size:14px;font-weight:500;">立即购买 &middot; Shop now &rarr;</span>
     </a>
-    <a href="supplier.html" style="display:block;text-decoration:none;background:var(--green);border-radius:2px;padding:2rem;color:white;transition:opacity 0.2s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-      <p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:0.5rem;">For manufacturers in China</p>
-      <h3 style="font-family:'DM Serif Display',serif;font-size:24px;margin-bottom:0.5rem;color:white;">Become a supplier</h3>
-      <p style="font-size:14px;color:rgba(255,255,255,0.85);line-height:1.7;margin-bottom:1rem;">FDA-registered food manufacturers in China are welcome to apply. Submit your company details and product information.</p>
-      <span style="font-size:13px;font-weight:500;letter-spacing:0.05em;">供应商入口 →</span>
-    </a>
+
+    <!-- SECONDARY: Bulk + Supplier -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;">
+      <a href="order.html" style="display:block;text-decoration:none;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:1.25rem;">
+        <p style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">For retailers &amp; wholesalers</p>
+        <h4 style="font-size:16px;font-weight:500;color:var(--dark);margin-bottom:4px;">Bulk order inquiry</h4>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">超市、餐厅及批发商请询价</p>
+        <span style="font-size:12px;font-weight:500;color:var(--gold);">批量询价 &rarr;</span>
+      </a>
+      <a href="supplier.html" style="display:block;text-decoration:none;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:1.25rem;">
+        <p style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">For manufacturers in China</p>
+        <h4 style="font-size:16px;font-weight:500;color:var(--dark);margin-bottom:4px;">Become a supplier</h4>
+        <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">中国食品生产企业入驻申请</p>
+        <span style="font-size:12px;font-weight:500;color:var(--green);">供应商入口 &rarr;</span>
+      </a>
+    </div>
   </div>
 </section>
 
