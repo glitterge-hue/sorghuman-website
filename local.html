@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Local Delivery · Sorghuman</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-<script src="https://js.stripe.com/v3/"></script>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{--green:#2A6B3A;--green-light:#4A9B5A;--gold:#C8922A;--cream:#FAF7F2;--dark:#1A1A18;--muted:#6B6B62;--border:#E2DDD4;--red:#C0392B;}
@@ -265,7 +264,6 @@ footer a{color:rgba(255,255,255,0.4);}
 </footer>
 
 <script>
-var STRIPE_KEY = 'pk_live_51TSPmECuwzUmEt2ZTQdRj3PzvnKhFXAxVbBYb8chk8FXDSaqVOhSsfHqcTHnyDZ6E4BrbVyKFTZZopN5elOM7C9O00NTmYGSrN';
 var VALID_ZIPS = ['18015','18016','18017','18018','18020','18040','18041','18042','18043','18044','18045','18101','18102','18103','18104','18105','18109'];
 var products = ['Dried Mustard Green Bun 梅干菜包','Shredded Radish Bun 千顺萝卜包','Bok Choy & Shiitake Bun 上海青香菇包','Chinese Chive & Egg Bun 韭菜鸡蛋包','Adzuki Bean Bun 豆沙包','Tofu, Bamboo & Shiitake Bun 豆腐竹笋香菇包','Sour Plum Soup 酸梅汤 (single)','Sour Plum Soup 酸梅汤 (case/20)'];
 var prices = [4.99,4.99,4.99,4.99,4.99,4.99,2.99,49.99];
@@ -371,15 +369,31 @@ function goToCheckout() {
   if (qtys[6] > 0) lineItems.push({ price: priceIds[6], quantity: qtys[6] });
   if (qtys[7] > 0) lineItems.push({ price: priceIds[7], quantity: qtys[7] });
   if (lineItems.length === 0) return;
-  var stripe = Stripe(STRIPE_KEY);
-  stripe.redirectToCheckout({
-    lineItems: lineItems,
-    mode: 'payment',
-    successUrl: window.location.origin + '/local-success.html',
-    cancelUrl: window.location.href,
-    shippingAddressCollection: { allowedCountries: ['US'] },
-    locale: 'en'
-  }).then(function(r) { if (r.error) alert('Payment error: ' + r.error.message); });
+
+  var btn = document.getElementById('checkoutBtn');
+  btn.disabled = true;
+  btn.textContent = 'Redirecting...';
+
+  fetch('/.netlify/functions/create-checkout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ lineItems: lineItems })
+  })
+  .then(function(res) { return res.json(); })
+  .then(function(data) {
+    if (data.url) {
+      window.location.href = data.url;
+    } else {
+      alert('Error: ' + (data.error || 'Could not create checkout session'));
+      btn.disabled = false;
+      btn.textContent = 'Proceed to checkout →';
+    }
+  })
+  .catch(function(err) {
+    alert('Network error. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Proceed to checkout →';
+  });
 }
 </script>
 </body>
