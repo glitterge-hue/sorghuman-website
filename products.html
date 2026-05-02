@@ -6,151 +6,22 @@
 <title>Products · Sorghuman Holding LLC</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  :root {
-    --green: #2A6B3A;
-    --green-light: #4A9B5A;
-    --gold: #C8922A;
-    --cream: #FAF7F2;
-    --dark: #1A1A18;
-    --muted: #6B6B62;
-    --border: #E2DDD4;
-  }
-  html { scroll-behavior: smooth; }
-  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--dark); line-height: 1.6; }
-
-  /* NAV */
-  nav {
-    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-    background: rgba(250,247,242,0.95); backdrop-filter: blur(8px);
-    border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 5%; height: 64px;
-  }
-  .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
-  .nav-logo img { height: 40px; width: 40px; object-fit: contain; }
-  .nav-logo span { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--green); }
-  .nav-links { display: flex; gap: 2rem; }
-  .nav-links a { text-decoration: none; font-size: 14px; font-weight: 400; color: var(--muted); transition: color 0.2s; letter-spacing: 0.03em; }
-  .nav-links a:hover { color: var(--green); }
-  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
-  .hamburger span { display: block; width: 22px; height: 2px; background: var(--dark); border-radius: 2px; transition: all 0.2s; }
-  .mobile-menu { display: none; position: fixed; top: 64px; left: 0; right: 0; background: var(--cream); border-bottom: 1px solid var(--border); z-index: 99; padding: 1rem 5%; flex-direction: column; gap: 0; }
-  .mobile-menu a { text-decoration: none; font-size: 15px; color: var(--dark); padding: 14px 0; border-bottom: 1px solid var(--border); display: block; }
-  .mobile-menu a:last-child { border-bottom: none; }
-  .mobile-menu.open { display: flex; }
-
-  /* HERO */
-  .hero {
-    min-height: 100vh; display: flex; align-items: center;
-    padding: 100px 5% 60px;
-    background: linear-gradient(160deg, #f0ece3 0%, var(--cream) 60%);
-    position: relative; overflow: hidden;
-  }
-  .hero::before {
-    content: '';
-    position: absolute; top: -100px; right: -100px;
-    width: 600px; height: 600px;
-    background: radial-gradient(circle, rgba(42,107,58,0.07) 0%, transparent 70%);
-    border-radius: 50%;
-  }
-  .hero-inner { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; width: 100%; }
-  .hero-text { animation: fadeUp 0.9s ease both; }
-  .hero-eyebrow { font-size: 12px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 1.25rem; }
-  .hero-text h1 { font-family: 'DM Serif Display', serif; font-size: clamp(38px, 5vw, 60px); line-height: 1.1; color: var(--dark); margin-bottom: 0.5rem; }
-  .hero-text h1 em { font-style: italic; color: var(--green); }
-  .hero-zh { font-size: 20px; color: var(--muted); margin-bottom: 1.5rem; letter-spacing: 0.08em; }
-  .hero-text p { font-size: 16px; color: var(--muted); max-width: 420px; line-height: 1.8; margin-bottom: 2rem; }
-  .hero-cta { display: inline-block; background: var(--green); color: white; text-decoration: none; padding: 14px 32px; border-radius: 2px; font-size: 14px; font-weight: 500; letter-spacing: 0.05em; transition: background 0.2s; }
-  .hero-cta:hover { background: var(--green-light); }
-  .hero-img { animation: fadeUp 0.9s 0.2s ease both; display: flex; justify-content: center; }
-  .hero-img img { width: 100%; max-width: 380px; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.08)); }
-
-  /* SECTION COMMONS */
-  section { padding: 80px 5%; }
-  .section-inner { max-width: 1100px; margin: 0 auto; }
-  .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.75rem; }
-  .section-title { font-family: 'DM Serif Display', serif; font-size: clamp(28px, 3.5vw, 42px); color: var(--dark); margin-bottom: 1rem; line-height: 1.2; }
-  .section-sub { font-size: 15px; color: var(--muted); max-width: 520px; line-height: 1.8; margin-bottom: 3rem; }
-  .divider { width: 48px; height: 2px; background: var(--gold); margin-bottom: 1.5rem; }
-
-  /* ABOUT */
-  .about { background: white; }
-  .about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-  .about-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 2rem; }
-  .stat-box { border: 1px solid var(--border); padding: 20px; border-radius: 2px; }
-  .stat-num { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--green); }
-  .stat-label { font-size: 12px; color: var(--muted); margin-top: 4px; }
-  .about-img img { width: 100%; border-radius: 2px; object-fit: cover; height: 360px; }
-
-  /* PRODUCTS */
-  .products { background: var(--cream); }
-  .products-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; align-items: stretch; }
-  .product-card { background: white; border: 1px solid var(--border); border-radius: 2px; overflow: hidden; transition: transform 0.25s, box-shadow 0.25s; display: flex; flex-direction: column; }
-  .product-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(0,0,0,0.08); }
-  .product-card img { width: 100%; height: 240px; object-fit: cover; object-position: center; display: block; flex-shrink: 0; }
-  .product-info { padding: 1rem 1.25rem 1.25rem; flex: 1; display: flex; flex-direction: column; }
-  .product-info h3 { font-family: 'DM Serif Display', serif; font-size: 18px; margin-bottom: 4px; }
-  .product-info .zh-name { font-size: 13px; color: var(--muted); letter-spacing: 0.05em; }
-  .product-tag { display: inline-block; margin-top: 10px; font-size: 11px; padding: 3px 10px; border: 1px solid var(--green); color: var(--green); border-radius: 20px; letter-spacing: 0.05em; }
-
-  /* CLIENTS */
-  .clients { background: white; }
-  .clients-intro { display: grid; grid-template-columns: 1fr 2fr; gap: 60px; margin-bottom: 3rem; }
-  .clients-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-  .client-item { background: var(--cream); border: 1px solid var(--border); padding: 14px 18px; border-radius: 2px; font-size: 13px; font-weight: 500; color: var(--dark); transition: border-color 0.2s, background 0.2s; }
-  .client-item:hover { border-color: var(--green); background: #f0f7f2; }
-  .client-item .state { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
-
-  /* CONTACT */
-  .contact { background: var(--green); color: white; }
-  .contact .section-label { color: rgba(255,255,255,0.6); }
-  .contact .section-title { color: white; }
-  .contact .divider { background: rgba(255,255,255,0.4); }
-  .contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: start; }
-  .contact-info p { color: rgba(255,255,255,0.8); font-size: 15px; line-height: 1.8; }
-  .contact-detail { margin-top: 2rem; }
-  .contact-detail .label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
-  .contact-detail .val { font-size: 15px; color: white; font-weight: 500; }
-  .contact-detail a { color: white; }
-  .contact-detail + .contact-detail { margin-top: 1.25rem; }
-  .contact-map { background: rgba(255,255,255,0.08); border-radius: 2px; padding: 2rem; border: 1px solid rgba(255,255,255,0.15); }
-  .contact-map p { color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.9; }
-
-  /* FOOTER */
-
-  footer { background: var(--dark); color: rgba(255,255,255,0.45); text-align: center; padding: 24px 5%; font-size: 13px; }
-  footer a { color: rgba(255,255,255,0.45); }
-
-  /* ANIMATIONS */
-  @keyframes fadeUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
-
-  /* RESPONSIVE */
-  @media (max-width: 768px) {
-    .hero-inner, .about-grid, .contact-grid, .clients-intro { grid-template-columns: 1fr; gap: 40px; }
-    .products-grid { grid-template-columns: repeat(2, 1fr); }
-    .nav-links { display: none; }
-    .hamburger { display: flex; }
-    .hero-img { order: -1; }
-  }
-  @media (max-width: 480px) {
-    .products-grid { grid-template-columns: 1fr; }
-  }
-  @media (max-width: 600px) {
-    .cta-grid { grid-template-columns: 1fr !important; }
-  }
-
-
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  :root{--green:#2A6B3A;--green-light:#4A9B5A;--gold:#C8922A;--cream:#FAF7F2;--dark:#1A1A18;--muted:#6B6B62;--border:#E2DDD4;}
+  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);line-height:1.6;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,0.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;}
+  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+  .nav-logo img{height:40px;width:40px;object-fit:contain;}
+  .nav-logo span{font-family:'DM Serif Display',serif;font-size:18px;color:var(--green);}
+  .nav-links{display:flex;gap:2rem;}
+  .nav-links a{text-decoration:none;font-size:14px;color:var(--muted);transition:color 0.2s;}
+  .nav-links a:hover{color:var(--green);}
   .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;}
   .hamburger span{display:block;width:22px;height:2px;background:var(--dark);border-radius:2px;}
   .mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:var(--cream);border-bottom:1px solid var(--border);z-index:99;padding:1rem 5%;flex-direction:column;}
   .mobile-menu a{text-decoration:none;font-size:15px;color:var(--dark);padding:14px 0;border-bottom:1px solid var(--border);display:block;}
   .mobile-menu a:last-child{border-bottom:none;}
   .mobile-menu.open{display:flex;}
-  @media(max-width:768px){.nav-links{display:none;}.hamburger{display:flex;}.products-grid{grid-template-columns:repeat(2,1fr);}}
-  @media(max-width:480px){.products-grid{grid-template-columns:1fr;}}
-
   .page-header{background:var(--green);padding:100px 5% 60px;color:white;}
   .page-header-inner{max-width:1100px;margin:0 auto;}
   .page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(32px,4vw,48px);margin-bottom:1rem;}
@@ -158,12 +29,26 @@
   .eyebrow{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:1rem;}
   .page-body{padding:60px 5%;}
   .page-body-inner{max-width:1100px;margin:0 auto;}
-  .nav-back{font-size:13px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;}
-  .nav-back:hover{color:var(--green);}
-  .nav-back::before{content:'←';font-size:16px;}
+  .divider{width:48px;height:2px;background:var(--gold);margin-bottom:1.5rem;}
+  .section-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,3vw,36px);color:var(--dark);margin-bottom:1.5rem;}
+  .section-sub{font-size:14px;color:var(--muted);margin-bottom:2rem;line-height:1.8;}
+  .products-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:stretch;}
+  .product-card{background:white;border:1px solid var(--border);border-radius:2px;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;display:flex;flex-direction:column;}
+  .product-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.08);}
+  .product-card img{width:100%;height:200px;object-fit:cover;object-position:center;display:block;flex-shrink:0;}
+  .product-info{padding:1rem 1.25rem 1.25rem;flex:1;display:flex;flex-direction:column;}
+  .product-info h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px;}
+  .product-info .zh-name{font-size:12px;color:var(--muted);}
+  .product-tag{display:inline-block;margin-top:8px;font-size:11px;padding:3px 10px;border:1px solid var(--green);color:var(--green);border-radius:20px;}
+  footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:20px 5%;font-size:13px;margin-top:40px;}
+  footer a{color:rgba(255,255,255,0.4);}
+  @media(max-width:900px){.products-grid{grid-template-columns:repeat(3,1fr);}}
+  @media(max-width:600px){.products-grid{grid-template-columns:repeat(2,1fr);}.nav-links{display:none;}.hamburger{display:flex;}}
+  @media(max-width:400px){.products-grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
+
 <nav>
   <a class="nav-logo" href="index.html"><img src="images/logo.jpg" alt="Sorghuman"><span>SORGHUMAN</span></a>
   <div class="nav-links">
@@ -197,10 +82,12 @@
 
 <div class="page-body">
   <div class="page-body-inner">
-    <p class="section-sub" style="margin-bottom:2rem;">所有包子无需解冻，直接蒸8-10分钟或微波炉加热4分钟即可。</p>
+
+    <p class="section-sub">所有包子无需解冻，直接蒸8-10分钟或微波炉加热4分钟即可。</p>
 
     <div class="divider"></div>
-    <h2 class="section-title" style="margin-bottom:1.5rem;">Steamed Buns · 包子系列</h2>
+    <h2 class="section-title">Steamed Buns · 包子系列</h2>
+
     <div class="products-grid">
       <div class="product-card">
         <img src="images/bun-mustard.jpg" alt="梅干菜包">
@@ -242,7 +129,6 @@
           <span class="product-tag">Suitable for vegetarians</span>
         </div>
       </div>
-    </div>
       <div class="product-card">
         <img src="images/bun-jicai.jpg" alt="荠菜包">
         <div class="product-info">
@@ -259,6 +145,7 @@
           <span class="product-tag">16 oz &middot; 6 pcs/pack</span>
         </div>
       </div>
+    </div>
 
     <div class="divider" style="margin-top:3rem;"></div>
     <h2 class="section-title" style="margin:1.5rem 0;">Beverages · 饮品</h2>
@@ -268,7 +155,7 @@
         <div class="product-info">
           <h3>Sour Plum Soup</h3>
           <p class="zh-name">酸梅汤</p>
-          <span class="product-tag">16 oz · Made in USA</span>
+          <span class="product-tag">16 oz &middot; Made in USA</span>
         </div>
       </div>
     </div>
@@ -280,6 +167,7 @@
 </div>
 
 <footer><p>&copy; 2025 Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &middot; <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p></footer>
+
 <script>
 function toggleMenu(){var m=document.getElementById('mobileMenu');m.classList.toggle('open');}
 function closeMenu(){document.getElementById('mobileMenu').classList.remove('open');}
