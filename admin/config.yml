@@ -1,74 +1,24 @@
 backend:
   name: git-gateway
   branch: main
-  commit_messages:
-    create: '新增产品图片: {{slug}}'
-    update: '更新产品图片: {{slug}}'
-    delete: '删除产品图片: {{slug}}'
-    uploadMedia: '上传图片: {{path}}'
-    deleteMedia: '删除图片: {{path}}'
 
-# 开启编辑预览
 publish_mode: editorial_workflow
 
-# 图片上传目录
-media_folder: "uploads/products"
-public_folder: "/uploads/products"
+media_folder: "images"
+public_folder: "/images"
 
 locale: 'zh_Hans'
 
 collections:
   - name: "products"
-    label: "产品图片 · Product Images"
-    label_singular: "产品 · Product"
+    label: "产品图片"
     folder: "_products"
     create: true
     slug: "{{slug}}"
-    editor:
-      preview: false
     fields:
-      - label: "产品名称 (中文)"
-        name: "name_zh"
-        widget: "string"
-        hint: "例如：梅干菜包"
-
-      - label: "产品名称 (英文)"
-        name: "name_en"
-        widget: "string"
-        hint: "例如：Dried Mustard Green Bun"
-
-      - label: "产品图片"
-        name: "image"
-        widget: "image"
-        hint: "请上传高清产品图片，建议尺寸 800x800 像素以上，JPG 或 PNG 格式"
-        media_library:
-          config:
-            multiple: false
-
-      - label: "产品描述 (中文)"
-        name: "description_zh"
-        widget: "text"
-        required: false
-        hint: "产品简短描述，可选填"
-
-      - label: "产品描述 (英文)"
-        name: "description_en"
-        widget: "text"
-        required: false
-        hint: "Optional product description in English"
-
-      - label: "供应商名称"
-        name: "supplier"
-        widget: "string"
-        hint: "贵司名称"
-
-      - label: "联系邮箱"
-        name: "contact_email"
-        widget: "string"
-        hint: "方便我们与您联系"
-
-      - label: "备注"
-        name: "notes"
-        widget: "text"
-        required: false
-        hint: "任何补充说明，如产品规格、包装方式等"
+      - {label: "产品名称（中文）", name: "name_zh", widget: "string", hint: "例如：荠菜包"}
+      - {label: "产品名称（英文）", name: "name_en", widget: "string", hint: "例如：Shepherd's Purse Bun"}
+      - {label: "产品图片", name: "image", widget: "image"}
+      - {label: "供应商名称", name: "supplier", widget: "string"}
+      - {label: "联系邮箱", name: "email", widget: "string"}
+      - {label: "备注", name: "notes", widget: "text", required: false}
