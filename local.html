@@ -268,6 +268,7 @@ var VALID_ZIPS = ['18015','18016','18017','18018','18020','18025','18040','18041
 var products = ['Dried Mustard Green Bun 梅干菜包','Shredded Radish Bun 千顺萝卜包','Bok Choy & Shiitake Bun 上海青香菇包','Chinese Chive & Egg Bun 韭菜鸡蛋包','Adzuki Bean Bun 豆沙包','Tofu, Bamboo & Shiitake Bun 豆腐竹笋香菇包','Sour Plum Soup 酸梅汤 (single)','Sour Plum Soup 酸梅汤 (case/20)'];
 var prices = [4.99,4.99,4.99,4.99,4.99,4.99,2.99,49.99];
 var priceIds = ['price_1TSQ1pCuwzUmEt2Z0SgKQahQ','price_1TSQ1pCuwzUmEt2Z0SgKQahQ','price_1TSQ1pCuwzUmEt2Z0SgKQahQ','price_1TSQ1pCuwzUmEt2Z0SgKQahQ','price_1TSQ1pCuwzUmEt2Z0SgKQahQ','price_1TSQ1pCuwzUmEt2Z0SgKQahQ','price_1TSQLTCuwzUmEt2Zr1NvORg9','price_1TSQMTCuwzUmEt2Z03adrdFD'];
+var DELIVERY_PRICE_ID = 'price_1TSUr2CuwzUmEt2ZjMdZXV85';
 var qtys = [0,0,0,0,0,0,0,0];
 
 function checkZip() {
@@ -369,6 +370,15 @@ function goToCheckout() {
   if (qtys[6] > 0) lineItems.push({ price: priceIds[6], quantity: qtys[6] });
   if (qtys[7] > 0) lineItems.push({ price: priceIds[7], quantity: qtys[7] });
   if (lineItems.length === 0) return;
+
+  // Add delivery fee if subtotal < $30 and no case of plum soup
+  var subtotal = 0;
+  for (var i = 0; i < 8; i++) subtotal += qtys[i] * prices[i];
+  subtotal = Math.round(subtotal * 100) / 100;
+  var hasCasePlum = qtys[7] > 0;
+  if (subtotal < 30 && !hasCasePlum) {
+    lineItems.push({ price: DELIVERY_PRICE_ID, quantity: 1 });
+  }
 
   var btn = document.getElementById('checkoutBtn');
   btn.disabled = true;
