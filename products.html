@@ -6,51 +6,61 @@
 <title>Products · Sorghuman Holding LLC</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
-  :root{--green:#2A6B3A;--green-light:#4A9B5A;--gold:#C8922A;--cream:#FAF7F2;--dark:#1A1A18;--muted:#6B6B62;--border:#E2DDD4;}
-  body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);line-height:1.6;}
-  nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,0.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;}
-  .nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
-  .nav-logo img{height:40px;width:40px;object-fit:contain;}
-  .nav-logo span{font-family:'DM Serif Display',serif;font-size:18px;color:var(--green);}
-  .nav-links{display:flex;gap:2rem;}
-  .nav-links a{text-decoration:none;font-size:14px;color:var(--muted);transition:color 0.2s;}
-  .nav-links a:hover{color:var(--green);}
-  .hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;}
-  .hamburger span{display:block;width:22px;height:2px;background:var(--dark);border-radius:2px;}
-  .mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:var(--cream);border-bottom:1px solid var(--border);z-index:99;padding:1rem 5%;flex-direction:column;}
-  .mobile-menu a{text-decoration:none;font-size:15px;color:var(--dark);padding:14px 0;border-bottom:1px solid var(--border);display:block;}
-  .mobile-menu a:last-child{border-bottom:none;}
-  .mobile-menu.open{display:flex;}
-  .page-header{background:var(--green);padding:100px 5% 60px;color:white;}
-  .page-header-inner{max-width:1100px;margin:0 auto;}
-  .page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(32px,4vw,48px);margin-bottom:1rem;}
-  .page-header p{font-size:15px;color:rgba(255,255,255,0.8);max-width:520px;line-height:1.8;}
-  .eyebrow{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:1rem;}
-  .page-body{padding:60px 5%;}
-  .page-body-inner{max-width:1100px;margin:0 auto;}
-  .divider{width:48px;height:2px;background:var(--gold);margin-bottom:1.5rem;}
-  .section-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,3vw,36px);color:var(--dark);margin-bottom:1.5rem;}
-  .section-sub{font-size:14px;color:var(--muted);margin-bottom:2rem;line-height:1.8;}
-  .products-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;align-items:stretch;}
-  .product-card{background:white;border:1px solid var(--border);border-radius:2px;overflow:hidden;transition:transform 0.25s,box-shadow 0.25s;display:flex;flex-direction:column;}
-  .product-card:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,0.08);}
-  .product-card img{width:100%;height:200px;object-fit:cover;object-position:center;display:block;flex-shrink:0;}
-  .product-info{padding:1rem 1.25rem 1.25rem;flex:1;display:flex;flex-direction:column;}
-  .product-info h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:4px;}
-  .product-info .zh-name{font-size:12px;color:var(--muted);}
-  .product-tag{display:inline-block;margin-top:8px;font-size:11px;padding:3px 10px;border:1px solid var(--green);color:var(--green);border-radius:20px;}
-  footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:20px 5%;font-size:13px;margin-top:40px;}
-  footer a{color:rgba(255,255,255,0.4);}
-  @media(max-width:900px){.products-grid{grid-template-columns:repeat(3,1fr);}}
-  @media(max-width:600px){.products-grid{grid-template-columns:repeat(2,1fr);}.nav-links{display:none;}.hamburger{display:flex;}}
-  @media(max-width:400px){.products-grid{grid-template-columns:1fr;}}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--green:#2A6B3A;--green-light:#4A9B5A;--gold:#C8922A;--cream:#FAF7F2;--dark:#1A1A18;--muted:#6B6B62;--border:#E2DDD4;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);line-height:1.6;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,0.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.nav-logo img{height:40px;width:40px;object-fit:contain;}
+.nav-logo span{font-family:'DM Serif Display',serif;font-size:18px;color:var(--green);}
+.nav-links{display:flex;gap:2rem;}
+.nav-links a{text-decoration:none;font-size:14px;color:var(--muted);transition:color 0.2s;}
+.nav-links a:hover{color:var(--green);}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--dark);border-radius:2px;}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:var(--cream);border-bottom:1px solid var(--border);z-index:99;padding:1rem 5%;flex-direction:column;}
+.mobile-menu a{text-decoration:none;font-size:15px;color:var(--dark);padding:14px 0;border-bottom:1px solid var(--border);display:block;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu.open{display:flex;}
+
+.page-header{background:var(--green);padding:100px 5% 60px;color:white;}
+.page-header-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:1rem;}
+.page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(32px,4vw,48px);margin-bottom:1rem;}
+.page-header p{font-size:15px;color:rgba(255,255,255,0.8);max-width:520px;line-height:1.8;}
+
+.page-body{padding:60px 5%;}
+.page-body-inner{max-width:1100px;margin:0 auto;}
+.divider{width:48px;height:2px;background:var(--gold);margin-bottom:1.5rem;}
+.section-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,3vw,36px);color:var(--dark);margin-bottom:1.5rem;}
+.section-note{font-size:14px;color:var(--muted);margin-bottom:2rem;line-height:1.8;}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:3rem;}
+.card{background:white;border:1px solid var(--border);border-radius:2px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s,box-shadow 0.2s;}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.08);}
+.card img{width:100%;height:200px;object-fit:cover;object-position:center;display:block;}
+.card-body{padding:1rem 1.25rem 1.25rem;flex:1;display:flex;flex-direction:column;}
+.card-body h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:3px;}
+.card-body .zh{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.tag{display:inline-block;font-size:11px;padding:3px 10px;border:1px solid var(--green);color:var(--green);border-radius:20px;margin-top:auto;}
+
+.buy-btn{display:block;text-align:center;background:var(--gold);color:white;text-decoration:none;padding:14px 36px;border-radius:2px;font-size:15px;font-weight:500;margin:2rem auto 0;max-width:300px;}
+
+footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:20px 5%;font-size:13px;margin-top:40px;}
+footer a{color:rgba(255,255,255,0.4);}
+
+@media(max-width:768px){.nav-links{display:none;}.hamburger{display:flex;}.grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:400px){.grid{grid-template-columns:1fr;}}
 </style>
 </head>
 <body>
 
 <nav>
-  <a class="nav-logo" href="index.html"><img src="images/logo.jpg" alt="Sorghuman"><span>SORGHUMAN</span></a>
+  <a class="nav-logo" href="index.html">
+    <img src="images/logo.jpg" alt="Sorghuman">
+    <span>SORGHUMAN</span>
+  </a>
   <div class="nav-links">
     <a href="index.html#about">About</a>
     <a href="products.html">Products 产品</a>
@@ -60,8 +70,11 @@
     <a href="supplier.html">Suppliers 供应商</a>
     <a href="index.html#contact">Contact</a>
   </div>
-  <button class="hamburger" onclick="toggleMenu()" id="hamburger"><span></span><span></span><span></span></button>
+  <button class="hamburger" onclick="toggleMenu()" id="hamburger">
+    <span></span><span></span><span></span>
+  </button>
 </nav>
+
 <div class="mobile-menu" id="mobileMenu">
   <a href="index.html#about" onclick="closeMenu()">About us</a>
   <a href="products.html" onclick="closeMenu()">Products 产品 →</a>
@@ -76,102 +89,119 @@
   <div class="page-header-inner">
     <p class="eyebrow">Our range &middot; 产品目录</p>
     <h1>Our Products</h1>
-    <p>Authentic frozen Chinese food &mdash; steamed buns, dim sum, beverages and more. All products are frozen at source for maximum freshness, ready to cook straight from frozen.</p>
+    <p>Authentic frozen Chinese food &mdash; steamed buns, dim sum, beverages and more. Ready to cook straight from frozen.</p>
   </div>
 </div>
 
 <div class="page-body">
   <div class="page-body-inner">
 
-    <p class="section-sub">所有包子无需解冻，直接蒸8-10分钟或微波炉加热4分钟即可。</p>
+    <p class="section-note">所有包子无需解冻，直接蒸8-10分钟或微波炉加热4分钟即可。</p>
 
     <div class="divider"></div>
     <h2 class="section-title">Steamed Buns · 包子系列</h2>
 
-    <div class="products-grid">
-      <div class="product-card">
+    <div class="grid">
+
+      <div class="card">
         <img src="images/bun-mustard.jpg" alt="梅干菜包">
-        <div class="product-info">
+        <div class="card-body">
           <h3>Dried Mustard Green Bun</h3>
-          <p class="zh-name">梅干菜包</p>
-          <span class="product-tag">Suitable for vegetarians</span>
+          <p class="zh">梅干菜包</p>
+          <span class="tag">Suitable for vegetarians</span>
         </div>
       </div>
-      <div class="product-card">
+
+      <div class="card">
         <img src="images/bun-radish.jpg" alt="千顺萝卜包">
-        <div class="product-info">
+        <div class="card-body">
           <h3>Shredded Radish Bun</h3>
-          <p class="zh-name">千顺萝卜包</p>
-          <span class="product-tag">Jiangnan style</span>
+          <p class="zh">千顺萝卜包</p>
+          <span class="tag">Jiangnan style</span>
         </div>
       </div>
-      <div class="product-card">
+
+      <div class="card">
         <img src="images/bun-bokchoy.jpg" alt="上海青香菇包">
-        <div class="product-info">
+        <div class="card-body">
           <h3>Bok Choy &amp; Shiitake Bun</h3>
-          <p class="zh-name">上海青香菇包</p>
-          <span class="product-tag">Suitable for vegetarians</span>
+          <p class="zh">上海青香菇包</p>
+          <span class="tag">Suitable for vegetarians</span>
         </div>
       </div>
-      <div class="product-card">
+
+      <div class="card">
         <img src="images/bun-adzuki.jpg" alt="豆沙包">
-        <div class="product-info">
+        <div class="card-body">
           <h3>Adzuki Bean Bun</h3>
-          <p class="zh-name">豆沙包</p>
-          <span class="product-tag">Suitable for vegetarians</span>
+          <p class="zh">豆沙包</p>
+          <span class="tag">Suitable for vegetarians</span>
         </div>
       </div>
-      <div class="product-card">
+
+      <div class="card">
         <img src="images/bun-tofu.jpg" alt="豆腐竹笋香菇包">
-        <div class="product-info">
+        <div class="card-body">
           <h3>Tofu, Bamboo &amp; Shiitake Bun</h3>
-          <p class="zh-name">豆腐竹笋香菇包</p>
-          <span class="product-tag">Suitable for vegetarians</span>
+          <p class="zh">豆腐竹笋香菇包</p>
+          <span class="tag">Suitable for vegetarians</span>
         </div>
       </div>
-      <div class="product-card">
+
+      <div class="card">
         <img src="images/bun-jicai.jpg" alt="荠菜包">
-        <div class="product-info">
+        <div class="card-body">
           <h3>Shepherd's Purse Bun</h3>
-          <p class="zh-name">荠菜包</p>
-          <span class="product-tag">Suitable for vegetarians</span>
+          <p class="zh">荠菜包</p>
+          <span class="tag">Suitable for vegetarians</span>
         </div>
       </div>
-      <div class="product-card">
+
+      <div class="card">
         <img src="images/shaomai.jpg" alt="糯米烧卖">
-        <div class="product-info">
+        <div class="card-body">
           <h3>Glutinous Rice Shaomai</h3>
-          <p class="zh-name">糯米烧卖</p>
-          <span class="product-tag">16 oz &middot; 6 pcs/pack</span>
+          <p class="zh">糯米烧卖</p>
+          <span class="tag">16 oz &middot; 6 pcs/pack</span>
         </div>
       </div>
+
     </div>
 
-    <div class="divider" style="margin-top:3rem;"></div>
-    <h2 class="section-title" style="margin:1.5rem 0;">Beverages · 饮品</h2>
-    <div class="products-grid">
-      <div class="product-card">
+    <div class="divider"></div>
+    <h2 class="section-title">Beverages · 饮品</h2>
+
+    <div class="grid">
+
+      <div class="card">
         <img src="images/plum-soup.jpg" alt="酸梅汤">
-        <div class="product-info">
+        <div class="card-body">
           <h3>Sour Plum Soup</h3>
-          <p class="zh-name">酸梅汤</p>
-          <span class="product-tag">16 oz &middot; Made in USA</span>
+          <p class="zh">酸梅汤</p>
+          <span class="tag">16 oz &middot; Made in USA</span>
         </div>
       </div>
+
     </div>
 
-    <div style="margin-top:3rem;text-align:center;">
-      <a href="local.html" style="display:inline-block;background:var(--gold);color:white;text-decoration:none;padding:14px 36px;border-radius:2px;font-size:15px;font-weight:500;">&#128722; 立即购买 &middot; Shop now</a>
-    </div>
+    <a href="local.html" class="buy-btn">&#128722; 立即购买 &middot; Shop now</a>
+
   </div>
 </div>
 
-<footer><p>&copy; 2025 Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &middot; <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p></footer>
+<footer>
+  <p>&copy; 2025 Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &middot;
+  <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
+</footer>
 
 <script>
-function toggleMenu(){var m=document.getElementById('mobileMenu');m.classList.toggle('open');}
+function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
 function closeMenu(){document.getElementById('mobileMenu').classList.remove('open');}
-document.addEventListener('click',function(e){var menu=document.getElementById('mobileMenu');var btn=document.getElementById('hamburger');if(menu&&menu.classList.contains('open')&&!menu.contains(e.target)&&!btn.contains(e.target)){menu.classList.remove('open');}});
+document.addEventListener('click',function(e){
+  var m=document.getElementById('mobileMenu');
+  var b=document.getElementById('hamburger');
+  if(m.classList.contains('open')&&!m.contains(e.target)&&!b.contains(e.target)){m.classList.remove('open');}
+});
 </script>
 </body>
 </html>
