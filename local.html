@@ -215,6 +215,23 @@ footer a{color:rgba(255,255,255,0.4);}
       </div>
     </div>
 
+
+    <div class="cat-label">Dim sum &middot; 点心系列</div>
+
+    <div class="product-row">
+      <div class="prod-info">
+        <h3>Glutinous Rice Shaomai</h3>
+        <p class="zh">糯米烧卖</p>
+        <p class="spec">Frozen dim sum &middot; 点心</p>
+        <p class="price">$2.99 / pack</p>
+      </div>
+      <div class="qty-control">
+        <button class="qty-btn" onclick="changeQty(6,-1)">&#8722;</button>
+        <div class="qty-num" id="qty-6">0</div>
+        <button class="qty-btn" onclick="changeQty(6,1)">+</button>
+      </div>
+    </div>
+
     <div class="cat-label">Beverages &middot; 饮品</div>
 
     <div class="product-row">
@@ -226,9 +243,9 @@ footer a{color:rgba(255,255,255,0.4);}
         <p class="price">$2.99 / bottle</p>
       </div>
       <div class="qty-control">
-        <button class="qty-btn" onclick="changeQty(6,-1)">&#8722;</button>
-        <div class="qty-num" id="qty-6">0</div>
-        <button class="qty-btn" onclick="changeQty(6,1)">+</button>
+        <button class="qty-btn" onclick="changeQty(7,-1)">&#8722;</button>
+        <div class="qty-num" id="qty-7">0</div>
+        <button class="qty-btn" onclick="changeQty(7,1)">+</button>
       </div>
     </div>
 
@@ -241,9 +258,9 @@ footer a{color:rgba(255,255,255,0.4);}
         <p class="price">$49.99 / case &nbsp;<span style="font-size:11px;color:var(--green);">FREE delivery</span></p>
       </div>
       <div class="qty-control">
-        <button class="qty-btn" onclick="changeQty(7,-1)">&#8722;</button>
-        <div class="qty-num" id="qty-7">0</div>
-        <button class="qty-btn" onclick="changeQty(7,1)">+</button>
+        <button class="qty-btn" onclick="changeQty(8,-1)">&#8722;</button>
+        <div class="qty-num" id="qty-8">0</div>
+        <button class="qty-btn" onclick="changeQty(8,1)">+</button>
       </div>
     </div>
     <div class="product-row">
@@ -255,9 +272,9 @@ footer a{color:rgba(255,255,255,0.4);}
         <p class="price">&#36;9.99 / bottle</p>
       </div>
       <div class="qty-control">
-        <button class="qty-btn" onclick="changeQty(8,-1)">&#8722;</button>
-        <div class="qty-num" id="qty-8">0</div>
-        <button class="qty-btn" onclick="changeQty(8,1)">+</button>
+        <button class="qty-btn" onclick="changeQty(9,-1)">&#8722;</button>
+        <div class="qty-num" id="qty-9">0</div>
+        <button class="qty-btn" onclick="changeQty(9,1)">+</button>
       </div>
     </div>
   </div>
@@ -296,11 +313,12 @@ var products = [
   'Shepherd\'s Purse Bun 荠菜包',
   'Adzuki Bean Bun 豆沙包',
   'Tofu, Bamboo & Shiitake Bun 豆腐竹笋香菇包',
+  'Glutinous Rice Shaomai 糯米烧卖',
   'Sour Plum Soup 酸梅汤 (single)',
   'Sour Plum Soup 酸梅汤 (case/20)',
   'Sour Plum Concentrate 酸梅汁浓缩液'
 ];
-var prices = [4.99,4.99,4.99,4.99,2.99,4.99,2.99,49.99,9.99];
+var prices = [4.99,4.99,4.99,4.99,2.99,4.99,2.99,2.99,49.99,9.99];
 var priceIds = [
   'price_1TT4g1CuwzUmEt2Z0JH58hNs', // 梅干菜包 dried mustard green buns
   'price_1TT4hLCuwzUmEt2ZHHEkRnAd', // 萝卜丝虾皮包 shredded radish buns
@@ -308,6 +326,7 @@ var priceIds = [
   'price_1TT4Y2CuwzUmEt2ZRykZg8v2', // 荠菜包 shepherd's purse buns
   'price_1TT4cLCuwzUmEt2ZXicxSwZ0', // 豆沙包 adzuki bean buns
   'price_1TT4eBCuwzUmEt2ZmTKaXiiT', // 腐皮三丁包 tofu bamboo shiitake buns
+  'price_1TT4dUCuwzUmEt2Z9tZzCA19', // 糯米烧卖 glutinous rice shaomai
   'price_1TSQLTCuwzUmEt2Zr1NvORg9', // 酸梅汤 sour plum soup
   'price_1TSQMTCuwzUmEt2Z03adrdFD', // 酸梅汤整箱 sour plum soup case
   'price_1TSodcCuwzUmEt2ZUUtrfeBG'  // 酸梅膏 sour plum concentrate
@@ -352,7 +371,7 @@ function updateCart() {
   var subtotal = 0;
   for (var i = 0; i < products.length; i++) subtotal += qtys[i] * prices[i];
   subtotal = Math.round(subtotal * 100) / 100;
-  var hasCasePlum = qtys[7] > 0;
+  var hasCasePlum = qtys[8] > 0;
   var delivery = (subtotal >= 30 || hasCasePlum) ? 0 : (total > 0 ? 5 : 0);
   var grandTotal = Math.round((subtotal + delivery) * 100) / 100;
 
@@ -426,7 +445,7 @@ function goToCheckout() {
   var subtotal = 0;
   for (var i = 0; i < products.length; i++) subtotal += qtys[i] * prices[i];
   subtotal = Math.round(subtotal * 100) / 100;
-  var hasCasePlum = qtys[7] > 0;
+  var hasCasePlum = qtys[8] > 0;
   if (subtotal < 30 && !hasCasePlum) {
     lineItems.push({ price: DELIVERY_PRICE_ID, quantity: 1 });
   }
