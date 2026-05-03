@@ -315,12 +315,12 @@ function changeQty(idx, delta) {
 
 function updateCart() {
   var total = 0;
-  for (var i = 0; i < 8; i++) total += qtys[i];
+  for (var i = 0; i < 9; i++) total += qtys[i];
   var bunTotal = 0;
   for (var i = 0; i < 6; i++) bunTotal += qtys[i];
   var freeQty = Math.floor(bunTotal / 10);
   var subtotal = 0;
-  for (var i = 0; i < 8; i++) subtotal += qtys[i] * prices[i];
+  for (var i = 0; i < 9; i++) subtotal += qtys[i] * prices[i];
   subtotal = Math.round(subtotal * 100) / 100;
   var hasCasePlum = qtys[7] > 0;
   var delivery = (subtotal >= 30 || hasCasePlum) ? 0 : (total > 0 ? 5 : 0);
@@ -348,7 +348,7 @@ function updateCart() {
   btn.disabled = false;
 
   var html = '';
-  for (var i = 0; i < 8; i++) {
+  for (var i = 0; i < 9; i++) {
     if (qtys[i] > 0) {
       html += '<div class="cart-item"><span class="cart-item-name">' + products[i] + '</span><div class="cart-item-right"><div class="cart-item-qty">x' + qtys[i] + '</div><div class="cart-item-price">$' + (qtys[i] * prices[i]).toFixed(2) + '</div></div></div>';
     }
@@ -388,7 +388,7 @@ function goToCheckout() {
 
   // Add delivery fee if subtotal < $30 and no case of plum soup
   var subtotal = 0;
-  for (var i = 0; i < 8; i++) subtotal += qtys[i] * prices[i];
+  for (var i = 0; i < 9; i++) subtotal += qtys[i] * prices[i];
   subtotal = Math.round(subtotal * 100) / 100;
   var hasCasePlum = qtys[7] > 0;
   if (subtotal < 30 && !hasCasePlum) {
