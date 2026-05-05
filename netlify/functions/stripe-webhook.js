@@ -1,15 +1,11 @@
 // stripe-webhook.js
 // 放到 netlify/functions/ 目录下
-// Odoo 认证：用账号密码获取 session，再用 session 操作
 
-// ── 配置 ──────────────────────────────────────────────────────────────────
 const ODOO_URL  = "https://sorg.odoo.com";
 const ODOO_DB   = "sorg";
 const ODOO_USER = "glitter.ge@sorghuman.com";
-// 密码从 Netlify 环境变量读取
 const ODOO_PASS = process.env.ODOO_PASSWORD;
 
-// 产品名关键词 → Odoo 货号
 const NAME_TO_REF = {
   "Dried Mustard Green":           "BAG-7951",
   "梅干菜":                         "BAG-7951",
@@ -29,7 +25,6 @@ const NAME_TO_REF = {
   "浓缩":                           "BAG-CONC",
 };
 
-// ── Odoo 登录，返回 session cookie ─────────────────────────────────────────
 async function odooLogin() {
   const res = await fetch(`${ODOO_URL}/web/session/authenticate`, {
     method: "POST",
@@ -37,73 +32,68 @@ async function odooLogin() {
     body: JSON.stringify({
       jsonrpc: "2.0",
       method: "call",
-      params: {
-        db: ODOO_DB,
-        login: ODOO_USER,
-        password: ODOO_PASS,
-      },
+      params: { db: ODOO_DB, login: ODOO_USER, password: ODOO_PASS },
     }),
   });
   const data = await res.json();
-  if (!data.result?.uid) {
-    throw new Error("Odoo 登录失败，请检查密码");
-  }
-  // 提取 session_id cookie
+  if (!data.result?.uid) throw new Error("Odoo 登录失败，请检查密码");
   const setCookie = res.headers.get("set-cookie") || "";
   const match = setCookie.match(/session_id=([^;]+)/);
-  if (!match) throw new Error("无法获取 Odoo session cookie");
+  if (!match) throw new Error("无法获取 session cookie");
   console.log(`Odoo 登录成功 uid=${data.result.uid}`);
   return match[1];
 }
 
-// ── Odoo JSON-RPC 调用 ────────────────────────────────────────────────────
-async function odoo(sessionId, model, method, args, kwargs = {}) {
+async function odoo(sid, model, method, args, kwargs = {}) {
   const res = await fetch(`${ODOO_URL}/web/dataset/call_kw`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Cookie": `session_id=${sessionId}`,
+      "Cookie": `session_id=${sid}`,
     },
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: 1,
       method: "call",
-      params: {
-        model,
-        method,
-        args,
-        kwargs: { context: {}, ...kwargs },
-      },
+      params: { model, method, args, kwargs: { context: {}, ...kwargs } },
     }),
   });
   const data = await res.json();
-  if (data.error) {
-    throw new Error(data.error.data?.message || JSON.stringify(data.error));
-  }
+  if (data.error) throw new Error(data.error.data?.message || JSON.stringify(data.error));
   return data.result;
 }
 
-// ── 业务逻辑 ──────────────────────────────────────────────────────────────
-
-async function findOrCreatePartner(sid, email, name) {
+async function findOrCreatePartner(sid, email, name, shipping) {
   const ids = await odoo(sid, "res.partner", "search", [[["email", "=", email]]]);
   if (ids.length > 0) {
-    console.log(`已有客户: ${email} id=${ids[0]}`);
+    console.log(`已有客户 id=${ids[0]}`);
     return ids[0];
   }
+
+  // 构建地址字段
+  const addrVals = {};
+  if (shipping) {
+    addrVals.street  = [shipping.address?.line1, shipping.address?.line2].filter(Boolean).join(", ");
+    addrVals.city    = shipping.address?.city    || "";
+    addrVals.zip     = shipping.address?.postal_code || "";
+    addrVals.country_id = false; // 可选：用 res.country search 查 US id
+  }
+
   const id = await odoo(sid, "res.partner", "create", [{
     name: name || email,
-    email: email,
+    email,
     customer_rank: 1,
+    ...addrVals,
   }]);
-  console.log(`新客户已创建: ${email} id=${id}`);
+  console.log(`新客户已创建 id=${id}`);
   return id;
 }
 
 async function findProduct(sid, ref) {
   const ids = await odoo(sid, "product.product", "search", [[["default_code", "=", ref]]]);
-  if (!ids.length) throw new Error(`找不到产品货号: ${ref}`);
-  const rows = await odoo(sid, "product.product", "read", [ids], { fields: ["id", "list_price"] });
+  if (!ids.length) throw new Error(`找不到产品: ${ref}`);
+  const rows = await odoo(sid, "product.product", "read", [ids], { fields: ["id", "list_price", "name"] });
+  console.log(`产品: ${rows[0].name} id=${rows[0].id} $${rows[0].list_price}`);
   return rows[0];
 }
 
@@ -129,29 +119,25 @@ async function createOdooOrder(session) {
   const name        = session.customer_details?.name  || email;
   const amountTotal = (session.amount_total || 0) / 100;
   const stripeId    = session.id;
+  const shipping    = session.shipping_details || session.customer_details;
 
   console.log(`处理订单: ${stripeId} | ${email} | $${amountTotal}`);
+  console.log(`配送地址: ${JSON.stringify(shipping)}`);
+  console.log(`metadata: ${JSON.stringify(session.metadata)}`);
 
-  // 登录获取 session
   const sid = await odooLogin();
+  const partnerId = await findOrCreatePartner(sid, email, name, shipping);
 
-  // 1. 找或创建客户
-  const partnerId = await findOrCreatePartner(sid, email, name);
-
-  // 2. 解析产品明细
+  // 解析产品
   const orderParam = session.metadata?.order || "";
+  console.log(`order 参数: "${orderParam}"`);
   const items = parseOrderParam(orderParam);
-  console.log(`解析到 ${items.length} 个产品项`);
+  console.log(`解析到 ${items.length} 个产品`);
 
-  // 3. 构建订单行
   const orderLines = [];
   for (const item of items) {
     if (!item.ref) {
-      orderLines.push([0, 0, {
-        name: item.rawName,
-        product_uom_qty: item.qty,
-        price_unit: 4.99,
-      }]);
+      orderLines.push([0, 0, { name: item.rawName, product_uom_qty: item.qty, price_unit: 4.99 }]);
       continue;
     }
     try {
@@ -168,46 +154,51 @@ async function createOdooOrder(session) {
 
   // 兜底
   if (orderLines.length === 0) {
+    console.log("使用兜底产品 BAG-7951");
+    const fallback = await findProduct(sid, "BAG-7951");
     orderLines.push([0, 0, {
+      product_id: fallback.id,
       name: `Online Order - ${stripeId}`,
       product_uom_qty: 1,
       price_unit: amountTotal,
     }]);
   }
 
-  // 4. 创建销售订单
+  // 配送地址备注
+  const shippingNote = shipping ? [
+    shipping.name,
+    shipping.address?.line1,
+    shipping.address?.line2,
+    shipping.address?.city,
+    shipping.address?.state,
+    shipping.address?.postal_code,
+  ].filter(Boolean).join(", ") : "";
+
+  // 创建销售订单
   const soId = await odoo(sid, "sale.order", "create", [{
     partner_id: partnerId,
     order_line: orderLines,
     client_order_ref: stripeId,
-    note: `Stripe: ${stripeId} | sorghuman.com local delivery`,
+    note: `Stripe: ${stripeId} | sorghuman.com local delivery\n配送地址: ${shippingNote}`,
   }]);
   console.log(`销售订单已创建: id=${soId}`);
 
-  // 5. 确认订单
   await odoo(sid, "sale.order", "action_confirm", [[soId]]);
   console.log(`销售订单已确认`);
 
-  // 6. 创建发票
   await odoo(sid, "sale.order", "_create_invoices", [[soId]]);
 
-  // 7. 取发票 id
   const soData = await odoo(sid, "sale.order", "read", [[soId]], { fields: ["invoice_ids"] });
   const invoiceId = soData[0]?.invoice_ids?.[0];
-  if (!invoiceId) {
-    console.log("发票暂未生成，订单已建立");
-    return soId;
-  }
+  if (!invoiceId) { console.log("发票暂未生成"); return soId; }
   console.log(`发票已创建: id=${invoiceId}`);
 
-  // 8. 确认发票
   await odoo(sid, "account.move", "action_post", [[invoiceId]]);
   console.log(`发票已确认`);
 
   return soId;
 }
 
-// ── Netlify Handler ───────────────────────────────────────────────────────
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
@@ -215,14 +206,12 @@ exports.handler = async (event) => {
 
   const Stripe = require("stripe");
   const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
-  const sig    = event.headers["stripe-signature"];
+  const sig = event.headers["stripe-signature"];
 
   let stripeEvent;
   try {
     stripeEvent = stripe.webhooks.constructEvent(
-      event.body,
-      sig,
-      process.env.STRIPE_WEBHOOK_SECRET
+      event.body, sig, process.env.STRIPE_WEBHOOK_SECRET
     );
   } catch (err) {
     console.error("签名验证失败:", err.message);
