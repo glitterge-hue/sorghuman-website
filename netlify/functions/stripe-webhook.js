@@ -6,6 +6,9 @@ const ODOO_DB   = "sorg";
 const ODOO_USER = "glitter.ge@sorghuman.com";
 const ODOO_PASS = process.env.ODOO_PASSWORD;
 
+// 所有网站零售订单统一挂在这个虚拟客户下
+const ONLINE_PARTNER_ID = 87;
+
 const NAME_TO_REF = {
   "Dried Mustard Green":           "BAG-7951",
   "梅干菜":                         "BAG-7951",
@@ -63,37 +66,11 @@ async function odoo(sid, model, method, args, kwargs = {}) {
   return data.result;
 }
 
-async function findOrCreatePartner(sid, email, name, shipping) {
-  const ids = await odoo(sid, "res.partner", "search", [[["email", "=", email]]]);
-  if (ids.length > 0) {
-    console.log(`已有客户 id=${ids[0]}`);
-    return ids[0];
-  }
-
-  // 构建地址字段
-  const addrVals = {};
-  if (shipping) {
-    addrVals.street  = [shipping.address?.line1, shipping.address?.line2].filter(Boolean).join(", ");
-    addrVals.city    = shipping.address?.city    || "";
-    addrVals.zip     = shipping.address?.postal_code || "";
-    addrVals.country_id = false; // 可选：用 res.country search 查 US id
-  }
-
-  const id = await odoo(sid, "res.partner", "create", [{
-    name: name || email,
-    email,
-    customer_rank: 1,
-    ...addrVals,
-  }]);
-  console.log(`新客户已创建 id=${id}`);
-  return id;
-}
-
 async function findProduct(sid, ref) {
   const ids = await odoo(sid, "product.product", "search", [[["default_code", "=", ref]]]);
   if (!ids.length) throw new Error(`找不到产品: ${ref}`);
   const rows = await odoo(sid, "product.product", "read", [ids], { fields: ["id", "list_price", "name"] });
-  console.log(`产品: ${rows[0].name} id=${rows[0].id} $${rows[0].list_price}`);
+  console.log(`产品: ${rows[0].name} $${rows[0].list_price}`);
   return rows[0];
 }
 
@@ -115,18 +92,15 @@ function parseOrderParam(orderStr) {
 }
 
 async function createOdooOrder(session) {
-  const email       = session.customer_details?.email || "unknown@sorghuman.com";
+  const email       = session.customer_details?.email || "";
   const name        = session.customer_details?.name  || email;
   const amountTotal = (session.amount_total || 0) / 100;
   const stripeId    = session.id;
   const shipping    = session.shipping_details || session.customer_details;
 
   console.log(`处理订单: ${stripeId} | ${email} | $${amountTotal}`);
-  console.log(`配送地址: ${JSON.stringify(shipping)}`);
-  console.log(`metadata: ${JSON.stringify(session.metadata)}`);
 
   const sid = await odooLogin();
-  const partnerId = await findOrCreatePartner(sid, email, name, shipping);
 
   // 解析产品
   const orderParam = session.metadata?.order || "";
@@ -152,20 +126,18 @@ async function createOdooOrder(session) {
     }
   }
 
-  // 兜底
   if (orderLines.length === 0) {
     console.log("使用兜底产品 BAG-7951");
     const fallback = await findProduct(sid, "BAG-7951");
     orderLines.push([0, 0, {
       product_id: fallback.id,
-      name: `Online Order - ${stripeId}`,
       product_uom_qty: 1,
       price_unit: amountTotal,
     }]);
   }
 
-  // 配送地址备注
-  const shippingNote = shipping ? [
+  // 配送地址和客户信息写入备注
+  const shippingAddr = shipping ? [
     shipping.name,
     shipping.address?.line1,
     shipping.address?.line2,
@@ -174,12 +146,16 @@ async function createOdooOrder(session) {
     shipping.address?.postal_code,
   ].filter(Boolean).join(", ") : "";
 
-  // 创建销售订单
+  const noteLines = [];
+  if (name)        noteLines.push(`客户: ${name}`);
+  if (email)       noteLines.push(`邮件: ${email}`);
+  if (shippingAddr) noteLines.push(`配送地址: ${shippingAddr}`);
+
+  // 创建销售订单，统一用 Online Retail Customer
   const soId = await odoo(sid, "sale.order", "create", [{
-    partner_id: partnerId,
+    partner_id: ONLINE_PARTNER_ID,
     order_line: orderLines,
-    client_order_ref: stripeId,
-    note: `Stripe: ${stripeId} | sorghuman.com local delivery\n配送地址: ${shippingNote}`,
+    note: noteLines.join("\n"),
   }]);
   console.log(`销售订单已创建: id=${soId}`);
 
