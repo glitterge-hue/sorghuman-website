@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Careers · Join Our Team · Sorghuman</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--green:#2A6B3A;--green-light:#4A9B5A;--gold:#C8922A;--cream:#FAF7F2;--dark:#1A1A18;--muted:#6B6B62;--border:#E2DDD4;}
+html{scroll-behavior:smooth;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);line-height:1.6;}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,0.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.nav-logo img{height:40px;width:40px;object-fit:contain;}
+.nav-logo span{font-family:'DM Serif Display',serif;font-size:18px;color:var(--green);}
+.nav-back{font-size:13px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;transition:color 0.2s;}
+.nav-back:hover{color:var(--green);}
+.nav-back::before{content:'←';font-size:16px;}
+
+/* PAGE HEADER */
+.page-header{background:var(--green);padding:100px 5% 60px;color:white;}
+.page-header-inner{max-width:900px;margin:0 auto;}
+.eyebrow{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:1rem;}
+.page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(32px,4vw,52px);line-height:1.15;margin-bottom:1.25rem;}
+.page-header p{font-size:15px;color:rgba(255,255,255,0.82);max-width:560px;line-height:1.85;}
+
+/* INTRO BAND */
+.intro-band{background:white;border-bottom:1px solid var(--border);padding:40px 5%;}
+.intro-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+.intro-text p{font-size:15px;color:var(--muted);line-height:1.9;margin-bottom:0.75rem;}
+.intro-values{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.value-chip{background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:10px 14px;font-size:13px;color:var(--dark);}
+.value-chip::before{content:'✓ ';;color:var(--green);font-weight:500;}
+
+/* JOBS SECTION */
+.jobs-section{padding:60px 5%;}
+.jobs-inner{max-width:900px;margin:0 auto;}
+.section-label{font-size:11px;font-weight:500;letter-spacing:0.15em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem;}
+.section-title{font-family:'DM Serif Display',serif;font-size:clamp(26px,3vw,36px);color:var(--dark);margin-bottom:0.5rem;line-height:1.2;}
+.section-sub{font-size:14px;color:var(--muted);margin-bottom:2.5rem;max-width:500px;}
+.divider{width:48px;height:2px;background:var(--gold);margin-bottom:1.5rem;}
+
+/* JOB CARD */
+.job-card{background:white;border:1px solid var(--border);border-radius:2px;margin-bottom:20px;overflow:hidden;transition:box-shadow 0.2s,border-color 0.2s;}
+.job-card:hover{border-color:#9FD4B2;box-shadow:0 6px 24px rgba(0,0,0,0.06);}
+.job-header{padding:1.5rem 2rem;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;cursor:pointer;user-select:none;}
+.job-header:hover .job-title{color:var(--green);}
+.job-meta{flex:1;}
+.job-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--dark);margin-bottom:6px;transition:color 0.2s;}
+.job-tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.tag{font-size:11px;padding:3px 10px;border-radius:20px;letter-spacing:0.05em;font-weight:500;}
+.tag-region{background:#f0f7f2;color:var(--green);border:1px solid #9FD4B2;}
+.tag-type{background:#FFF8E8;color:#7A5C00;border:1px solid #F0D890;}
+.job-arrow{font-size:18px;color:var(--muted);transition:transform 0.2s,color 0.2s;flex-shrink:0;margin-top:2px;}
+.job-card.open .job-arrow{transform:rotate(90deg);color:var(--green);}
+.job-body{display:none;padding:0 2rem 2rem;border-top:1px solid var(--border);}
+.job-card.open .job-body{display:block;}
+.job-section-head{font-size:11px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin:1.5rem 0 0.75rem;}
+.job-section-head:first-child{margin-top:1.25rem;}
+.job-desc{font-size:14px;color:var(--dark);line-height:1.85;}
+.job-list{list-style:none;padding:0;}
+.job-list li{font-size:14px;color:var(--dark);line-height:1.75;padding-left:20px;position:relative;margin-bottom:4px;}
+.job-list li::before{content:'·';position:absolute;left:6px;color:var(--green);font-size:18px;line-height:1.5;}
+.job-cta{margin-top:1.75rem;padding-top:1.5rem;border-top:1px solid var(--border);display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+.btn-apply{display:inline-block;background:var(--green);color:white;text-decoration:none;padding:11px 28px;border-radius:2px;font-size:14px;font-weight:500;letter-spacing:0.03em;transition:background 0.2s;}
+.btn-apply:hover{background:var(--green-light);}
+.btn-email{display:inline-block;border:1px solid var(--border);color:var(--muted);text-decoration:none;padding:10px 20px;border-radius:2px;font-size:13px;transition:border-color 0.2s,color 0.2s;}
+.btn-email:hover{border-color:var(--green);color:var(--green);}
+.apply-note{font-size:12px;color:var(--muted);}
+
+/* OPEN REGIONS BANNER */
+.regions-banner{background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:1.5rem 2rem;margin-bottom:2.5rem;}
+.regions-banner p{font-size:13px;color:var(--muted);line-height:1.8;}
+.regions-banner strong{color:var(--dark);font-weight:500;}
+.region-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+.region-badge{background:white;border:1px solid var(--border);border-radius:2px;padding:5px 14px;font-size:12px;font-weight:500;color:var(--dark);}
+.region-badge.open{border-color:var(--green);color:var(--green);}
+.region-badge.recruiting{border-color:var(--gold);color:var(--gold);}
+
+/* CONTACT CTA */
+.contact-cta{background:var(--green);padding:60px 5%;color:white;margin-top:60px;}
+.contact-inner{max-width:900px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;}
+.contact-cta h2{font-family:'DM Serif Display',serif;font-size:clamp(26px,3vw,36px);margin-bottom:1rem;}
+.contact-cta p{font-size:15px;color:rgba(255,255,255,0.82);line-height:1.85;}
+.contact-block{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:2px;padding:1.5rem 2rem;}
+.contact-block .label{font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:4px;}
+.contact-block .val{font-size:15px;color:white;font-weight:500;}
+.contact-block a{color:white;}
+.contact-block+.contact-block{margin-top:1rem;}
+
+footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:24px 5%;font-size:13px;}
+footer a{color:rgba(255,255,255,0.4);}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+.page-header{animation:fadeUp 0.7s ease both;}
+
+@media(max-width:768px){
+  .intro-inner,.contact-inner{grid-template-columns:1fr;gap:28px;}
+  .intro-values{grid-template-columns:1fr;}
+  .job-header{flex-direction:column;gap:8px;}
+  .job-arrow{display:none;}
+}
+</style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q99SSTBGE8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Q99SSTBGE8');
+</script>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="images/logo.jpg" alt="Sorghuman">
+    <span>SORGHUMAN</span>
+  </a>
+  <a class="nav-back" href="index.html">Back to main site</a>
+</nav>
+
+<!-- PAGE HEADER -->
+<div class="page-header">
+  <div class="page-header-inner">
+    <p class="eyebrow">Careers · 加入我们</p>
+    <h1>Join Our Growing Team</h1>
+    <p>Sorghuman is expanding across the U.S. East Coast and beyond. We're looking for driven, community-connected sales professionals to grow with us as we bring authentic Chinese frozen foods to more homes. 我们正在全美快速扩展，寻找有经验、有人脉的本地销售精英。</p>
+  </div>
+</div>
+
+<!-- INTRO BAND -->
+<div class="intro-band">
+  <div class="intro-inner">
+    <div class="intro-text">
+      <p>We are a New York-registered importer and distributor of premium frozen Chinese food products — steamed buns, dim sum, rice cakes and beverages — serving Asian supermarket chains across the Northeast.</p>
+      <p>Our products are FDA-registered, CBP-certified, and sold through 25+ retail partners. We're building a regional network of independent sales agents and territory managers.</p>
+    </div>
+    <div class="intro-values">
+      <div class="value-chip">Competitive commission</div>
+      <div class="value-chip">Flexible territory</div>
+      <div class="value-chip">Growing product line</div>
+      <div class="value-chip">Supportive team</div>
+      <div class="value-chip">Autonomy</div>
+      <div class="value-chip">Long-term partnership</div>
+    </div>
+  </div>
+</div>
+
+<!-- OPEN REGIONS -->
+<div class="jobs-section">
+  <div class="jobs-inner">
+
+    <div class="regions-banner">
+      <p><strong>Currently hiring in these regions · 目前招聘区域：</strong></p>
+      <div class="region-list">
+        <span class="region-badge open">Flushing, NY · 法拉盛</span>
+        <span class="region-badge recruiting">Greater Boston · 大波士顿</span>
+        <span class="region-badge recruiting">Florida · 佛罗里达</span>
+        <span class="region-badge open">PA & Philadelphia · 宾州及费城</span>
+      </div>
+    </div>
+
+    <p class="section-label">Open positions · 在招职位</p>
+    <div class="divider"></div>
+
+    <!-- JOB 1: FLUSHING MANAGER -->
+    <div class="job-card" id="job1">
+      <div class="job-header" onclick="toggleJob('job1')">
+        <div class="job-meta">
+          <div class="job-title">Sales Territory Manager — Flushing, NY · 法拉盛地区快销业务经理</div>
+          <div class="job-tags">
+            <span class="tag tag-region">📍 Flushing, NY</span>
+            <span class="tag tag-type">Full-time / Agent</span>
+            <span class="tag tag-type">FMCG · 快销</span>
+          </div>
+        </div>
+        <span class="job-arrow">›</span>
+      </div>
+      <div class="job-body">
+        <p class="job-section-head">About this role · 职位概述</p>
+        <p class="job-desc">You will be the key commercial representative for Sorghuman in the Greater Flushing area, managing and growing our retail presence across Asian supermarkets and grocery chains in the Queens/Flushing corridor. This is a territory-based role requiring deep local market knowledge and strong existing relationships with supermarket buyers and store managers.<br><br>您将作为公司在大法拉盛地区的核心商务代表，负责管理和拓展本地超市渠道。</p>
+
+        <p class="job-section-head">Requirements · 任职要求</p>
+        <ul class="job-list">
+          <li>Familiar with the major Asian supermarkets across Greater Flushing — store layouts, key buyers, and category managers · 熟悉大法拉盛地区主要华人超市格局</li>
+          <li>Established relationships with supermarket purchasing and floor staff · 拥有良好的超市人脉关系</li>
+          <li>Strong professional ethics and reputation in the local community · 良好的职业品行，口碑佳</li>
+          <li>Proven track record in FMCG, food distribution, or retail sales · 有快消或食品销售从业经验</li>
+          <li>Bilingual (Mandarin/English) strongly preferred · 普通话/英语双语优先</li>
+          <li>Reliable transport and willingness to visit stores regularly · 有车，能定期拜访门店</li>
+        </ul>
+
+        <p class="job-section-head">Responsibilities · 主要职责</p>
+        <ul class="job-list">
+          <li>Manage and maintain existing retail accounts; ensure product availability and shelf presence · 管理及维护现有客户，确保产品上架及陈列</li>
+          <li>Develop new retail accounts across the territory · 积极开发新客户，扩大覆盖网点</li>
+          <li>Conduct account reconciliation and timely payment collection · 负责定期对账、货款回收</li>
+          <li>Plan and execute in-store promotions · 安排和执行门店促销活动</li>
+          <li>Manage and coordinate in-store promotional staff · 管理促销员工作</li>
+          <li>Ensure proper product display, shelf placement, and brand standards · 保证公司产品良好陈列，维护品牌形象</li>
+          <li>Provide market feedback to HQ on pricing, competition, and consumer trends · 及时向总部反馈市场信息</li>
+        </ul>
+
+        <div class="job-cta">
+          <a href="mailto:info@sorghuman.com?subject=Application: Flushing Sales Manager · 法拉盛业务经理申请&body=Hello, I am applying for the Flushing Sales Territory Manager position. Please find my introduction below:%0A%0AName · 姓名:%0APhone · 电话:%0AYears of FMCG experience · 快消经验年限:%0ACurrent/recent employer · 目前/近期雇主:%0ASupermarket connections in Flushing · 法拉盛超市人脉:" class="btn-apply">Apply now · 立即申请</a>
+          <a href="mailto:info@sorghuman.com" class="btn-email">Email us · 发邮件咨询</a>
+          <span class="apply-note">Send your CV + brief intro to <strong>info@sorghuman.com</strong></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOB 2: BOSTON -->
+    <div class="job-card" id="job2">
+      <div class="job-header" onclick="toggleJob('job2')">
+        <div class="job-meta">
+          <div class="job-title">Sales Representative — Greater Boston · 大波士顿地区业务员</div>
+          <div class="job-tags">
+            <span class="tag tag-region">📍 Greater Boston, MA</span>
+            <span class="tag tag-type">Agent / Commission</span>
+            <span class="tag tag-type">FMCG · 快销</span>
+          </div>
+        </div>
+        <span class="job-arrow">›</span>
+      </div>
+      <div class="job-body">
+        <p class="job-section-head">About this role · 职位概述</p>
+        <p class="job-desc">We are expanding into Greater Boston and looking for a motivated sales representative to establish and grow our presence in local Asian supermarkets. This is a ground-floor opportunity to build a territory from scratch with full company support.<br><br>我们正在开拓大波士顿市场，寻找有积极性的销售人员建立当地渠道。</p>
+
+        <p class="job-section-head">Requirements · 任职要求</p>
+        <ul class="job-list">
+          <li>Based in or near Greater Boston (Quincy, Newton, Cambridge, Malden area preferred) · 居住在大波士顿地区</li>
+          <li>Familiar with Asian grocery landscape in Boston metro · 熟悉波士顿华人超市分布</li>
+          <li>Self-motivated and results-driven · 积极主动，目标导向</li>
+          <li>Food or FMCG sales experience a plus · 食品或快消销售经验加分</li>
+          <li>Bilingual (Mandarin/English) preferred · 双语优先</li>
+        </ul>
+
+        <p class="job-section-head">Responsibilities · 主要职责</p>
+        <ul class="job-list">
+          <li>Identify and approach target supermarkets and grocery stores · 识别并开拓目标超市及食品店</li>
+          <li>Present and pitch Sorghuman product line to buyers · 向采购经理介绍公司产品</li>
+          <li>Manage order placement, delivery coordination, and account follow-up · 跟进订单、配送及客户关系</li>
+          <li>Execute in-store promotions when required · 配合执行促销活动</li>
+          <li>Report market conditions and competitor activity · 定期汇报市场动态</li>
+        </ul>
+
+        <div class="job-cta">
+          <a href="mailto:info@sorghuman.com?subject=Application: Boston Sales Rep · 波士顿业务员申请&body=Hello, I am applying for the Greater Boston Sales Representative position.%0A%0AName · 姓名:%0APhone · 电话:%0ALocation in Boston area · 居住区域:%0AExperience · 相关经验:" class="btn-apply">Apply now · 立即申请</a>
+          <a href="mailto:info@sorghuman.com" class="btn-email">Email us · 发邮件咨询</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOB 3: FLORIDA -->
+    <div class="job-card" id="job3">
+      <div class="job-header" onclick="toggleJob('job3')">
+        <div class="job-meta">
+          <div class="job-title">Sales Representative — Florida · 佛罗里达州业务员</div>
+          <div class="job-tags">
+            <span class="tag tag-region">📍 Florida, FL</span>
+            <span class="tag tag-type">Agent / Commission</span>
+            <span class="tag tag-type">FMCG · 快销</span>
+          </div>
+        </div>
+        <span class="job-arrow">›</span>
+      </div>
+      <div class="job-body">
+        <p class="job-section-head">About this role · 职位概述</p>
+        <p class="job-desc">Florida's Asian food market is growing rapidly. We're looking for an entrepreneurial sales representative to pioneer our entry into the Florida market, beginning with the greater Orlando, Miami, or Tampa areas.<br><br>佛罗里达华人食品市场发展迅速，我们寻找有进取心的销售人员开拓当地渠道。</p>
+
+        <p class="job-section-head">Requirements · 任职要求</p>
+        <ul class="job-list">
+          <li>Based in Florida, ideally in Orlando, Miami, Tampa, or Jacksonville area · 居住在佛罗里达州</li>
+          <li>Knowledge of local Asian supermarket and grocery landscape · 了解当地亚裔超市分布</li>
+          <li>Strong communication and relationship-building skills · 良好的沟通和客情维护能力</li>
+          <li>Prior food distribution or retail sales experience preferred · 有食品分销或零售销售经验优先</li>
+        </ul>
+
+        <p class="job-section-head">Responsibilities · 主要职责</p>
+        <ul class="job-list">
+          <li>Establish initial retail accounts in the Florida market · 在佛罗里达建立首批零售客户</li>
+          <li>Develop and maintain ongoing buyer relationships · 发展并维护采购关系</li>
+          <li>Manage orders, deliveries, and accounts payable · 跟进订单、配送及账款</li>
+          <li>Provide local market intelligence to support product launch · 提供本地市场信息支持产品导入</li>
+        </ul>
+
+        <div class="job-cta">
+          <a href="mailto:info@sorghuman.com?subject=Application: Florida Sales Rep · 佛罗里达业务员申请&body=Hello, I am applying for the Florida Sales Representative position.%0A%0AName · 姓名:%0APhone · 电话:%0ALocation in Florida · 居住城市:%0AExperience · 相关经验:" class="btn-apply">Apply now · 立即申请</a>
+          <a href="mailto:info@sorghuman.com" class="btn-email">Email us · 发邮件咨询</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOB 4: PA & PHILLY -->
+    <div class="job-card" id="job4">
+      <div class="job-header" onclick="toggleJob('job4')">
+        <div class="job-meta">
+          <div class="job-title">Sales Representative — PA & Philadelphia · 宾州及费城地区业务员</div>
+          <div class="job-tags">
+            <span class="tag tag-region">📍 Pennsylvania & Philadelphia</span>
+            <span class="tag tag-type">Agent / Commission</span>
+            <span class="tag tag-type">FMCG · 快销</span>
+          </div>
+        </div>
+        <span class="job-arrow">›</span>
+      </div>
+      <div class="job-body">
+        <p class="job-section-head">About this role · 职位概述</p>
+        <p class="job-desc">Sorghuman already serves the Philadelphia and Pennsylvania market and is actively growing here. We're looking for a local sales representative to supplement our existing sales effort — ideal for someone who lives in the area and has connections in Asian grocery retail.<br><br>公司已在宾州/费城地区建立客户基础，欢迎本地有超市人脉的销售人员加入。</p>
+
+        <p class="job-section-head">Requirements · 任职要求</p>
+        <ul class="job-list">
+          <li>Based in Pennsylvania or greater Philadelphia area · 居住在宾州或大费城地区</li>
+          <li>Familiarity with Asian supermarkets in the region (H Mart, Hung Vuong, etc.) · 熟悉当地华人/亚裔超市</li>
+          <li>Reliable transportation · 有车，出行方便</li>
+          <li>Professional and punctual · 守信守时</li>
+          <li>Prior sales or food industry experience a plus · 销售或食品行业经验加分</li>
+        </ul>
+
+        <p class="job-section-head">Responsibilities · 主要职责</p>
+        <ul class="job-list">
+          <li>Support and grow existing retail accounts · 维护和发展现有零售客户</li>
+          <li>Open new accounts in underserved areas of PA/NJ · 开拓宾州、新泽西空白区域新客户</li>
+          <li>Conduct regular store visits and shelf checks · 定期拜访门店，检查陈列情况</li>
+          <li>Assist with promotions and in-store sampling events · 协助执行促销及试吃活动</li>
+          <li>Coordinate with warehouse for delivery scheduling · 配合仓库安排配送时间</li>
+        </ul>
+
+        <div class="job-cta">
+          <a href="mailto:info@sorghuman.com?subject=Application: PA & Philly Sales Rep · 宾州费城业务员申请&body=Hello, I am applying for the PA / Philadelphia Sales Representative position.%0A%0AName · 姓名:%0APhone · 电话:%0ALocation · 居住城市:%0AExperience · 相关经验:" class="btn-apply">Apply now · 立即申请</a>
+          <a href="mailto:info@sorghuman.com" class="btn-email">Email us · 发邮件咨询</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- CONTACT CTA -->
+<div class="contact-cta">
+  <div class="contact-inner">
+    <div>
+      <h2>Questions? Let's talk.</h2>
+      <p>Not sure if you fit any of these roles exactly? Reach out anyway. We're always open to meeting motivated people with strong local networks — even if the right position doesn't exist yet.<br><br>不确定是否符合要求？欢迎主动联系我们，有潜力、有人脉的人才永远是我们想认识的。</p>
+    </div>
+    <div>
+      <div class="contact-block">
+        <div class="label">Email · 邮箱</div>
+        <div class="val"><a href="mailto:info@sorghuman.com">info@sorghuman.com</a></div>
+      </div>
+      <div class="contact-block">
+        <div class="label">Sales inquiries</div>
+        <div class="val"><a href="mailto:sales@sorghuman.com">sales@sorghuman.com</a></div>
+      </div>
+      <div class="contact-block">
+        <div class="label">Company</div>
+        <div class="val">Sorghuman Holding LLC<br>高仁控股国际有限公司</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2025 Sorghuman Holding LLC · 高仁控股国际有限公司 · <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
+</footer>
+
+<script>
+function toggleJob(id) {
+  var card = document.getElementById(id);
+  card.classList.toggle('open');
+}
+</script>
+</body>
+</html>
