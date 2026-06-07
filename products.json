@@ -1,0 +1,22 @@
+{
+  "_comment": "中央产品库 / Central catalog — 所有店共用唯一一份。新增产品只在这里加一次。base_price = 基准价。common=true 表示默认大多数店都卖。",
+  "currency": "USD",
+  "categories": {
+    "buns": "Buns 包点",
+    "beverages": "Beverages 饮品",
+    "rice": "Rice 大米"
+  },
+  "products": [
+    { "sku": "4650", "name_en": "Glutinous Rice Shaomai", "name_zh": "糯米烧卖", "spec": "16 oz · 6 pcs/pack", "category": "buns", "type": "dry", "image": "/img/4650.jpg", "base_price": 4.99, "common": true },
+    { "sku": "6784", "name_en": "Three-Diced Beancurd-Skin Bun", "name_zh": "三丁腐皮包", "spec": "16 oz · 6 pcs/pack", "category": "buns", "type": "dry", "image": "/img/6784.jpg", "base_price": 4.99, "common": true },
+    { "sku": "7194", "name_en": "Shepherd's Purse Bun", "name_zh": "荠菜包", "spec": "16 oz · 6 pcs/pack", "category": "buns", "type": "dry", "image": "/img/7194.jpg", "base_price": 4.99, "common": true },
+    { "sku": "7951", "name_en": "Dried Mustard Green Bun", "name_zh": "梅干菜包", "spec": "16 oz · 6 pcs/pack", "category": "buns", "type": "dry", "image": "/img/7951.jpg", "base_price": 4.99, "common": true },
+    { "sku": "7985", "name_en": "Shredded Radish Bun", "name_zh": "千顺萝卜丝包", "spec": "16 oz · 6 pcs/pack", "category": "buns", "type": "dry", "image": "/img/7985.jpg", "base_price": 4.99, "common": true },
+    { "sku": "9615", "name_en": "Bok Choy & Shiitake Bun", "name_zh": "青菜香菇包", "spec": "16 oz · 6 pcs/pack", "category": "buns", "type": "dry", "image": "/img/9615.jpg", "base_price": 4.99, "common": true },
+    { "sku": "9913", "name_en": "Adzuki Bean Bun", "name_zh": "豆沙包", "spec": "10.58 oz · 6 pcs/pack", "category": "buns", "type": "dry", "image": "/img/9913.jpg", "base_price": 4.99, "common": true },
+    { "sku": "PLUM-1", "name_en": "Sour Plum Soup (single)", "name_zh": "酸梅汤 单瓶", "spec": "16 oz PET bottle", "category": "beverages", "type": "dry", "image": "/img/plum-1.jpg", "base_price": 2.99, "common": true },
+    { "sku": "PLUM-20", "name_en": "Sour Plum Soup (case of 20)", "name_zh": "酸梅汤 整箱20瓶", "spec": "20 x 16 oz", "category": "beverages", "type": "dry", "image": "/img/plum-20.jpg", "base_price": 49.99, "common": true },
+    { "sku": "PLUM-CONC", "name_en": "Sour Plum Concentrate", "name_zh": "酸梅汁浓缩液", "spec": "用9倍冰水稀释", "category": "beverages", "type": "dry", "image": "/img/plum-conc.jpg", "base_price": 9.99, "common": true },
+    { "sku": "RICE-ST25", "name_en": "ST25 Vietnamese Premium Rice", "name_zh": "蟹老伯ST25大米", "spec": "5 kg / 11.11 lbs", "category": "rice", "type": "dry", "image": "/img/rice-st25.jpg", "base_price": 25.00, "common": true }
+  ]
+}
