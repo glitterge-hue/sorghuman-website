@@ -1,0 +1,22 @@
+{
+  "_comment": "远东超市店铺配置。只记差异:prices=价格覆盖, drop=停售, add=额外上架, markup=统一加价系数。",
+  "store_id": "fareast",
+  "name_zh": "远东超市",
+  "name_en": "Far East Asian Market",
+  "domain": "fareastpa.com",
+  "theme": "#2A6B3A",
+  "logo": "",
+  "tagline": "冷冻包点 · 酸梅汤 · 优质大米 · 新鲜直送",
+  "contact_email": "",
+  "contact_phone": "",
+  "delivery_zips": ["18052", "18067", "18103", "18104", "18101", "18017"],
+  "free_delivery_threshold": 30,
+  "delivery_fee": 5,
+  "markup": 1.0,
+  "drop": [],
+  "add": [],
+  "prices": {
+    "4650": 5.49,
+    "9913": 5.29
+  }
+}
