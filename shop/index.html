@@ -221,6 +221,12 @@ function applyStore(){
   document.getElementById('footContact').innerHTML=
     "© 2026 "+store.name_zh+(parts.length?" · "+parts.join(" · "):"");
   document.title=store.name_zh+" · Order";
+  // 门头背景图:有则覆盖纯色背景,叠半透明黑色渐变保证文字可读
+  if(store.hero_image){
+    var hdr=document.querySelector('.page-header');
+    hdr.style.background=
+      'linear-gradient(rgba(0,0,0,.48),rgba(0,0,0,.48)),url('+store.hero_image+') center/cover no-repeat';
+  }
   if(isDemo){
     var f=document.getElementById('demoFlag');
     f.style.display="block";
