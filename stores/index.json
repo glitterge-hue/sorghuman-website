@@ -1,0 +1,6 @@
+{
+  "_comment": "域名 → store_id 对照表。门面页读访问域名,在这里查出是哪家店,再去 stores/{id}.json 读它的配置。每加一家店,加一行。",
+  "fareastpa.com": "fareast",
+  "www.fareastpa.com": "fareast",
+  "sorghuman.com": "default"
+}
