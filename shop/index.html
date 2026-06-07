@@ -20,16 +20,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .eyebrow{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.6rem;}
 .page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,42px);line-height:1.15;margin-bottom:.6rem;}
 .page-header p{font-size:14px;color:rgba(255,255,255,.82);max-width:520px;}
-.zip-section{background:#fff;border-bottom:1px solid var(--border);padding:20px 5%;}
-.zip-inner{max-width:920px;margin:0 auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.zip-inner label{font-size:14px;font-weight:500;}
-.zip-input{border:1px solid var(--border);border-radius:3px;padding:9px 14px;font-size:14px;font-family:inherit;outline:none;width:150px;}
-.zip-input:focus{border-color:var(--brand);}
-.zip-btn{background:var(--brand);color:#fff;border:none;border-radius:3px;padding:9px 20px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:500;}
-.zip-msg{font-size:13px;padding:8px 14px;border-radius:3px;display:none;}
-.zip-msg.ok{background:#f0f7f2;color:#1A4A28;border:1px solid #9FD4B2;}
-.zip-msg.err{background:#fdf2f2;color:var(--red);border:1px solid #e8a0a0;}
-.shop-body{padding:36px 5%;max-width:920px;margin:0 auto;display:none;grid-template-columns:1fr 300px;gap:28px;align-items:start;}
+/* 品类导航 */
+.cat-tabs-section{background:#fff;border-bottom:1px solid var(--border);padding:16px 5%;}
+.cat-tabs{max-width:920px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;}
+.cat-tab{padding:9px 22px;border:1.5px solid var(--brand);border-radius:30px;font-size:13.5px;font-weight:500;cursor:pointer;background:#fff;color:var(--brand);font-family:inherit;transition:background .15s,color .15s;white-space:nowrap;}
+.cat-tab:hover{background:var(--brand);color:#fff;}
+.cat-tab.active{background:var(--brand);color:#fff;}
+.empty-cat{padding:48px 0;text-align:center;color:var(--muted);font-size:14px;line-height:2.2;}
+/* 商品区 */
+.shop-body{padding:36px 5%;max-width:920px;margin:0 auto;display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start;}
 @media(max-width:820px){.shop-body{grid-template-columns:1fr;}}
 .cat-label{font-family:'DM Serif Display',serif;font-size:20px;color:var(--brand);margin:26px 0 10px;}
 .cat-label:first-child{margin-top:0;}
@@ -43,6 +42,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .qty-btn{width:30px;height:30px;border:1px solid var(--border);background:#fff;border-radius:3px;font-size:17px;cursor:pointer;color:var(--brand);line-height:1;}
 .qty-btn:hover{border-color:var(--brand);}
 .qty-num{min-width:22px;text-align:center;font-weight:600;font-variant-numeric:tabular-nums;}
+/* 购物车 */
 .cart-box{background:#fff;border:1px solid var(--border);border-radius:6px;padding:18px;position:sticky;top:76px;}
 .cart-box h3{font-family:'DM Serif Display',serif;font-size:18px;color:var(--brand);margin-bottom:12px;}
 .cart-empty{font-size:13px;color:var(--muted);}
@@ -54,6 +54,17 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .cart-row.total{font-weight:600;font-size:15px;border-top:1px solid var(--border);margin-top:6px;padding-top:8px;}
 .free-tag{color:var(--brand-light);font-weight:600;}
 .cart-note{font-size:12px;color:var(--gold);margin-top:8px;line-height:1.5;}
+/* 邮编内联(结账时才展开) */
+.zip-inline{margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.zip-inline-label{font-size:13px;font-weight:500;margin-bottom:8px;}
+.zip-inline-row{display:flex;gap:8px;}
+.zip-input{border:1px solid var(--border);border-radius:3px;padding:9px 14px;font-size:14px;font-family:inherit;outline:none;flex:1;min-width:0;}
+.zip-input:focus{border-color:var(--brand);}
+.zip-btn{background:var(--brand);color:#fff;border:none;border-radius:3px;padding:9px 16px;font-size:14px;font-family:inherit;cursor:pointer;font-weight:500;white-space:nowrap;}
+.zip-msg{font-size:12px;padding:6px 10px;border-radius:3px;margin-top:6px;}
+.zip-msg.ok{background:#f0f7f2;color:#1A4A28;border:1px solid #9FD4B2;}
+.zip-msg.err{background:#fdf2f2;color:var(--red);border:1px solid #e8a0a0;}
+/* 结账按钮 */
 .checkout-btn{width:100%;background:var(--gold);color:#fff;border:none;border-radius:3px;padding:12px;font-size:15px;font-family:inherit;font-weight:500;cursor:pointer;margin-top:12px;}
 .checkout-btn:disabled{opacity:.45;cursor:not-allowed;}
 .stripe-note{font-size:11px;color:var(--muted);text-align:center;margin-top:8px;}
@@ -75,16 +86,17 @@ footer a{color:var(--brand);}
   <div class="page-header-inner">
     <div class="eyebrow">Local Delivery · 本地配送</div>
     <h1 id="heroTitle">远东超市</h1>
-    <p id="heroSub">先输入邮编确认配送范围。</p>
+    <p id="heroSub">选择品类，开始购物。</p>
   </div>
 </header>
 
-<div class="zip-section">
-  <div class="zip-inner">
-    <label for="zipInput">配送邮编 ZIP：</label>
-    <input class="zip-input" id="zipInput" placeholder="例 18052" maxlength="5">
-    <button class="zip-btn" onclick="checkZip()">确认 Check</button>
-    <span class="zip-msg" id="zipMsg"></span>
+<!-- 品类导航 -->
+<div class="cat-tabs-section">
+  <div class="cat-tabs" id="catTabs">
+    <button class="cat-tab" data-cat="condiments" onclick="setCat('condiments')">调味品</button>
+    <button class="cat-tab" data-cat="snacks"     onclick="setCat('snacks')">零食和饮料</button>
+    <button class="cat-tab" data-cat="frozen"     onclick="setCat('frozen')">冷冻食品</button>
+    <button class="cat-tab" data-cat="fresh"      onclick="setCat('fresh')">生鲜</button>
   </div>
 </div>
 
@@ -101,6 +113,15 @@ footer a{color:var(--brand);}
         <div class="cart-row total"><span>合计 Total</span><span id="cartTotal"></span></div>
       </div>
       <p class="cart-note" id="cartNote" style="display:none;"></p>
+      <!-- 邮编确认:点结账后才展开 -->
+      <div class="zip-inline" id="zipInline" style="display:none;">
+        <p class="zip-inline-label">请输入邮编确认配送范围：</p>
+        <div class="zip-inline-row">
+          <input class="zip-input" id="zipCart" placeholder="5位邮编" maxlength="5">
+          <button class="zip-btn" onclick="confirmZipAndProceed()">确认</button>
+        </div>
+        <div class="zip-msg" id="zipCartMsg" style="display:none;"></div>
+      </div>
       <button class="checkout-btn" id="checkoutBtn" onclick="goToCheckout()" disabled>去结账 Checkout &rarr;</button>
       <p class="stripe-note">结账安全加密 · Secured by Stripe</p>
     </div>
@@ -115,130 +136,138 @@ footer a{color:var(--brand);}
 <script>
 /* ============================================================
    门面页逻辑
-   1. 看访问域名 → 在 index.json 查出 store_id
-   2. 读 products.json(中央库) + stores/{id}.json(本店差异)
-   3. 合并出本店商品和价格 → 渲染
-   4. 结账把 store_id + 购物车 交给 sorghuman.com
-   独立打开时用下面内嵌的演示数据;线上会自动 fetch 真实文件覆盖。
+   1. 看访问域名 → stores/index.json 查 store_id
+   2. 读 products.json + stores/{id}.json → 合并本店商品价格
+   3. 品类按钮过滤商品列表
+   4. 结账时先展开邮编验证,通过后交给 sorghuman.com
    ============================================================ */
 
-// 结账接口(部署后指向 sorghuman.com 上的函数)
 var CHECKOUT_URL = "https://sorghuman.com/.netlify/functions/create-checkout";
 
-// ---- 内嵌演示数据(线上会被 fetch 覆盖)----
+// ---- 内嵌演示数据(线上 fetch 覆盖) ----
 var FALLBACK_CATALOG = {
   currency:"USD",
-  categories:{ buns:"Buns 包点", beverages:"Beverages 饮品", rice:"Rice 大米" },
+  categories:{
+    condiments:"调味品 Condiments",
+    snacks:"零食和饮料 Snacks & Beverages",
+    frozen:"冷冻食品 Frozen Foods",
+    fresh:"生鲜 Fresh Produce"
+  },
   products:[
-    {sku:"4650",name_en:"Glutinous Rice Shaomai",name_zh:"糯米烧卖",spec:"16 oz · 6 pcs",category:"buns",base_price:4.99,common:true},
-    {sku:"6784",name_en:"Three-Diced Beancurd-Skin Bun",name_zh:"三丁腐皮包",spec:"16 oz · 6 pcs",category:"buns",base_price:4.99,common:true},
-    {sku:"7194",name_en:"Shepherd's Purse Bun",name_zh:"荠菜包",spec:"16 oz · 6 pcs",category:"buns",base_price:4.99,common:true},
-    {sku:"7951",name_en:"Dried Mustard Green Bun",name_zh:"梅干菜包",spec:"16 oz · 6 pcs",category:"buns",base_price:4.99,common:true},
-    {sku:"7985",name_en:"Shredded Radish Bun",name_zh:"千顺萝卜丝包",spec:"16 oz · 6 pcs",category:"buns",base_price:4.99,common:true},
-    {sku:"9615",name_en:"Bok Choy & Shiitake Bun",name_zh:"青菜香菇包",spec:"16 oz · 6 pcs",category:"buns",base_price:4.99,common:true},
-    {sku:"9913",name_en:"Adzuki Bean Bun",name_zh:"豆沙包",spec:"10.58 oz · 6 pcs",category:"buns",base_price:4.99,common:true},
-    {sku:"PLUM-1",name_en:"Sour Plum Soup (single)",name_zh:"酸梅汤 单瓶",spec:"16 oz",category:"beverages",base_price:2.99,common:true},
-    {sku:"PLUM-20",name_en:"Sour Plum Soup (case of 20)",name_zh:"酸梅汤 整箱20瓶",spec:"20 x 16 oz",category:"beverages",base_price:49.99,common:true},
-    {sku:"PLUM-CONC",name_en:"Sour Plum Concentrate",name_zh:"酸梅汁浓缩液",spec:"浓缩",category:"beverages",base_price:9.99,common:true},
-    {sku:"RICE-ST25",name_en:"ST25 Vietnamese Rice",name_zh:"蟹老伯ST25大米",spec:"5 kg",category:"rice",base_price:25.00,common:true}
+    {sku:"4650",  name_en:"Glutinous Rice Shaomai",         name_zh:"糯米烧卖",      spec:"16 oz · 6 pcs",  category:"frozen", base_price:4.99, common:true},
+    {sku:"6784",  name_en:"Three-Diced Beancurd-Skin Bun",  name_zh:"三丁腐皮包",    spec:"16 oz · 6 pcs",  category:"frozen", base_price:4.99, common:true},
+    {sku:"7194",  name_en:"Shepherd's Purse Bun",           name_zh:"荠菜包",        spec:"16 oz · 6 pcs",  category:"frozen", base_price:4.99, common:true},
+    {sku:"7951",  name_en:"Dried Mustard Green Bun",        name_zh:"梅干菜包",      spec:"16 oz · 6 pcs",  category:"frozen", base_price:4.99, common:true},
+    {sku:"7985",  name_en:"Shredded Radish Bun",            name_zh:"千顺萝卜丝包",  spec:"16 oz · 6 pcs",  category:"frozen", base_price:4.99, common:true},
+    {sku:"9615",  name_en:"Bok Choy & Shiitake Bun",        name_zh:"青菜香菇包",    spec:"16 oz · 6 pcs",  category:"frozen", base_price:4.99, common:true},
+    {sku:"9913",  name_en:"Adzuki Bean Bun",                name_zh:"豆沙包",        spec:"10.58 oz · 6 pcs",category:"frozen",base_price:4.99, common:true},
+    {sku:"PLUM-1",  name_en:"Sour Plum Soup (single)",      name_zh:"酸梅汤 单瓶",   spec:"16 oz",          category:"snacks", base_price:2.99, common:true},
+    {sku:"PLUM-20", name_en:"Sour Plum Soup (case of 20)",  name_zh:"酸梅汤 整箱20瓶",spec:"20 x 16 oz",    category:"snacks", base_price:49.99,common:true},
+    {sku:"PLUM-CONC",name_en:"Sour Plum Concentrate",       name_zh:"酸梅汁浓缩液",  spec:"浓缩",           category:"snacks", base_price:9.99, common:true},
+    {sku:"RICE-ST25",name_en:"ST25 Vietnamese Rice",        name_zh:"蟹老伯ST25大米",spec:"5 kg",           category:"snacks", base_price:25.00,common:true}
   ]
 };
-var FALLBACK_REGISTRY = { "fareastpa.com":"fareast", "www.fareastpa.com":"fareast", "sorghuman.com":"default" };
+var FALLBACK_REGISTRY = {"fareastpa.com":"fareast","www.fareastpa.com":"fareast","sorghuman.com":"default"};
 var FALLBACK_STORES = {
-  fareast:{ store_id:"fareast", name_zh:"远东超市", name_en:"Far East Asian Market", domain:"fareastpa.com",
-            tagline:"冷冻包点 · 酸梅汤 · 优质大米 · 新鲜直送", theme:"#2A6B3A", contact_email:"", contact_phone:"",
-            delivery_zips:["18052","18067","18103","18104","18101","18017"],
-            free_delivery_threshold:30, delivery_fee:5, markup:1.0, drop:[], add:[], prices:{"4650":5.49,"9913":5.29} },
-  default:{ store_id:"default", name_zh:"Sorghuman 高仁", name_en:"Sorghuman", domain:"sorghuman.com",
-            delivery_zips:["18015","18017","18018","18020"], free_delivery_threshold:30, delivery_fee:5, markup:1.0, drop:[], add:[], prices:{} }
+  fareast:{store_id:"fareast",name_zh:"远东超市",name_en:"Far East Asian Market",domain:"fareastpa.com",
+           tagline:"冷冻包点 · 酸梅汤 · 优质大米 · 新鲜直送",theme:"#2A6B3A",contact_email:"",contact_phone:"",
+           delivery_zips:["18052","18067","18103","18104","18101","18017"],
+           free_delivery_threshold:30,delivery_fee:5,markup:1.0,drop:[],add:[],prices:{"4650":5.49,"9913":5.29}},
+  default:{store_id:"default",name_zh:"Sorghuman 高仁",name_en:"Sorghuman",domain:"sorghuman.com",
+           delivery_zips:["18015","18017","18018","18020"],free_delivery_threshold:30,delivery_fee:5,markup:1.0,drop:[],add:[],prices:{}}
 };
 
-var catalog = null, store = null, qty = {}, isDemo = false;
+var catalog=null, store=null, qty={}, isDemo=false;
+var activeCat=null;       // 当前品类筛选,null=全部
+var zipConfirmed=false;   // 邮编是否已验证通过
 
-function round2(n){ return Math.round(n*100)/100; }
-function fmt(n){ return "$"+n.toFixed(2); }
+function round2(n){return Math.round(n*100)/100;}
+function fmt(n){return "$"+n.toFixed(2);}
 
 async function tryFetch(url){
-  try{ var r = await fetch(url, {cache:"no-store"}); if(!r.ok) return null; return await r.json(); }
-  catch(e){ return null; }
+  try{var r=await fetch(url,{cache:"no-store"});if(!r.ok)return null;return await r.json();}
+  catch(e){return null;}
 }
 
 async function boot(){
-  // 1) 中央产品库
-  catalog = await tryFetch("/products.json");
-  if(!catalog){ catalog = FALLBACK_CATALOG; isDemo = true; }
+  catalog=await tryFetch("/products.json");
+  if(!catalog){catalog=FALLBACK_CATALOG;isDemo=true;}
 
-  // 2) 判断店铺:?store= 优先,否则按域名查对照表
-  var params = new URLSearchParams(location.search);
-  var forced = params.get("store");
-  var host = location.hostname.replace(/^www\./,"");
-  var registry = await tryFetch("/stores/index.json") || FALLBACK_REGISTRY;
-  var storeId = forced || registry[location.hostname] || registry[host] || "default";
+  var params=new URLSearchParams(location.search);
+  var forced=params.get("store");
+  var host=location.hostname.replace(/^www\./,"");
+  var registry=await tryFetch("/stores/index.json")||FALLBACK_REGISTRY;
+  var storeId=forced||registry[location.hostname]||registry[host]||"default";
 
-  // 3) 读本店配置
-  store = await tryFetch("/stores/"+storeId+".json");
-  if(!store){ store = FALLBACK_STORES[storeId] || FALLBACK_STORES["default"]; isDemo = true; }
+  store=await tryFetch("/stores/"+storeId+".json");
+  if(!store){store=FALLBACK_STORES[storeId]||FALLBACK_STORES["default"];isDemo=true;}
 
   applyStore();
   renderProducts();
 }
 
 function applyStore(){
-  document.documentElement.style.setProperty('--brand', store.theme || '#2A6B3A');
-  document.getElementById('navStore').textContent = store.name_zh;
-  document.getElementById('navTag').textContent = store.tagline || "";
-  document.getElementById('heroTitle').textContent = store.name_zh;
-
-  // 副标题:本店标语 + 操作提示;无标语就只留提示
-  document.getElementById('heroSub').textContent =
-    (store.tagline ? store.tagline + " —— " : "") + "先输入邮编确认配送范围。";
-
-  document.getElementById('footStore').textContent =
-    store.name_zh + (store.name_en ? " · " + store.name_en : "");
-
-  // 页脚联系方式:只用本店自己的;phone/email 都空就不显示(白标:门面不出现高仁)
-  var parts = [];
-  if(store.contact_phone) parts.push(store.contact_phone);
-  if(store.contact_email) parts.push('<a href="mailto:'+store.contact_email+'">'+store.contact_email+'</a>');
-  document.getElementById('footContact').innerHTML =
-    "© 2026 " + store.name_zh + (parts.length ? " · " + parts.join(" · ") : "");
-
-  document.title = store.name_zh + " · Order";
+  document.documentElement.style.setProperty('--brand',store.theme||'#2A6B3A');
+  document.getElementById('navStore').textContent=store.name_zh;
+  document.getElementById('navTag').textContent=store.tagline||"";
+  document.getElementById('heroTitle').textContent=store.name_zh;
+  document.getElementById('heroSub').textContent=
+    (store.tagline?store.tagline+" —— ":"")+"选择品类，开始购物。";
+  document.getElementById('footStore').textContent=
+    store.name_zh+(store.name_en?" · "+store.name_en:"");
+  var parts=[];
+  if(store.contact_phone)parts.push(store.contact_phone);
+  if(store.contact_email)parts.push('<a href="mailto:'+store.contact_email+'">'+store.contact_email+'</a>');
+  document.getElementById('footContact').innerHTML=
+    "© 2026 "+store.name_zh+(parts.length?" · "+parts.join(" · "):"");
+  document.title=store.name_zh+" · Order";
   if(isDemo){
-    var f = document.getElementById('demoFlag');
-    f.style.display = "block";
-    f.textContent = "演示模式:正在用内嵌数据(本地打开)。部署后会自动读取线上 products.json 和门店配置。";
+    var f=document.getElementById('demoFlag');
+    f.style.display="block";
+    f.textContent="演示模式:正在用内嵌数据(本地打开)。部署后会自动读取线上 products.json 和门店配置。";
   }
 }
 
+// 品类按钮:点同一个取消筛选,点其他切换
+function setCat(cat){
+  activeCat=(activeCat===cat)?null:cat;
+  document.querySelectorAll('.cat-tab').forEach(function(btn){
+    btn.classList.toggle('active',btn.dataset.cat===activeCat);
+  });
+  renderProducts();
+}
+
 function carries(p){
-  if(store.drop && store.drop.indexOf(p.sku)!==-1) return false;
-  if(store.add && store.add.indexOf(p.sku)!==-1) return true;
+  if(store.drop&&store.drop.indexOf(p.sku)!==-1)return false;
+  if(store.add&&store.add.indexOf(p.sku)!==-1)return true;
   return !!p.common;
 }
 function priceOf(p){
-  var ov = store.prices ? store.prices[p.sku] : undefined;
-  if(ov!==undefined && ov!==null && ov!=="") return round2(Number(ov));
-  return round2(p.base_price * (store.markup||1));
+  var ov=store.prices?store.prices[p.sku]:undefined;
+  if(ov!==undefined&&ov!==null&&ov!=="")return round2(Number(ov));
+  return round2(p.base_price*(store.markup||1));
 }
 
 function renderProducts(){
-  var col = document.getElementById('productsCol');
-  col.innerHTML = "";
-  var lastCat = null;
+  var col=document.getElementById('productsCol');
+  col.innerHTML="";
+  var lastCat=null,count=0;
   catalog.products.forEach(function(p){
-    if(!carries(p)) return;
-    if(p.category !== lastCat){
-      lastCat = p.category;
-      var lbl = document.createElement('div');
-      lbl.className = "cat-label";
-      lbl.textContent = (catalog.categories && catalog.categories[p.category]) || p.category;
+    if(!carries(p))return;
+    if(activeCat&&p.category!==activeCat)return;
+    count++;
+    // 全部模式:显示分类标题;单品类模式:不重复显示
+    if(!activeCat&&p.category!==lastCat){
+      lastCat=p.category;
+      var lbl=document.createElement('div');
+      lbl.className="cat-label";
+      lbl.textContent=(catalog.categories&&catalog.categories[p.category])||p.category;
       col.appendChild(lbl);
     }
-    qty[p.sku] = qty[p.sku] || 0;
-    var row = document.createElement('div');
-    row.className = "product-row";
-    row.innerHTML =
+    qty[p.sku]=qty[p.sku]||0;
+    var row=document.createElement('div');
+    row.className="product-row";
+    row.innerHTML=
       '<div class="prod-info"><h3>'+p.name_en+'</h3><div class="zh">'+p.name_zh+'</div>'+
       '<div class="spec">'+(p.spec||'')+'</div><div class="price">'+fmt(priceOf(p))+'</div></div>'+
       '<div class="qty-control"><button class="qty-btn" onclick="changeQty(\''+p.sku+'\',-1)">&#8722;</button>'+
@@ -246,85 +275,110 @@ function renderProducts(){
       '<button class="qty-btn" onclick="changeQty(\''+p.sku+'\',1)">+</button></div>';
     col.appendChild(row);
   });
-}
-
-function checkZip(){
-  var z = document.getElementById('zipInput').value.trim();
-  var msg = document.getElementById('zipMsg');
-  msg.style.display = "block";
-  if((store.delivery_zips||[]).indexOf(z) !== -1){
-    msg.className = "zip-msg ok"; msg.textContent = "可以配送到您的区域,请在下方选购。";
-    document.getElementById('shopBody').style.display = "grid";
-  } else if(/^[0-9]{5}$/.test(z)){
-    msg.className = "zip-msg err"; msg.textContent = "抱歉,邮编 "+z+" 不在"+store.name_zh+"的配送范围。" + (store.contact_email ? "可联系 "+store.contact_email+" 查询。" : "");
-    document.getElementById('shopBody').style.display = "none";
-  } else {
-    msg.className = "zip-msg err"; msg.textContent = "请输入有效的 5 位邮编。";
+  // 当前品类无商品
+  if(count===0){
+    var empty=document.createElement('div');
+    empty.className="empty-cat";
+    empty.innerHTML="即将上架<br><span style='font-size:12px;color:var(--muted);'>Coming Soon</span>";
+    col.appendChild(empty);
   }
 }
-document.getElementById('zipInput').addEventListener('keydown',function(e){ if(e.key==='Enter') checkZip(); });
 
-function changeQty(sku, d){
-  qty[sku] = Math.max(0, (qty[sku]||0)+d);
-  document.getElementById('q-'+sku).textContent = qty[sku];
+function changeQty(sku,d){
+  qty[sku]=Math.max(0,(qty[sku]||0)+d);
+  document.getElementById('q-'+sku).textContent=qty[sku];
   updateCart();
+  // 修改购物车时重置邮编状态
+  if(zipConfirmed){
+    zipConfirmed=false;
+    document.getElementById('zipInline').style.display="none";
+    document.getElementById('zipCartMsg').style.display="none";
+  }
 }
 
 function updateCart(){
-  var items = [], subtotal = 0, count = 0;
+  var items=[],subtotal=0,count=0;
   catalog.products.forEach(function(p){
-    var n = qty[p.sku]||0;
-    if(n>0){ var line = round2(n*priceOf(p)); subtotal += line; count += n; items.push({p:p,n:n,line:line}); }
+    var n=qty[p.sku]||0;
+    if(n>0){var line=round2(n*priceOf(p));subtotal+=line;count+=n;items.push({p:p,n:n,line:line});}
   });
-  subtotal = round2(subtotal);
-  var thr = store.free_delivery_threshold!=null ? store.free_delivery_threshold : 30;
-  var fee = store.delivery_fee!=null ? store.delivery_fee : 5;
-  var delivery = count===0 ? 0 : (subtotal>=thr ? 0 : fee);
-  var total = round2(subtotal+delivery);
+  subtotal=round2(subtotal);
+  var thr=store.free_delivery_threshold!=null?store.free_delivery_threshold:30;
+  var fee=store.delivery_fee!=null?store.delivery_fee:5;
+  var delivery=count===0?0:(subtotal>=thr?0:fee);
+  var total=round2(subtotal+delivery);
 
-  var empty=document.getElementById('cartEmpty'), itemsEl=document.getElementById('cartItems'),
-      totalsEl=document.getElementById('cartTotals'), noteEl=document.getElementById('cartNote'),
+  var empty=document.getElementById('cartEmpty'),itemsEl=document.getElementById('cartItems'),
+      totalsEl=document.getElementById('cartTotals'),noteEl=document.getElementById('cartNote'),
       btn=document.getElementById('checkoutBtn');
 
-  if(count===0){ empty.style.display="block"; itemsEl.innerHTML=""; totalsEl.style.display="none"; noteEl.style.display="none"; btn.disabled=true; return; }
-  empty.style.display="none"; totalsEl.style.display="block"; btn.disabled=false;
+  if(count===0){empty.style.display="block";itemsEl.innerHTML="";totalsEl.style.display="none";noteEl.style.display="none";btn.disabled=true;return;}
+  empty.style.display="none";totalsEl.style.display="block";btn.disabled=false;
 
-  itemsEl.innerHTML = items.map(function(it){
+  itemsEl.innerHTML=items.map(function(it){
     return '<div class="cart-item"><span class="cart-item-name">'+it.p.name_zh+' ×'+it.n+'</span><span class="cart-item-price">'+fmt(it.line)+'</span></div>';
   }).join("");
-  document.getElementById('cartSubtotal').textContent = fmt(subtotal);
-  document.getElementById('cartDelivery').innerHTML = delivery===0 ? '<span class="free-tag">免费 Free</span>' : fmt(delivery);
-  document.getElementById('cartTotal').textContent = fmt(total);
+  document.getElementById('cartSubtotal').textContent=fmt(subtotal);
+  document.getElementById('cartDelivery').innerHTML=delivery===0?'<span class="free-tag">免费 Free</span>':fmt(delivery);
+  document.getElementById('cartTotal').textContent=fmt(total);
 
-  var need = round2(thr - subtotal);
-  noteEl.style.display = "block";
-  noteEl.textContent = need>0 ? ("再加 "+fmt(need)+" 即可免费配送！") : "已享受免费配送！";
+  var need=round2(thr-subtotal);
+  noteEl.style.display="block";
+  noteEl.textContent=need>0?("再加 "+fmt(need)+" 即可免费配送！"):"已享受免费配送！";
 }
 
+// 点"去结账":未验证邮编则先展开邮编框
 function goToCheckout(){
-  var cart = [];
-  catalog.products.forEach(function(p){ var n=qty[p.sku]||0; if(n>0) cart.push({sku:p.sku, qty:n}); });
-  if(cart.length===0) return;
+  var cart=[];
+  catalog.products.forEach(function(p){var n=qty[p.sku]||0;if(n>0)cart.push({sku:p.sku,qty:n});});
+  if(cart.length===0)return;
+  if(!zipConfirmed){
+    document.getElementById('zipInline').style.display="block";
+    document.getElementById('zipCart').focus();
+    return;
+  }
+  submitCheckout(cart);
+}
 
-  var btn = document.getElementById('checkoutBtn');
-  btn.disabled = true; btn.textContent = "跳转中…";
+// 确认邮编 → 若可达直接发起结账
+function confirmZipAndProceed(){
+  var z=document.getElementById('zipCart').value.trim();
+  var msg=document.getElementById('zipCartMsg');
+  msg.style.display="block";
+  if(!/^[0-9]{5}$/.test(z)){
+    msg.className="zip-msg err";msg.textContent="请输入有效的5位邮编。";return;
+  }
+  if((store.delivery_zips||[]).indexOf(z)!==-1){
+    msg.className="zip-msg ok";msg.textContent="✓ 可以配送到您的区域。";
+    zipConfirmed=true;
+    setTimeout(function(){
+      document.getElementById('zipInline').style.display="none";
+      var cart=[];
+      catalog.products.forEach(function(p){var n=qty[p.sku]||0;if(n>0)cart.push({sku:p.sku,qty:n});});
+      submitCheckout(cart);
+    },700);
+  } else {
+    msg.className="zip-msg err";
+    msg.textContent="抱歉,邮编 "+z+" 不在配送范围内。"+(store.contact_email?" 请联系 "+store.contact_email+"。":"");
+  }
+}
 
-  // 把 店铺 + 购物车 交给 sorghuman.com;价格由那边服务器按 store_id 重新计算
-  fetch(CHECKOUT_URL, {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({ storeId: store.store_id, cart: cart })
-  })
-  .then(function(r){ return r.json(); })
+document.addEventListener('keydown',function(e){
+  if(e.key==='Enter'&&document.activeElement&&document.activeElement.id==='zipCart')confirmZipAndProceed();
+});
+
+function submitCheckout(cart){
+  var btn=document.getElementById('checkoutBtn');
+  btn.disabled=true;btn.textContent="跳转中…";
+  fetch(CHECKOUT_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({storeId:store.store_id,cart:cart})})
+  .then(function(r){return r.json();})
   .then(function(d){
-    if(d && d.url){ location.href = d.url; }
-    else { alert("结账暂时无法完成:"+((d&&d.error)||"请稍后再试")); reset(); }
+    if(d&&d.url){location.href=d.url;}
+    else{alert("结账暂时无法完成:"+((d&&d.error)||"请稍后再试"));resetBtn();}
   })
-  .catch(function(){
-    alert("结账暂时无法完成,请稍后再试,或联系本店。");
-    reset();
-  });
-
-  function reset(){ btn.disabled=false; btn.textContent="去结账 Checkout →"; }
+  .catch(function(){alert("结账暂时无法完成，请稍后再试，或联系本店。");resetBtn();});
+  function resetBtn(){btn.disabled=false;btn.textContent="去结账 Checkout →";}
 }
 
 boot();
