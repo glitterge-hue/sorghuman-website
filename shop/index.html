@@ -95,10 +95,10 @@ footer a{color:var(--brand);}
 <!-- 品类导航 -->
 <div class="cat-tabs-section">
   <div class="cat-tabs" id="catTabs">
-    <button class="cat-tab" data-cat="condiments" onclick="setCat('condiments')">调味品</button>
-    <button class="cat-tab" data-cat="snacks"     onclick="setCat('snacks')">零食和饮料</button>
-    <button class="cat-tab" data-cat="frozen"     onclick="setCat('frozen')">冷冻食品</button>
-    <button class="cat-tab" data-cat="fresh"      onclick="setCat('fresh')">生鲜</button>
+    <button class="cat-tab" data-cat="condiments" onclick="setCat('condiments')">调味品 Condiments</button>
+    <button class="cat-tab" data-cat="snacks"     onclick="setCat('snacks')">零食和饮料 Snacks</button>
+    <button class="cat-tab" data-cat="frozen"     onclick="setCat('frozen')">冷冻食品 Frozen</button>
+    <button class="cat-tab" data-cat="fresh"      onclick="setCat('fresh')">生鲜 Fresh</button>
     <button class="cat-tab" data-cat="grocery"    onclick="setCat('grocery')">百货 Grocery</button>
   </div>
 </div>
@@ -108,7 +108,7 @@ footer a{color:var(--brand);}
   <div class="cart-col">
     <div class="cart-box">
       <h3>购物车 Cart</h3>
-      <div id="cartEmpty" class="cart-empty">还没有商品。<br>请在左边选择。</div>
+      <div id="cartEmpty" class="cart-empty">购物车是空的 · Cart is empty.<br>请在左侧选择商品。</div>
       <div id="cartItems"></div>
       <div id="cartTotals" class="cart-totals" style="display:none;">
         <div class="cart-row"><span>小计 Subtotal</span><span id="cartSubtotal"></span></div>
@@ -118,10 +118,10 @@ footer a{color:var(--brand);}
       <p class="cart-note" id="cartNote" style="display:none;"></p>
       <!-- 邮编确认:点结账后才展开 -->
       <div class="zip-inline" id="zipInline" style="display:none;">
-        <p class="zip-inline-label">请输入邮编确认配送范围：</p>
+        <p class="zip-inline-label">请输入邮编确认配送范围 · Enter your ZIP to verify delivery:</p>
         <div class="zip-inline-row">
-          <input class="zip-input" id="zipCart" placeholder="5位邮编" maxlength="5">
-          <button class="zip-btn" onclick="confirmZipAndProceed()">确认</button>
+          <input class="zip-input" id="zipCart" placeholder="ZIP Code / 邮编" maxlength="5">
+          <button class="zip-btn" onclick="confirmZipAndProceed()">确认 Confirm</button>
         </div>
         <div class="zip-msg" id="zipCartMsg" style="display:none;"></div>
       </div>
@@ -217,7 +217,7 @@ function applyStore(){
   document.getElementById('heroTitle').textContent=store.name_zh;
   document.getElementById('heroEnName').textContent=store.name_en||'';
   document.getElementById('heroSub').textContent=
-    (store.tagline?store.tagline+" —— ":"")+"选择品类，开始购物。";
+    (store.tagline?store.tagline+" —— ":"")+"选择品类，开始购物。 Browse by category.";
   document.getElementById('footStore').textContent=
     store.name_zh+(store.name_en?" · "+store.name_en:"");
   var parts=[];
@@ -337,7 +337,7 @@ function updateCart(){
 
   var need=round2(thr-subtotal);
   noteEl.style.display="block";
-  noteEl.textContent=need>0?("再加 "+fmt(need)+" 即可免费配送！"):"已享受免费配送！";
+  noteEl.textContent=need>0?("再加 "+fmt(need)+" 即可免费配送 · Add "+fmt(need)+" for free delivery!"):"✓ 免费配送 · Free delivery applied!";
 }
 
 // 点"去结账":未验证邮编则先展开邮编框
@@ -359,10 +359,10 @@ function confirmZipAndProceed(){
   var msg=document.getElementById('zipCartMsg');
   msg.style.display="block";
   if(!/^[0-9]{5}$/.test(z)){
-    msg.className="zip-msg err";msg.textContent="请输入有效的5位邮编。";return;
+    msg.className="zip-msg err";msg.textContent="请输入有效的5位邮编 · Please enter a valid 5-digit ZIP.";return;
   }
   if((store.delivery_zips||[]).indexOf(z)!==-1){
-    msg.className="zip-msg ok";msg.textContent="✓ 可以配送到您的区域。";
+    msg.className="zip-msg ok";msg.textContent="✓ 可配送 · Delivery available!";
     zipConfirmed=true;
     setTimeout(function(){
       document.getElementById('zipInline').style.display="none";
@@ -372,7 +372,7 @@ function confirmZipAndProceed(){
     },700);
   } else {
     msg.className="zip-msg err";
-    msg.textContent="抱歉,邮编 "+z+" 不在配送范围内。"+(store.contact_email?" 请联系 "+store.contact_email+"。":"");
+    msg.textContent="抱歉 · Sorry, ZIP "+z+" is outside our delivery area."+(store.contact_email?" Contact: "+store.contact_email:"");
   }
 }
 
@@ -382,9 +382,9 @@ document.addEventListener('keydown',function(e){
 
 function submitCheckout(cart){
   var btn=document.getElementById('checkoutBtn');
-  btn.disabled=true;btn.textContent="跳转中…";
+  btn.disabled=true;btn.textContent="跳转中 Redirecting…";
   fetch(CHECKOUT_URL,{method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({storeId:store.store_id,cart:cart})})
+    body:JSON.stringify({storeId:store.store_id,cart:cart,origin:window.location.origin})})
   .then(function(r){return r.json();})
   .then(function(d){
     if(d&&d.url){location.href=d.url;}
@@ -394,6 +394,14 @@ function submitCheckout(cart){
   function resetBtn(){btn.disabled=false;btn.textContent="去结账 Checkout →";}
 }
 
+// 订单成功页:?order=success
+if(new URLSearchParams(location.search).get('order')==='success'){
+  var hdr=document.querySelector('.page-header');
+  hdr.style.background='#1A4A28';
+  document.getElementById('heroTitle').textContent='谢谢您的订单！ Thank You!';
+  document.getElementById('heroEnName').textContent='Order Confirmed';
+  document.getElementById('heroSub').textContent='我们将尽快安排配送。We will arrange delivery soon.';
+}
 boot();
 </script>
 </body>
