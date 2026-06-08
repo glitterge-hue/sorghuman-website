@@ -20,6 +20,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .eyebrow{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.6rem;}
 .page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,42px);line-height:1.15;margin-bottom:.6rem;}
 .page-header p{font-size:14px;color:rgba(255,255,255,.82);max-width:520px;}
+.hero-en{font-family:'DM Serif Display',serif;font-size:18px;color:rgba(255,255,255,.80);margin-bottom:.5rem;letter-spacing:.01em;}
 /* 品类导航 */
 .cat-tabs-section{background:#fff;border-bottom:1px solid var(--border);padding:16px 5%;}
 .cat-tabs{max-width:920px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;}
@@ -86,6 +87,7 @@ footer a{color:var(--brand);}
   <div class="page-header-inner">
     <div class="eyebrow">Local Delivery · 本地配送</div>
     <h1 id="heroTitle">远东超市</h1>
+    <p class="hero-en" id="heroEnName"></p>
     <p id="heroSub">选择品类，开始购物。</p>
   </div>
 </header>
@@ -97,6 +99,7 @@ footer a{color:var(--brand);}
     <button class="cat-tab" data-cat="snacks"     onclick="setCat('snacks')">零食和饮料</button>
     <button class="cat-tab" data-cat="frozen"     onclick="setCat('frozen')">冷冻食品</button>
     <button class="cat-tab" data-cat="fresh"      onclick="setCat('fresh')">生鲜</button>
+    <button class="cat-tab" data-cat="grocery"    onclick="setCat('grocery')">百货 Grocery</button>
   </div>
 </div>
 
@@ -151,7 +154,8 @@ var FALLBACK_CATALOG = {
     condiments:"调味品 Condiments",
     snacks:"零食和饮料 Snacks & Beverages",
     frozen:"冷冻食品 Frozen Foods",
-    fresh:"生鲜 Fresh Produce"
+    fresh:"生鲜 Fresh Produce",
+    grocery:"百货 Grocery"
   },
   products:[
     {sku:"4650",  name_en:"Glutinous Rice Shaomai",         name_zh:"糯米烧卖",      spec:"16 oz · 6 pcs",  category:"frozen", base_price:4.99, common:true},
@@ -170,7 +174,7 @@ var FALLBACK_CATALOG = {
 var FALLBACK_REGISTRY = {"fareastpa.com":"fareast","www.fareastpa.com":"fareast","sorghuman.com":"default"};
 var FALLBACK_STORES = {
   fareast:{store_id:"fareast",name_zh:"远东超市",name_en:"Far East Asian Market",domain:"fareastpa.com",
-           tagline:"冷冻包点 · 酸梅汤 · 优质大米 · 新鲜直送",theme:"#2A6B3A",contact_email:"",contact_phone:"",
+           tagline:"冷冻包点 Frozen Buns · 新鲜直送 Fresh Daily",theme:"#2A6B3A",contact_email:"",contact_phone:"",
            delivery_zips:["18052","18067","18103","18104","18101","18017"],
            free_delivery_threshold:30,delivery_fee:5,markup:1.0,drop:[],add:[],prices:{"4650":5.49,"9913":5.29}},
   default:{store_id:"default",name_zh:"Sorghuman 高仁",name_en:"Sorghuman",domain:"sorghuman.com",
@@ -211,6 +215,7 @@ function applyStore(){
   document.getElementById('navStore').textContent=store.name_zh;
   document.getElementById('navTag').textContent=store.tagline||"";
   document.getElementById('heroTitle').textContent=store.name_zh;
+  document.getElementById('heroEnName').textContent=store.name_en||'';
   document.getElementById('heroSub').textContent=
     (store.tagline?store.tagline+" —— ":"")+"选择品类，开始购物。";
   document.getElementById('footStore').textContent=
@@ -224,8 +229,10 @@ function applyStore(){
   // 门头背景图:有则覆盖纯色背景,叠半透明黑色渐变保证文字可读
   if(store.hero_image){
     var hdr=document.querySelector('.page-header');
-    hdr.style.background=
-      'linear-gradient(rgba(0,0,0,.48),rgba(0,0,0,.48)),url('+store.hero_image+') center/cover no-repeat';
+    hdr.style.backgroundImage='linear-gradient(rgba(0,0,0,.50),rgba(0,0,0,.50)),url("'+store.hero_image+'")';
+    hdr.style.backgroundSize='cover';
+    hdr.style.backgroundPosition='center';
+    hdr.style.backgroundRepeat='no-repeat';
   }
   if(isDemo){
     var f=document.getElementById('demoFlag');
