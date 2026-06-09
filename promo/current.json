@@ -1,0 +1,39 @@
+{
+  "active": true,
+  "festival_zh": "端午节",
+  "festival_en": "Dragon Boat Festival",
+  "year": "2026",
+  "date_zh": "农历五月初五 · 2026年6月20日",
+  "date_en": "5th Day, 5th Lunar Month · June 20, 2026",
+  "icon": "🐉",
+  "tagline_zh": "粽香飘四方，龙舟竞中流",
+  "tagline_en": "Where Ancient Tradition Meets Your Table",
+  "intro_zh": "端午节是中国最古老的传统节日之一，已有两千余年历史。相传为纪念爱国诗人屈原投江而设。每逢端午，人们赛龙舟、裹粽子、挂艾草，以驱邪避害、寄托思念。如今，端午节已成为连接全球华人的文化纽带，也是向邻里朋友介绍中华文化的最佳时机。",
+  "intro_en": "Dragon Boat Festival (Duanwu Jié) has been celebrated for over 2,000 years across China and Chinese communities worldwide. Legend honors the patriot-poet Qu Yuan. Today the festival is marked by thrilling dragon boat races, handmade zongzi (sticky rice dumplings), and aromatic mugwort hung at the door — a perfect moment to share Chinese culture with your neighbors and friends.",
+  "featured_items": [
+    {
+      "icon": "🎋",
+      "name_zh": "粽子（鲜肉 / 豆沙 / 蛋黄）",
+      "name_en": "Zongzi · Sticky Rice Dumplings",
+      "sku": null
+    },
+    {
+      "icon": "🐉",
+      "name_zh": "龙舟节礼盒",
+      "name_en": "Dragon Boat Festival Gift Box",
+      "sku": null
+    },
+    {
+      "icon": "🍵",
+      "name_zh": "酸梅汤（消暑佳品）",
+      "name_en": "Sour Plum Soup · Perfect Summer Drink",
+      "sku": "PLUM-1"
+    },
+    {
+      "icon": "🌿",
+      "name_zh": "艾草 / 菖蒲",
+      "name_en": "Mugwort & Calamus · Traditional Door Herbs",
+      "sku": null
+    }
+  ]
+}
