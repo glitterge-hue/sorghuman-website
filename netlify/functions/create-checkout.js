@@ -1,7 +1,9 @@
 // netlify/functions/create-checkout.js
-// 环境变量: STRIPE_SECRET_KEY = sk_test_... 或 sk_live_...
+// 从 Supabase 验价 → 创建 Stripe 收银 → 写订单到数据库
 
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const SUPA_URL = process.env.SUPABASE_URL;
+const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 
 const CORS = {
   'Access-Control-Allow-Origin' : '*',
@@ -10,16 +12,33 @@ const CORS = {
   'Content-Type'                 : 'application/json',
 };
 
-const BASE = 'https://sorghuman.com';   // 从 CDN 读商品库和门店配置
+async function sb(table, qs) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${qs}`, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+  });
+  if (!res.ok) throw new Error(`Supabase ${table}: ${res.status}`);
+  return res.json();
+}
+
+async function sbInsert(table, data) {
+  await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+    method : 'POST',
+    headers: {
+      'apikey'       : SUPA_KEY,
+      'Authorization': `Bearer ${SUPA_KEY}`,
+      'Content-Type' : 'application/json',
+      'Prefer'       : 'return=minimal',
+    },
+    body: JSON.stringify(data),
+  });
+}
 
 exports.handler = async (event) => {
-
   if (event.httpMethod === 'OPTIONS')
     return { statusCode: 200, headers: CORS, body: '' };
   if (event.httpMethod !== 'POST')
     return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: 'Method not allowed' }) };
 
-  // ── 解析请求 ────────────────────────────────────────────────
   let body;
   try { body = JSON.parse(event.body); }
   catch { return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
@@ -28,64 +47,68 @@ exports.handler = async (event) => {
   if (!storeId || !Array.isArray(cart) || cart.length === 0)
     return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing storeId or cart' }) };
 
-  // ── 从 CDN 读商品库 & 门店配置 ──────────────────────────────
-  let catalog, store;
   try {
-    const [cr, sr] = await Promise.all([
-      fetch(BASE + '/products.json'),
-      fetch(BASE + '/stores/' + storeId + '.json'),
+    // ── 从 Supabase 读门店和商品（服务器端，不信任前端价格）──
+    const skus = cart.map(i => i.sku).join(',');
+    const [storeRows, products, prices] = await Promise.all([
+      sb('stores',       `store_id=eq.${storeId}&select=*&limit=1`),
+      sb('products',     `sku=in.(${skus})&active=eq.true&select=*`),
+      sb('store_prices', `store_id=eq.${storeId}&sku=in.(${skus})&select=sku,price`),
     ]);
-    if (!cr.ok) throw new Error('products.json not found');
-    if (!sr.ok) throw new Error('Store not found: ' + storeId);
-    [catalog, store] = await Promise.all([cr.json(), sr.json()]);
-  } catch (e) {
-    return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: e.message }) };
-  }
 
-  // ── 服务器端重新算价(不信任前端价格) ──────────────────────────
-  const map = {};
-  catalog.products.forEach(p => { map[p.sku] = p; });
+    if (!storeRows.length)
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Unknown store' }) };
 
-  const lineItems = [];
-  for (const item of cart) {
-    const p = map[item.sku];
-    if (!p) continue;
-    let price = p.base_price * (store.markup || 1);
-    if (store.prices?.[item.sku] != null) price = Number(store.prices[item.sku]);
-    lineItems.push({
-      price_data: {
-        currency    : (catalog.currency || 'usd').toLowerCase(),
-        product_data: { name: p.name_zh + '  ' + p.name_en },
-        unit_amount : Math.round(price * 100),
-      },
-      quantity: Math.max(1, Math.floor(Number(item.qty))),
-    });
-  }
+    const store   = storeRows[0];
+    const markup  = parseFloat(store.markup) || 1.0;
+    const priceMap = {};
+    prices.forEach(p => { priceMap[p.sku] = parseFloat(p.price); });
+    const prodMap  = {};
+    products.forEach(p => { prodMap[p.sku] = p; });
 
-  if (lineItems.length === 0)
-    return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'No valid items in cart' }) };
+    // ── 服务器端算价 ──────────────────────────────────────────
+    const lineItems = [];
+    for (const item of cart) {
+      const p = prodMap[item.sku];
+      if (!p) continue;
+      const price = priceMap[p.sku] != null
+        ? priceMap[p.sku]
+        : parseFloat((p.base_price * markup).toFixed(2));
+      lineItems.push({
+        price_data: {
+          currency    : 'usd',
+          product_data: { name: p.name_zh + '  ' + p.name_en },
+          unit_amount : Math.round(price * 100),
+        },
+        quantity: Math.max(1, Math.floor(Number(item.qty))),
+      });
+    }
 
-  // ── 配送费 ───────────────────────────────────────────────────
-  const subtotalCents  = lineItems.reduce((s, li) => s + li.price_data.unit_amount * li.quantity, 0);
-  const thresholdCents = Math.round((store.free_delivery_threshold ?? 30) * 100);
-  const feeCents       = Math.round((store.delivery_fee ?? 5) * 100);
-  if (subtotalCents < thresholdCents) {
-    lineItems.push({
-      price_data: {
-        currency    : (catalog.currency || 'usd').toLowerCase(),
-        product_data: { name: '配送费 Delivery Fee' },
-        unit_amount : feeCents,
-      },
-      quantity: 1,
-    });
-  }
+    if (lineItems.length === 0)
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'No valid items' }) };
 
-  // ── Stripe Checkout Session ──────────────────────────────────
-  const base       = (origin || 'https://' + store.domain).replace(/\/$/, '');
-  const successUrl = base + '/shop/?order=success';
-  const cancelUrl  = base + '/shop/';
+    // ── 配送费 ────────────────────────────────────────────────
+    const subtotalCents  = lineItems.reduce((s, li) => s + li.price_data.unit_amount * li.quantity, 0);
+    const thresholdCents = Math.round((store.free_delivery_threshold ?? 30) * 100);
+    const feeCents       = Math.round((store.delivery_fee ?? 5) * 100);
+    const deliveryCents  = subtotalCents < thresholdCents ? feeCents : 0;
 
-  try {
+    if (deliveryCents > 0) {
+      lineItems.push({
+        price_data: {
+          currency    : 'usd',
+          product_data: { name: '配送费 Delivery Fee' },
+          unit_amount : deliveryCents,
+        },
+        quantity: 1,
+      });
+    }
+
+    // ── 创建 Stripe 收银会话 ───────────────────────────────────
+    const base       = (origin || `https://${store.domain}`).replace(/\/$/, '');
+    const successUrl = `${base}/shop/?order=success`;
+    const cancelUrl  = `${base}/shop/`;
+
     const session = await stripe.checkout.sessions.create({
       payment_method_types        : ['card'],
       line_items                  : lineItems,
@@ -96,9 +119,22 @@ exports.handler = async (event) => {
       shipping_address_collection : { allowed_countries: ['US'] },
       phone_number_collection     : { enabled: true },
     });
+
+    // ── 写订单到 Supabase ─────────────────────────────────────
+    await sbInsert('orders', {
+      store_id         : storeId,
+      stripe_session_id: session.id,
+      items            : cart,
+      subtotal         : subtotalCents  / 100,
+      delivery_fee     : deliveryCents  / 100,
+      total            : (subtotalCents + deliveryCents) / 100,
+      status           : 'pending',
+    });
+
     return { statusCode: 200, headers: CORS, body: JSON.stringify({ url: session.url }) };
+
   } catch (e) {
-    console.error('Stripe error:', e.message);
+    console.error('checkout error:', e.message);
     return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: e.message }) };
   }
 };
