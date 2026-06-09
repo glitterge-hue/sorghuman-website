@@ -280,31 +280,49 @@ function priceOf(p){
 function renderProducts(){
   var col=document.getElementById('productsCol');
   col.innerHTML="";
-  var lastCat=null,count=0;
+
+  // 未选品类 → 显示品类卡片
+  if(!activeCat){
+    CAT_INFO.forEach(function(c){
+      var card=document.createElement('div');
+      card.className='cat-card';
+      card.onclick=function(){setCat(c.cat);};
+      card.innerHTML='<div class="cat-card-icon">'+c.icon+'</div>'+
+        '<div class="cat-card-zh">'+c.zh+'</div>'+
+        '<div class="cat-card-en">'+c.en+'</div>';
+      col.appendChild(card);
+    });
+    return;
+  }
+
+  // 已选品类 → 返回按钮 + 商品列表
+  var back=document.createElement('div');
+  back.className='cat-back';
+  back.innerHTML='&#8592; 所有品类 All Categories';
+  back.onclick=function(){
+    activeCat=null;
+    document.querySelectorAll('.cat-tab').forEach(function(b){b.classList.remove('active');});
+    renderProducts();
+  };
+  col.appendChild(back);
+
+  var count=0;
   catalog.products.forEach(function(p){
     if(!carries(p))return;
-    if(activeCat&&p.category!==activeCat)return;
+    if(p.category!==activeCat)return;
     count++;
-    // 全部模式:显示分类标题;单品类模式:不重复显示
-    if(!activeCat&&p.category!==lastCat){
-      lastCat=p.category;
-      var lbl=document.createElement('div');
-      lbl.className="cat-label";
-      lbl.textContent=(catalog.categories&&catalog.categories[p.category])||p.category;
-      col.appendChild(lbl);
-    }
     qty[p.sku]=qty[p.sku]||0;
     var row=document.createElement('div');
     row.className="product-row";
     row.innerHTML=
       '<div class="prod-info"><h3>'+p.name_en+'</h3><div class="zh">'+p.name_zh+'</div>'+
       '<div class="spec">'+(p.spec||'')+'</div><div class="price">'+fmt(priceOf(p))+'</div></div>'+
-      '<div class="qty-control"><button class="qty-btn" onclick="changeQty(\''+p.sku+'\',-1)">&#8722;</button>'+
+      '<div class="qty-control">'+
+      '<button class="qty-btn" onclick="changeQty(\''+p.sku+'\',-1)">&#8722;</button>'+
       '<div class="qty-num" id="q-'+p.sku+'">'+qty[p.sku]+'</div>'+
       '<button class="qty-btn" onclick="changeQty(\''+p.sku+'\',1)">+</button></div>';
     col.appendChild(row);
   });
-  // 当前品类无商品
   if(count===0){
     var empty=document.createElement('div');
     empty.className="empty-cat";
