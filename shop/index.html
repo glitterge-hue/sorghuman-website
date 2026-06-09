@@ -298,17 +298,22 @@ async function boot(){
     document.getElementById('heroSub').textContent     = '我们将尽快安排配送。We will arrange delivery soon.';
   }
 
-  catalog = await tryFetch('/products.json');
-  if(!catalog){ catalog = FALLBACK_CATALOG; isDemo = true; }
-
-  var params   = new URLSearchParams(location.search);
-  var forced   = params.get('store');
-  var host     = location.hostname.replace(/^www\./,'');
+  var params  = new URLSearchParams(location.search);
+  var forced  = params.get('store');
+  var host    = location.hostname.replace(/^www\./,'');
   var registry = await tryFetch('/stores/index.json') || FALLBACK_REGISTRY;
-  var storeId  = forced || registry[location.hostname] || registry[host] || 'default';
+  var storeId = forced || registry[location.hostname] || registry[host] || 'default';
 
-  store = await tryFetch('/stores/'+storeId+'.json');
-  if(!store){ store = FALLBACK_STORES[storeId] || FALLBACK_STORES['default']; isDemo = true; }
+  // 从 Supabase（经 get-catalog 函数）拉取门店商品目录
+  var data = await tryFetch('/.netlify/functions/get-catalog?store='+storeId);
+  if(data && data.store && data.products){
+    store   = data.store;
+    catalog = { currency:'USD', categories: data.categories, products: data.products };
+  } else {
+    catalog = FALLBACK_CATALOG;
+    store   = FALLBACK_STORES[storeId] || FALLBACK_STORES['default'];
+    isDemo  = true;
+  }
 
   applyStore();
   loadPromo();
