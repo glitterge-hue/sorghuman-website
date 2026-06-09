@@ -28,6 +28,15 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .cat-tab:hover{background:var(--brand);color:#fff;}
 .cat-tab.active{background:var(--brand);color:#fff;}
 .empty-cat{padding:48px 0;text-align:center;color:var(--muted);font-size:14px;line-height:2.2;}
+.cat-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:14px;padding:4px 0;}
+.cat-card{background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:22px 12px 18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s,color .15s;}
+.cat-card:hover,.cat-card.active{border-color:var(--brand);background:var(--brand);color:#fff;}
+.cat-card:hover .cat-card-en,.cat-card.active .cat-card-en{color:rgba(255,255,255,.72);}
+.cat-card-icon{font-size:30px;margin-bottom:8px;}
+.cat-card-zh{font-size:14px;font-weight:600;}
+.cat-card-en{font-size:11px;color:var(--muted);margin-top:3px;}
+.cat-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--brand);cursor:pointer;margin-bottom:14px;font-weight:500;}
+.cat-back:hover{text-decoration:underline;}
 /* 商品区 */
 .shop-body{padding:36px 5%;max-width:920px;margin:0 auto;display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:start;}
 @media(max-width:820px){.shop-body{grid-template-columns:1fr;}}
@@ -174,7 +183,7 @@ var FALLBACK_CATALOG = {
 var FALLBACK_REGISTRY = {"fareastpa.com":"fareast","www.fareastpa.com":"fareast","sorghuman.com":"default"};
 var FALLBACK_STORES = {
   fareast:{store_id:"fareast",name_zh:"远东超市",name_en:"Far East Asian Market",domain:"fareastpa.com",
-           tagline:"冷冻包点 Frozen Buns · 新鲜直送 Fresh Daily",theme:"#2A6B3A",contact_email:"",contact_phone:"",
+           tagline:"您的社区亚洲超市 · Your Neighborhood Asian Market",theme:"#2A6B3A",contact_email:"",contact_phone:"",
            delivery_zips:["18052","18067","18103","18104","18101","18017"],
            free_delivery_threshold:30,delivery_fee:5,markup:1.0,drop:[],add:[],prices:{"4650":5.49,"9913":5.29}},
   default:{store_id:"default",name_zh:"Sorghuman 高仁",name_en:"Sorghuman",domain:"sorghuman.com",
@@ -183,6 +192,13 @@ var FALLBACK_STORES = {
 
 var catalog=null, store=null, qty={}, isDemo=false;
 var activeCat=null;       // 当前品类筛选,null=全部
+var CAT_INFO=[
+  {cat:'condiments', icon:'🥫', zh:'调味品',    en:'Condiments'},
+  {cat:'snacks',     icon:'🧃', zh:'零食和饮料', en:'Snacks & Drinks'},
+  {cat:'frozen',     icon:'❄️', zh:'冷冻食品',  en:'Frozen Foods'},
+  {cat:'fresh',      icon:'🥬', zh:'生鲜',      en:'Fresh Produce'},
+  {cat:'grocery',    icon:'🛒', zh:'百货',      en:'Grocery'},
+];
 var zipConfirmed=false;   // 邮编是否已验证通过
 
 function round2(n){return Math.round(n*100)/100;}
@@ -217,7 +233,7 @@ function applyStore(){
   document.getElementById('heroTitle').textContent=store.name_zh;
   document.getElementById('heroEnName').textContent=store.name_en||'';
   document.getElementById('heroSub').textContent=
-    (store.tagline?store.tagline+" —— ":"")+"选择品类，开始购物。 Browse by category.";
+    (store.tagline?store.tagline+" —— ":"")+"选择品类开始购物。 Choose a category to browse.";
   document.getElementById('footStore').textContent=
     store.name_zh+(store.name_en?" · "+store.name_en:"");
   var parts=[];
