@@ -43,9 +43,10 @@ exports.handler = async (event) => {
   try { body = JSON.parse(event.body); }
   catch { return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
-  const { storeId, cart, origin } = body;
-  if (!storeId || !Array.isArray(cart) || cart.length === 0)
-    return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing storeId or cart' }) };
+  const { cart, origin } = body;
+  const storeId = body.storeId || 'default';   // 没传 storeId 时用 default（兼容 local.html）
+  if (!Array.isArray(cart) || cart.length === 0)
+    return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing cart' }) };
 
   try {
     // ── 从 Supabase 读门店和商品（服务器端，不信任前端价格）──
