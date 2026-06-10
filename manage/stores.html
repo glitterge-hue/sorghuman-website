@@ -173,13 +173,17 @@ td{padding:10px 14px;vertical-align:middle;}
 </div>
 
 <script>
-const SUPA_URL  = 'https://uvvdyqmuxiupgyerxbep.supabase.co';
-const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2dmR5cW11eGl1cGd5ZXJ4YmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMzYxOTEsImV4cCI6MjA5NjYxMjE5MX0.EPFNnqTJZwetB3HFM_t2BpqHyw1jR7KxvVFhjlRRxSE';
-const sb = window.supabase.createClient(SUPA_URL, SUPA_ANON);
+// 从 Netlify 函数读取配置（避免硬编码 key 触发安全扫描）
+let sb;
+async function initSupabase(){
+  const cfg = await fetch('/.netlify/functions/get-config').then(r=>r.json());
+  sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+}
 
 let allStores = [], editingId = null, priceStoreId = null, allProducts = [];
 
 window.addEventListener('load', async () => {
+  await initSupabase();
   const { data: { session } } = await sb.auth.getSession();
   if (!session) { location.href = 'index.html'; return; }
   document.getElementById('userEmail').textContent = session.user.email + ' · 退出';
