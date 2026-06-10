@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>门店管理 · Sorghuman Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#f0f4f0;color:#1a1a18;}
+.topbar{background:#1A4A28;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;position:sticky;top:0;z-index:100;}
+.topbar h1{font-size:16px;font-weight:700;}
+.topbar nav a{color:rgba(255,255,255,.75);text-decoration:none;font-size:13px;margin-left:20px;}
+.topbar nav a:hover,.topbar nav a.active{color:#fff;}
+.topbar .user{font-size:12px;color:rgba(255,255,255,.65);margin-left:20px;cursor:pointer;}
+.main{max-width:1200px;margin:0 auto;padding:24px;}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:18px;}
+.toolbar input{border:1px solid #ddd;border-radius:6px;padding:8px 14px;font-size:13px;font-family:inherit;outline:none;width:260px;}
+.toolbar input:focus{border-color:#2A6B3A;}
+.btn{padding:8px 18px;border-radius:6px;border:none;font-size:13px;font-family:inherit;font-weight:500;cursor:pointer;}
+.btn-primary{background:#2A6B3A;color:#fff;}
+.btn-primary:hover{background:#1A5A2A;}
+.btn-secondary{background:#fff;color:#2A6B3A;border:1px solid #2A6B3A;}
+.btn-secondary:hover{background:#f0f7f2;}
+.btn-danger{background:#fff;color:#c0392b;border:1px solid #e8a0a0;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.table-wrap{background:#fff;border-radius:8px;border:1px solid #e8e8e0;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{background:#f8f8f5;}
+thead th{padding:11px 14px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #e8e8e0;white-space:nowrap;}
+tbody tr{border-bottom:1px solid #f0f0ea;}
+tbody tr:hover{background:#fafaf7;}
+td{padding:10px 14px;vertical-align:middle;}
+.badge-on{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;background:#f0f7f2;color:#2A6B3A;}
+.badge-off{display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;background:#fdf2f2;color:#c0392b;}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center;}
+.overlay.show{display:flex;}
+.modal{background:#fff;border-radius:10px;padding:28px;width:100%;max-width:600px;max-height:90vh;overflow-y:auto;}
+.modal h2{font-size:17px;margin-bottom:20px;color:#1A4A28;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.form-group{margin-bottom:14px;}
+.form-group label{display:block;font-size:12px;font-weight:600;color:#555;margin-bottom:5px;}
+.form-group input,.form-group select,.form-group textarea{width:100%;border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;}
+.form-group input:focus{border-color:#2A6B3A;}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:20px;}
+/* 覆盖价弹窗 */
+.price-list{max-height:300px;overflow-y:auto;border:1px solid #eee;border-radius:6px;}
+.price-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid #f0f0ea;font-size:13px;}
+.price-row:last-child{border-bottom:none;}
+.price-row input{width:90px;border:1px solid #ddd;border-radius:4px;padding:5px 8px;font-size:13px;font-family:inherit;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🌾 Sorghuman Admin</h1>
+  <nav>
+    <a href="products.html">商品管理</a>
+    <a href="stores.html" class="active">门店管理</a>
+    <a href="orders.html">订单查询</a>
+  </nav>
+  <span class="user" id="userEmail" onclick="logout()">退出登录</span>
+</div>
+
+<div class="main">
+  <div class="toolbar">
+    <input id="searchInput" placeholder="搜索门店名称 / 域名…" oninput="filterStores()">
+    <button class="btn btn-primary" onclick="openAdd()">+ 新增门店</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>门店 ID</th>
+          <th>中文名</th>
+          <th>域名</th>
+          <th>加价系数</th>
+          <th>配送门槛</th>
+          <th>配送费</th>
+          <th>状态</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="storeTbody">
+        <tr><td colspan="8" style="text-align:center;padding:30px;color:#888;">加载中…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- 新增/编辑门店弹窗 -->
+<div class="overlay" id="editOverlay" onclick="closeEdit(event)">
+  <div class="modal">
+    <h2 id="modalTitle">新增门店</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>门店 ID * (英文,唯一)</label>
+        <input id="fId" placeholder="如 fareast / jmart_bk">
+      </div>
+      <div class="form-group">
+        <label>域名 Domain</label>
+        <input id="fDomain" placeholder="fareastpa.com">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>中文名 *</label>
+        <input id="fNameZh" placeholder="远东超市">
+      </div>
+      <div class="form-group">
+        <label>英文名</label>
+        <input id="fNameEn" placeholder="Far East Asian Market">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>主题色 Theme Color</label>
+        <input id="fTheme" placeholder="#2A6B3A" value="#2A6B3A">
+      </div>
+      <div class="form-group">
+        <label>联系电话</label>
+        <input id="fPhone" placeholder="610-266-8968">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>加价系数 Markup (1.0=原价)</label>
+        <input id="fMarkup" type="number" step="0.01" placeholder="1.0" value="1.0">
+      </div>
+      <div class="form-group">
+        <label>免费配送门槛 ($)</label>
+        <input id="fThreshold" type="number" step="1" placeholder="30" value="30">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>配送费 Delivery Fee ($)</label>
+        <input id="fFee" type="number" step="0.5" placeholder="5" value="5">
+      </div>
+      <div class="form-group">
+        <label>标语 Tagline</label>
+        <input id="fTagline" placeholder="您的社区亚洲超市">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>配送邮编 (每行一个)</label>
+      <textarea id="fZips" rows="3" placeholder="18052&#10;18067&#10;18103"></textarea>
+    </div>
+    <div class="form-group">
+      <label><input type="checkbox" id="fActive" checked> 启用 (Active)</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeEditDirect()">取消</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveStore()">保存</button>
+    </div>
+    <div id="editMsg" style="margin-top:10px;font-size:13px;color:#c0392b;"></div>
+  </div>
+</div>
+
+<!-- 覆盖价弹窗 -->
+<div class="overlay" id="priceOverlay" onclick="closePriceOverlay(event)">
+  <div class="modal">
+    <h2 id="priceTitleEl">设置覆盖价</h2>
+    <p style="font-size:12px;color:#888;margin-bottom:12px;">留空 = 使用基准价×加价系数；填入具体价格 = 覆盖</p>
+    <div class="price-list" id="priceList"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closePriceOverlay({target:{id:'priceOverlay'}})">关闭</button>
+      <button class="btn btn-primary" onclick="savePrices()">保存覆盖价</button>
+    </div>
+    <div id="priceMsg" style="margin-top:10px;font-size:13px;color:#2A6B3A;"></div>
+  </div>
+</div>
+
+<script>
+const SUPA_URL  = 'https://uvvdyqmuxiupgyerxbep.supabase.co';
+const SUPA_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV2dmR5cW11eGl1cGd5ZXJ4YmVwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEwMzYxOTEsImV4cCI6MjA5NjYxMjE5MX0.EPFNnqTJZwetB3HFM_t2BpqHyw1jR7KxvVFhjlRRxSE';
+const sb = window.supabase.createClient(SUPA_URL, SUPA_ANON);
+
+let allStores = [], editingId = null, priceStoreId = null, allProducts = [];
+
+window.addEventListener('load', async () => {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) { location.href = 'index.html'; return; }
+  document.getElementById('userEmail').textContent = session.user.email + ' · 退出';
+  loadStores();
+  loadAllProducts();
+});
+
+async function logout() { await sb.auth.signOut(); location.href = 'index.html'; }
+
+async function loadStores() {
+  const { data, error } = await sb.from('stores').select('*').order('store_id');
+  if (error) { alert('加载失败: '+error.message); return; }
+  allStores = data;
+  renderTable(allStores);
+}
+
+async function loadAllProducts() {
+  const { data } = await sb.from('products').select('sku,name_zh,base_price').order('sort_order');
+  allProducts = data || [];
+}
+
+function filterStores() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  renderTable(allStores.filter(s => !q || s.store_id.includes(q) || s.name_zh.includes(q) || (s.domain||'').includes(q)));
+}
+
+function renderTable(list) {
+  const tbody = document.getElementById('storeTbody');
+  if (!list.length) { tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:30px;color:#888;">暂无门店</td></tr>'; return; }
+  tbody.innerHTML = list.map(s => `
+    <tr>
+      <td style="font-family:monospace;font-size:12px;color:#888;">${s.store_id}</td>
+      <td><strong>${s.name_zh}</strong><br><span style="font-size:11px;color:#888;">${s.name_en||''}</span></td>
+      <td style="font-size:12px;">${s.domain||'-'}</td>
+      <td style="font-weight:600;">×${Number(s.markup).toFixed(2)}</td>
+      <td>$${Number(s.free_delivery_threshold).toFixed(0)}</td>
+      <td>$${Number(s.delivery_fee).toFixed(2)}</td>
+      <td><span class="${s.active?'badge-on':'badge-off'}">${s.active?'启用':'停用'}</span></td>
+      <td>
+        <button class="btn btn-secondary btn-sm" onclick="openEdit('${s.store_id}')">编辑</button>
+        <button class="btn btn-secondary btn-sm" style="margin-left:4px;" onclick="openPrices('${s.store_id}','${s.name_zh}')">覆盖价</button>
+      </td>
+    </tr>`).join('');
+}
+
+// ── 新增/编辑 ─────────────────────────────────────────────────
+function openAdd() {
+  editingId = null;
+  document.getElementById('modalTitle').textContent = '新增门店';
+  ['fId','fDomain','fNameZh','fNameEn','fPhone','fTagline'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('fTheme').value='#2A6B3A';
+  document.getElementById('fMarkup').value='1.0';
+  document.getElementById('fThreshold').value='30';
+  document.getElementById('fFee').value='5';
+  document.getElementById('fZips').value='';
+  document.getElementById('fId').readOnly=false;
+  document.getElementById('fActive').checked=true;
+  document.getElementById('editMsg').textContent='';
+  document.getElementById('editOverlay').classList.add('show');
+}
+
+function openEdit(id) {
+  const s = allStores.find(x=>x.store_id===id);
+  if (!s) return;
+  editingId = id;
+  document.getElementById('modalTitle').textContent = '编辑门店 · '+id;
+  document.getElementById('fId').value=s.store_id; document.getElementById('fId').readOnly=true;
+  document.getElementById('fDomain').value=s.domain||'';
+  document.getElementById('fNameZh').value=s.name_zh;
+  document.getElementById('fNameEn').value=s.name_en||'';
+  document.getElementById('fPhone').value=s.contact_phone||'';
+  document.getElementById('fTheme').value=s.theme||'#2A6B3A';
+  document.getElementById('fMarkup').value=s.markup||1;
+  document.getElementById('fThreshold').value=s.free_delivery_threshold||30;
+  document.getElementById('fFee').value=s.delivery_fee||5;
+  document.getElementById('fTagline').value=s.tagline||'';
+  document.getElementById('fZips').value=(s.delivery_zips||[]).join('\n');
+  document.getElementById('fActive').checked=!!s.active;
+  document.getElementById('editMsg').textContent='';
+  document.getElementById('editOverlay').classList.add('show');
+}
+
+function closeEdit(e){if(e.target.id==='editOverlay')closeEditDirect();}
+function closeEditDirect(){document.getElementById('editOverlay').classList.remove('show');}
+
+async function saveStore() {
+  const id  = document.getElementById('fId').value.trim();
+  const zh  = document.getElementById('fNameZh').value.trim();
+  const msg = document.getElementById('editMsg');
+  if (!id||!zh) { msg.textContent='门店 ID 和中文名为必填'; return; }
+
+  const zips = document.getElementById('fZips').value.split('\n').map(z=>z.trim()).filter(Boolean);
+  const row = {
+    store_id                : id,
+    name_zh                 : zh,
+    name_en                 : document.getElementById('fNameEn').value.trim()||null,
+    domain                  : document.getElementById('fDomain').value.trim()||null,
+    theme                   : document.getElementById('fTheme').value.trim()||'#2A6B3A',
+    contact_phone           : document.getElementById('fPhone').value.trim()||null,
+    tagline                 : document.getElementById('fTagline').value.trim()||null,
+    markup                  : parseFloat(document.getElementById('fMarkup').value)||1,
+    free_delivery_threshold : parseFloat(document.getElementById('fThreshold').value)||30,
+    delivery_fee            : parseFloat(document.getElementById('fFee').value)||5,
+    delivery_zips           : zips,
+    active                  : document.getElementById('fActive').checked,
+  };
+
+  document.getElementById('saveBtn').disabled=true;
+  const { error } = editingId
+    ? await sb.from('stores').update(row).eq('store_id',id)
+    : await sb.from('stores').insert(row);
+  document.getElementById('saveBtn').disabled=false;
+
+  if (error) { msg.textContent=error.message; return; }
+  closeEditDirect();
+  loadStores();
+}
+
+// ── 覆盖价管理 ────────────────────────────────────────────────
+async function openPrices(storeId, storeName) {
+  priceStoreId = storeId;
+  document.getElementById('priceTitleEl').textContent = storeName + ' · 覆盖价设置';
+  document.getElementById('priceMsg').textContent='';
+  document.getElementById('priceOverlay').classList.add('show');
+
+  const { data: existing } = await sb.from('store_prices').select('sku,price').eq('store_id',storeId);
+  const priceMap = {};
+  (existing||[]).forEach(r => { priceMap[r.sku]=r.price; });
+
+  const list = document.getElementById('priceList');
+  list.innerHTML = allProducts.map(p => `
+    <div class="price-row">
+      <span style="font-family:monospace;color:#888;width:80px;">${p.sku}</span>
+      <span style="flex:1;">${p.name_zh}</span>
+      <span style="color:#888;font-size:12px;margin-right:4px;">基准 $${Number(p.base_price).toFixed(2)}</span>
+      <input type="number" step="0.01" min="0" id="sp_${p.sku}"
+        value="${priceMap[p.sku]!=null?priceMap[p.sku]:''}"
+        placeholder="留空=基准价">
+    </div>`).join('');
+}
+
+function closePriceOverlay(e){if(e.target.id==='priceOverlay')document.getElementById('priceOverlay').classList.remove('show');}
+
+async function savePrices() {
+  const msg = document.getElementById('priceMsg');
+  msg.textContent='保存中…'; msg.style.color='#888';
+
+  // 收集有值的覆盖价
+  const toUpsert=[], toDelete=[];
+  allProducts.forEach(p => {
+    const el = document.getElementById('sp_'+p.sku);
+    if (!el) return;
+    const v = el.value.trim();
+    if (v !== '' && !isNaN(parseFloat(v))) {
+      toUpsert.push({ store_id:priceStoreId, sku:p.sku, price:parseFloat(v) });
+    } else {
+      toDelete.push(p.sku);
+    }
+  });
+
+  // 删除清空的覆盖价
+  if (toDelete.length) {
+    await sb.from('store_prices').delete().eq('store_id',priceStoreId).in('sku',toDelete);
+  }
+  // 写入有值的
+  if (toUpsert.length) {
+    const { error } = await sb.from('store_prices').upsert(toUpsert, {onConflict:'store_id,sku'});
+    if (error) { msg.style.color='#c0392b'; msg.textContent='保存失败: '+error.message; return; }
+  }
+  msg.style.color='#2A6B3A';
+  msg.textContent=`✓ 保存成功（${toUpsert.length} 条覆盖价）`;
+}
+</script>
+</body>
+</html>
