@@ -148,10 +148,12 @@ async function initSupabase(){
 
 async function logout(){ await sb.auth.signOut(); location.href='index.html'; }
 
+const storeNames = {};
 async function loadStoreFilter(){
   const { data } = await sb.from('stores').select('store_id,name_zh').order('store_id');
   const sel = document.getElementById('storeFilter');
   (data||[]).forEach(s => {
+    storeNames[s.store_id] = s.name_zh;
     const opt = document.createElement('option');
     opt.value = s.store_id; opt.textContent = s.name_zh;
     sel.appendChild(opt);
@@ -199,11 +201,15 @@ function renderTable(list){
   }
   tbody.innerHTML = list.map(o => {
     const items = Array.isArray(o.items) ? o.items : [];
-    const itemSummary = items.slice(0,2).map(i=>i.sku+'×'+i.qty).join(', ')+(items.length>2?'…':'');
+    const itemSummary = items.slice(0,2).map(i=>{
+      const name = i.sku || (i.price ? i.price.slice(-8) : '?');
+      const qty  = i.qty  || i.quantity || 1;
+      return name+'×'+qty;
+    }).join(', ')+(items.length>2?'…':'');
     const dt = new Date(o.created_at).toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
     return `<tr onclick="openDetail('${o.id}')">
       <td style="color:#888;font-size:12px;">${dt}</td>
-      <td>${o.store_id}</td>
+      <td>${storeNames[o.store_id] || o.store_id}</td>
       <td style="color:#555;font-size:12px;">${itemSummary||'-'}</td>
       <td class="price">$${Number(o.subtotal||0).toFixed(2)}</td>
       <td class="price" style="color:#888;">$${Number(o.delivery_fee||0).toFixed(2)}</td>
@@ -245,7 +251,11 @@ async function openDetail(id){
     <div class="detail-row"><span class="detail-label">配送地址</span><span style="font-size:11px;white-space:pre-wrap;">${addr}</span></div>
     <div style="margin-top:14px;font-weight:600;font-size:13px;margin-bottom:6px;">商品明细</div>
     <div class="item-list">
-      ${items.map(i=>`<div class="item-row"><span>${i.sku}</span><span>× ${i.qty}</span></div>`).join('')}
+      ${items.map(i=>{
+        const name = i.sku || (i.price ? i.price.slice(-8) : '?');
+        const qty  = i.qty  || i.quantity || 1;
+        return '<div class="item-row"><span>'+name+'</span><span>× '+qty+'</span></div>';
+      }).join('')}
     </div>
     <div class="detail-row" style="margin-top:10px;"><span class="detail-label">小计</span><span class="price">$${Number(o.subtotal||0).toFixed(2)}</span></div>
     <div class="detail-row"><span class="detail-label">配送费</span><span class="price">$${Number(o.delivery_fee||0).toFixed(2)}</span></div>
