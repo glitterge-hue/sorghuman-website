@@ -40,6 +40,7 @@ exports.handler = async (event) => {
       customer_email         : session.customer_details?.email || null,
       customer_phone         : session.customer_details?.phone || null,
       shipping_address       : session.shipping_details?.address || null,
+      total                  : session.amount_total ? session.amount_total / 100 : null,
     };
 
     // 按 stripe_session_id 找到订单并更新
