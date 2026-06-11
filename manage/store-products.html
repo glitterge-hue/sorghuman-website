@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>门店商品 · Sorghuman Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#f0f4f0;color:#1a1a18;}
+.topbar{background:#1A4A28;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;position:sticky;top:0;z-index:100;}
+.topbar h1{font-size:16px;font-weight:700;}
+.topbar nav a{color:rgba(255,255,255,.75);text-decoration:none;font-size:13px;margin-left:20px;}
+.topbar nav a:hover,.topbar nav a.active{color:#fff;}
+.topbar .user{font-size:12px;color:rgba(255,255,255,.65);margin-left:20px;cursor:pointer;}
+.main{max-width:1100px;margin:0 auto;padding:24px;}
+/* 门店选择器 */
+.store-selector{background:#fff;border-radius:8px;border:1px solid #e8e8e0;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+.store-selector label{font-size:13px;font-weight:600;color:#555;}
+.store-selector select{border:1px solid #ddd;border-radius:6px;padding:9px 14px;font-size:14px;font-family:inherit;outline:none;min-width:220px;}
+.store-selector select:focus{border-color:#2A6B3A;}
+.stats-row{display:flex;gap:12px;margin-bottom:16px;align-items:center;flex-wrap:wrap;}
+.stat{background:#fff;border-radius:6px;padding:10px 18px;border:1px solid #e8e8e0;font-size:13px;}
+.stat strong{color:#2A6B3A;font-size:20px;display:block;}
+/* 工具栏 */
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.toolbar input,.toolbar select{border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;background:#fff;}
+.toolbar input:focus,.toolbar select:focus{border-color:#2A6B3A;}
+.btn{padding:8px 18px;border-radius:6px;border:none;font-size:13px;font-family:inherit;font-weight:500;cursor:pointer;}
+.btn-primary{background:#2A6B3A;color:#fff;}
+.btn-primary:hover{background:#1A5A2A;}
+.btn-secondary{background:#fff;color:#2A6B3A;border:1px solid #2A6B3A;}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-danger{background:#fff;color:#c0392b;border:1px solid #e8a0a0;}
+/* 商品列表 */
+.table-wrap{background:#fff;border-radius:8px;border:1px solid #e8e8e0;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{background:#f8f8f5;}
+thead th{padding:10px 14px;text-align:left;font-weight:600;color:#555;border-bottom:1px solid #e8e8e0;white-space:nowrap;}
+tbody tr{border-bottom:1px solid #f0f0ea;}
+tbody tr:hover{background:#fafaf7;}
+td{padding:9px 14px;vertical-align:middle;}
+td input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#2A6B3A;}
+.sku{font-family:monospace;font-size:12px;color:#888;}
+.price-input{width:80px;border:1px solid #ddd;border-radius:4px;padding:4px 8px;font-size:13px;font-family:inherit;text-align:right;}
+.price-input:focus{border-color:#2A6B3A;outline:none;}
+.badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500;}
+.badge-frozen{background:#e8f4fd;color:#1a6b9a;}
+.badge-snacks{background:#fff8e8;color:#8a6d1f;}
+.badge-condiments{background:#f0f7f2;color:#2A6B3A;}
+.badge-fresh{background:#f0fff0;color:#1a7a1a;}
+.badge-grocery{background:#f5f0ff;color:#5a3a9a;}
+.save-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid #e8e8e0;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 8px rgba(0,0,0,.06);}
+.save-bar span{font-size:13px;color:#888;}
+.placeholder{text-align:center;padding:60px;color:#888;font-size:14px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🌾 Sorghuman Admin</h1>
+  <nav>
+    <a href="products.html">商品管理</a>
+    <a href="stores.html">门店管理</a>
+    <a href="store-products.html" class="active">门店商品</a>
+    <a href="orders.html">订单查询</a>
+  </nav>
+  <span class="user" id="userEmail" onclick="logout()">退出登录</span>
+</div>
+
+<div class="main">
+
+  <!-- 第一步：选门店 -->
+  <div class="store-selector">
+    <label>第一步：选择门店</label>
+    <select id="storeSelect" onchange="onStoreChange()">
+      <option value="">— 请选择门店 —</option>
+    </select>
+    <span id="storeInfo" style="font-size:12px;color:#888;"></span>
+  </div>
+
+  <!-- 统计 -->
+  <div class="stats-row" id="statsRow" style="display:none;">
+    <div class="stat"><strong id="statIn">0</strong>已选商品</div>
+    <div class="stat"><strong id="statTotal">0</strong>商品库总数</div>
+    <div class="btn btn-secondary btn-sm" onclick="selectAll()">全选当前分类</div>
+    <div class="btn btn-danger btn-sm" onclick="deselectAll()">取消全选</div>
+  </div>
+
+  <!-- 工具栏 -->
+  <div class="toolbar" id="toolbarRow" style="display:none;">
+    <input id="searchInput" placeholder="搜索 SKU / 名称…" oninput="renderTable()">
+    <select id="catFilter" onchange="renderTable()">
+      <option value="">全部品类</option>
+      <option value="frozen">冷冻食品</option>
+      <option value="snacks">零食和饮料</option>
+      <option value="condiments">米面粮油调味</option>
+      <option value="fresh">生鲜</option>
+      <option value="grocery">百货</option>
+    </select>
+    <select id="selFilter" onchange="renderTable()">
+      <option value="">全部</option>
+      <option value="in">已选</option>
+      <option value="out">未选</option>
+    </select>
+  </div>
+
+  <!-- 商品表格 -->
+  <div class="table-wrap" id="tableWrap">
+    <div class="placeholder">请先选择门店</div>
+  </div>
+
+  <!-- 保存栏 -->
+  <div class="save-bar" id="saveBar" style="display:none;">
+    <span id="changeCount">未做改动</span>
+    <button class="btn btn-primary" onclick="saveChanges()">保存所有改动</button>
+  </div>
+
+</div>
+
+<script>
+const CAT = {frozen:'冷冻食品',snacks:'零食饮料',condiments:'粮油调味',fresh:'生鲜',grocery:'百货'};
+let sb;
+let allProducts = [];      // 全部商品库
+let storeSet = {};         // {sku: {in: bool, price: num|null}} 当前门店
+let origSet  = {};         // 原始状态，用于判断改动
+let currentStore = null;
+
+window.addEventListener('load', async () => {
+  await initSupabase();
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session){ location.href='index.html'; return; }
+  document.getElementById('userEmail').textContent = session.user.email+' · 退出';
+  await loadStores();
+  await loadAllProducts();
+});
+
+async function initSupabase(){
+  const cfg = await fetch('/.netlify/functions/get-config').then(r=>r.json());
+  sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+}
+async function logout(){ await sb.auth.signOut(); location.href='index.html'; }
+
+async function loadStores(){
+  const { data } = await sb.from('stores').select('store_id,name_zh,name_en').order('store_id');
+  const sel = document.getElementById('storeSelect');
+  (data||[]).forEach(s=>{
+    const o = document.createElement('option');
+    o.value = s.store_id;
+    o.textContent = s.name_zh + (s.name_en?' / '+s.name_en:'') + ' ('+s.store_id+')';
+    sel.appendChild(o);
+  });
+}
+
+async function loadAllProducts(){
+  const { data } = await sb.from('products').select('*').eq('active',true).order('sort_order').order('sku');
+  allProducts = data || [];
+}
+
+async function onStoreChange(){
+  const storeId = document.getElementById('storeSelect').value;
+  if(!storeId){
+    document.getElementById('tableWrap').innerHTML='<div class="placeholder">请先选择门店</div>';
+    ['statsRow','toolbarRow','saveBar'].forEach(id=>document.getElementById(id).style.display='none');
+    return;
+  }
+  currentStore = storeId;
+  document.getElementById('storeInfo').textContent = '加载中…';
+
+  // 读该门店已选商品
+  const { data } = await sb.from('store_products')
+    .select('sku,price,active').eq('store_id',storeId);
+
+  storeSet = {}; origSet = {};
+  (data||[]).forEach(r=>{
+    storeSet[r.sku] = { in: r.active!==false, price: r.price };
+    origSet[r.sku]  = { in: r.active!==false, price: r.price };
+  });
+
+  document.getElementById('storeInfo').textContent = '';
+  ['statsRow','toolbarRow','saveBar'].forEach(id=>document.getElementById(id).style.display='flex');
+  document.getElementById('saveBar').style.display='flex';
+  updateStats();
+  renderTable();
+}
+
+function updateStats(){
+  const inCount = allProducts.filter(p=>storeSet[p.sku]?.in).length;
+  document.getElementById('statIn').textContent    = inCount;
+  document.getElementById('statTotal').textContent = allProducts.length;
+}
+
+function renderTable(){
+  const q   = document.getElementById('searchInput').value.toLowerCase();
+  const cat = document.getElementById('catFilter').value;
+  const sel = document.getElementById('selFilter').value;
+
+  const list = allProducts.filter(p=>{
+    if(cat && p.category!==cat) return false;
+    if(q && !p.sku.toLowerCase().includes(q) && !p.name_zh.includes(q) && !p.name_en.toLowerCase().includes(q)) return false;
+    if(sel==='in'  && !storeSet[p.sku]?.in) return false;
+    if(sel==='out' && storeSet[p.sku]?.in)  return false;
+    return true;
+  });
+
+  const tbody = list.map(p=>{
+    const checked = storeSet[p.sku]?.in ? 'checked' : '';
+    const priceVal = storeSet[p.sku]?.price != null ? storeSet[p.sku].price : '';
+    const disabled = storeSet[p.sku]?.in ? '' : 'disabled';
+    return `<tr id="row-${p.sku}">
+      <td><input type="checkbox" ${checked} onchange="toggleProduct('${p.sku}',this.checked)"></td>
+      <td class="sku">${p.sku}</td>
+      <td>${p.name_zh}</td>
+      <td style="color:#555;">${p.name_en}</td>
+      <td><span class="badge badge-${p.category}">${CAT[p.category]||p.category}</span></td>
+      <td>$${Number(p.base_price).toFixed(2)}</td>
+      <td><input class="price-input" type="number" step="0.01" min="0"
+            id="price-${p.sku}" value="${priceVal}" ${disabled}
+            placeholder="同基准价" onchange="setPrice('${p.sku}',this.value)"></td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('tableWrap').innerHTML = `
+    <table>
+      <thead><tr>
+        <th style="width:40px;">选</th>
+        <th>SKU</th><th>中文名</th><th>英文名</th>
+        <th>品类</th><th>基准价</th>
+        <th style="width:120px;">门店售价（空=基准价）</th>
+      </tr></thead>
+      <tbody>${tbody||'<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">无匹配商品</td></tr>'}</tbody>
+    </table>`;
+  updateChangeCount();
+}
+
+function toggleProduct(sku, checked){
+  if(!storeSet[sku]) storeSet[sku] = { in:false, price:null };
+  storeSet[sku].in = checked;
+  const priceEl = document.getElementById('price-'+sku);
+  if(priceEl) priceEl.disabled = !checked;
+  updateStats();
+  updateChangeCount();
+}
+
+function setPrice(sku, val){
+  if(!storeSet[sku]) storeSet[sku] = { in:true, price:null };
+  storeSet[sku].price = val!==''? parseFloat(val) : null;
+  updateChangeCount();
+}
+
+function updateChangeCount(){
+  let changes = 0;
+  allProducts.forEach(p=>{
+    const cur = storeSet[p.sku] || { in:false, price:null };
+    const ori = origSet[p.sku]  || { in:false, price:null };
+    if(cur.in!==ori.in || cur.price!==ori.price) changes++;
+  });
+  document.getElementById('changeCount').textContent =
+    changes>0 ? `${changes} 项改动未保存` : '未做改动';
+}
+
+function selectAll(){
+  const cat = document.getElementById('catFilter').value;
+  allProducts.filter(p=>!cat||p.category===cat).forEach(p=>{
+    storeSet[p.sku] = { in:true, price: storeSet[p.sku]?.price||null };
+  });
+  renderTable(); updateStats();
+}
+
+function deselectAll(){
+  const cat = document.getElementById('catFilter').value;
+  allProducts.filter(p=>!cat||p.category===cat).forEach(p=>{
+    if(storeSet[p.sku]) storeSet[p.sku].in = false;
+  });
+  renderTable(); updateStats();
+}
+
+async function saveChanges(){
+  if(!currentStore) return;
+  const btn = document.querySelector('.save-bar .btn-primary');
+  btn.disabled=true; btn.textContent='保存中…';
+
+  const toUpsert=[], toDelete=[];
+  allProducts.forEach(p=>{
+    const cur = storeSet[p.sku] || {in:false,price:null};
+    if(cur.in){
+      toUpsert.push({store_id:currentStore, sku:p.sku, price:cur.price||null, active:true});
+    } else {
+      toDelete.push(p.sku);
+    }
+  });
+
+  let ok = true;
+  if(toUpsert.length){
+    const { error } = await sb.from('store_products')
+      .upsert(toUpsert, {onConflict:'store_id,sku'});
+    if(error){ alert('保存失败: '+error.message); ok=false; }
+  }
+  if(ok && toDelete.length){
+    const { error } = await sb.from('store_products')
+      .delete().eq('store_id',currentStore).in('sku',toDelete);
+    if(error){ alert('保存失败: '+error.message); ok=false; }
+  }
+
+  btn.disabled=false; btn.textContent='保存所有改动';
+  if(ok){
+    // 刷新 origSet
+    origSet = JSON.parse(JSON.stringify(storeSet));
+    updateChangeCount();
+    alert(`✓ 已保存！${toUpsert.length} 个商品上架，${toDelete.length} 个下架`);
+  }
+}
+</script>
+</body>
+</html>
