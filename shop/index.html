@@ -403,8 +403,11 @@ function renderProducts(){
     qty[p.sku] = qty[p.sku]||0;
     var row = document.createElement('div');
     row.className = 'product-row';
-    const imgHtml = p.image_url
-      ? '<img class="prod-img" src="'+p.image_url+'" alt="'+p.name_en+'" loading="lazy">'
+    const imgSrc = p.image_url
+      ? p.image_url.replace(/\/public$/, '/thumb').replace(/\/thumbnail$/, '/thumb')
+      : null;
+    const imgHtml = imgSrc
+      ? '<img class="prod-img" src="'+imgSrc+'" alt="'+p.name_en+'" loading="lazy">'
       : '<div class="prod-img-placeholder">🛍</div>';
     row.innerHTML =
       imgHtml +
