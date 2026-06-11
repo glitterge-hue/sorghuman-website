@@ -36,7 +36,10 @@ exports.handler = async (event) => {
     stripe_payment_intent : session.payment_intent || null,
     customer_email        : session.customer_details?.email || null,
     customer_phone        : session.customer_details?.phone || null,
-    shipping_address      : session.shipping_details?.address || null,
+    shipping_address      : session.shipping_details?.address 
+                            || session.customer_details?.address || null,
+    shipping_name         : session.shipping_details?.name 
+                            || session.customer_details?.name || null,
     total                 : session.amount_total ? session.amount_total / 100 : null,
   };
 
@@ -83,10 +86,26 @@ exports.handler = async (event) => {
       prods.forEach(p => { prodMap[p.sku] = p; });
     }
 
+    // 对没有 SKU 的 item（local.html 旧格式），用 Stripe API 查商品名
+    for (const item of cart) {
+      if (!item.sku && item.price) {
+        try {
+          const priceData = await stripe.prices.retrieve(item.price, { expand: ['product'] });
+          const productName = priceData.product?.name || item.price.slice(-8);
+          prodMap[item.price] = { name_zh: productName, name_en: '' };
+          item._lookupKey = item.price; // 用 price 作为查询 key
+        } catch(e) {
+          prodMap[item.price] = { name_zh: item.price.slice(-8), name_en: '' };
+          item._lookupKey = item.price;
+        }
+      }
+    }
+
     // ── 构建订单邮件 HTML ────────────────────────────────────────
     const addr    = update.shipping_address;
+    const addrName = update.shipping_name || '';
     const addrStr = addr
-      ? [addr.line1, addr.line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(', ')
+      ? [addrName, addr.line1, addr.line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(', ')
       : 'N/A';
     const orderId  = order.id ? order.id.slice(-8).toUpperCase() : 'N/A';
     const orderTime = new Date(order.created_at).toLocaleString('zh-CN', {
@@ -100,8 +119,9 @@ exports.handler = async (event) => {
     const storeName  = store.name_zh + (store.name_en ? ' / ' + store.name_en : '');
 
     const itemRows = cart.map(i => {
-      const p    = prodMap[i.sku] || {};
-      const name = p.name_zh ? `${p.name_zh} ${p.name_en || ''}` : (i.sku || '?');
+      const key  = i.sku || i._lookupKey || i.price;
+      const p    = prodMap[key] || {};
+      const name = p.name_zh ? `${p.name_zh} ${p.name_en || ''}`.trim() : (key || '?');
       const qty  = i.qty || i.quantity || 1;
       return `<tr>
         <td style="padding:8px 12px;border-bottom:1px solid #f0f0ea;">${name}</td>
