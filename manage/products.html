@@ -78,6 +78,7 @@ td{padding:10px 14px;vertical-align:middle;}
   <nav>
     <a href="products.html" class="active">商品管理</a>
     <a href="stores.html">门店管理</a>
+    <a href="store-products.html">门店商品</a>
     <a href="orders.html">订单查询</a>
   </nav>
   <span class="user" id="userEmail" onclick="logout()">退出登录</span>
@@ -202,7 +203,7 @@ td{padding:10px 14px;vertical-align:middle;}
     <h2>批量导入商品 CSV</h2>
     <div class="csv-hint">
       每行一个商品，用英文逗号分隔，第一行为表头（可省略）。<br>
-      格式：<code>sku,name_zh,name_en,spec,category,base_price,common</code><br>
+      格式：<code>sku,name_zh,name_en,spec,category,base_price,common,image_url</code><br>
       品类可选值：<code>frozen</code> / <code>snacks</code> / <code>condiments</code> / <code>fresh</code> / <code>grocery</code><br>
       已存在的 SKU 会自动更新（upsert）。
     </div>
@@ -408,6 +409,7 @@ async function importCsv() {
       category   : cols[4].trim() || 'frozen',
       base_price : parseFloat(cols[5]) || 0,
       common     : cols[6] ? cols[6].trim().toLowerCase() !== 'false' : true,
+      image_url  : cols[7] ? cols[7].trim() || null : null,
       active     : true,
     };
     if (row.sku && row.name_zh && row.base_price > 0) rows.push(row);
