@@ -30,11 +30,20 @@ async function sb(method, table, qs, body) {
 }
 
 // token 验证：返回 store 对象或 null
-async function verifyToken(storeId, token) {
+// origin = 请求来源域名（用于校验只能从自家或 sorghuman.com 访问）
+async function verifyToken(storeId, token, origin) {
   if (!storeId || !token) return null;
   const rows = await sb('GET', 'stores',
     `store_id=eq.${storeId}&admin_token=eq.${token}&select=store_id,name_zh,name_en,domain,markup`);
-  return rows[0] || null;
+  const store = rows[0];
+  if (!store) return null;
+  // 域名校验：只允许自家域名或 sorghuman.com 访问
+  if (origin) {
+    const isMaster = origin.includes('sorghuman.com');
+    const isOwn    = origin.includes(store.domain);
+    if (!isMaster && !isOwn) return null;
+  }
+  return store;
 }
 
 exports.handler = async (event) => {
@@ -50,7 +59,8 @@ exports.handler = async (event) => {
   const { action, storeId, token } = body;
 
   // ── 验证 token ──────────────────────────────────────────────
-  const store = await verifyToken(storeId, token);
+  const origin = event.headers.origin || event.headers.referer || '';
+  const store = await verifyToken(storeId, token, origin);
   if (!store)
     return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: '无效的访问令牌' }) };
 
