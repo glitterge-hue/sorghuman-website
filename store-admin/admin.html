@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>门店管理</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#f0f4f0;color:#1a1a18;min-height:100vh;}
+/* 顶栏 */
+.topbar{background:#1A4A28;color:#fff;padding:0 20px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar .brand{font-size:15px;font-weight:700;}
+.topbar .store-name{font-size:13px;color:rgba(255,255,255,.75);}
+/* 标签页 */
+.tabs{display:flex;background:#fff;border-bottom:1px solid #e0ddd5;padding:0 20px;}
+.tab{padding:14px 18px;font-size:13px;font-weight:500;cursor:pointer;border-bottom:2px solid transparent;color:#888;}
+.tab.active{color:#1A4A28;border-bottom-color:#1A4A28;}
+/* 内容区 */
+.main{max-width:900px;margin:0 auto;padding:20px;}
+.panel{display:none;}
+.panel.active{display:block;}
+/* 通用组件 */
+.card{background:#fff;border-radius:8px;border:1px solid #e8e8e0;overflow:hidden;margin-bottom:16px;}
+.card-header{padding:14px 18px;font-size:13px;font-weight:600;color:#555;background:#f8f8f5;border-bottom:1px solid #e8e8e0;display:flex;align-items:center;justify-content:space-between;}
+.search-bar{padding:14px 18px;border-bottom:1px solid #f0f0ea;}
+.search-bar input,.search-bar select{border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;margin-right:8px;}
+.search-bar input:focus,.search-bar select:focus{border-color:#2A6B3A;}
+/* 商品行 */
+.prod-row{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #f5f5f0;}
+.prod-row:last-child{border-bottom:none;}
+.prod-img{width:52px;height:52px;object-fit:cover;border-radius:6px;background:#f0f0ea;flex-shrink:0;}
+.prod-img-ph{width:52px;height:52px;border-radius:6px;background:#f0f0ea;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.prod-info{flex:1;min-width:0;}
+.prod-info .zh{font-size:14px;font-weight:500;}
+.prod-info .en{font-size:12px;color:#888;}
+.prod-info .spec{font-size:11px;color:#aaa;}
+.price-tag{font-size:14px;font-weight:600;color:#2A6B3A;white-space:nowrap;}
+.price-input{width:80px;border:1px solid #ddd;border-radius:4px;padding:5px 8px;font-size:13px;text-align:right;font-family:inherit;}
+.price-input:focus{outline:none;border-color:#2A6B3A;}
+.badge{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;font-weight:500;background:#f0f0ea;color:#666;}
+/* 按钮 */
+.btn{padding:7px 16px;border-radius:6px;border:none;font-size:13px;font-family:inherit;font-weight:500;cursor:pointer;}
+.btn-primary{background:#2A6B3A;color:#fff;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-danger{background:#fff;color:#c0392b;border:1px solid #e8a0a0;}
+.btn-add{background:#f0f7f2;color:#2A6B3A;border:1px solid #c0ddc8;}
+.btn-sm{padding:4px 12px;font-size:12px;}
+/* 表单 */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:18px;}
+.form-group{display:flex;flex-direction:column;gap:5px;}
+.form-group.full{grid-column:1/-1;}
+.form-group label{font-size:12px;font-weight:600;color:#555;}
+.form-group input,.form-group select{border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;}
+.form-group input:focus,.form-group select:focus{border-color:#2A6B3A;}
+.form-footer{padding:0 18px 18px;display:flex;justify-content:flex-end;}
+/* 底部保存栏 */
+.save-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid #e0ddd5;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -2px 8px rgba(0,0,0,.06);}
+.save-bar span{font-size:13px;color:#888;}
+/* 空状态 */
+.empty{text-align:center;padding:40px;color:#aaa;font-size:14px;}
+/* 登录页 */
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f0f4f0;}
+.login-box{background:#fff;border-radius:10px;padding:36px 32px;width:360px;box-shadow:0 4px 20px rgba(0,0,0,.08);}
+.login-box h2{font-size:20px;color:#1A4A28;margin-bottom:6px;}
+.login-box p{font-size:13px;color:#888;margin-bottom:24px;}
+.err{color:#c0392b;font-size:13px;margin-top:10px;}
+/* checkbox */
+input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;flex-shrink:0;}
+@media(max-width:600px){
+  .form-grid{grid-template-columns:1fr;}
+  .form-group.full{grid-column:1;}
+  .tabs .tab{padding:12px 12px;font-size:12px;}
+}
+</style>
+</head>
+<body>
+
+<!-- 登录状态下隐藏，未登录时显示 -->
+<div id="loginWrap" class="login-wrap">
+  <div class="login-box">
+    <h2>🌾 门店管理</h2>
+    <p id="loginDesc">正在识别门店…</p>
+    <div id="storeIdRow" class="form-group" style="display:none;">
+      <label>门店 ID Store ID</label>
+      <input id="inputStoreId" placeholder="例如：fareast" autocomplete="off">
+    </div>
+    <div class="form-group" style="margin-top:12px;">
+      <label>访问令牌 Token</label>
+      <input id="inputToken" type="password" placeholder="粘贴您的访问令牌">
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px;padding:10px;" onclick="doLogin()">登录</button>
+    <div id="loginErr" class="err"></div>
+  </div>
+</div>
+
+<!-- 主界面（登录后显示） -->
+<div id="mainWrap" style="display:none;">
+  <div class="topbar">
+    <div>
+      <div class="brand">🌾 Sorghuman 门店管理</div>
+      <div class="store-name" id="headerStoreName"></div>
+    </div>
+    <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;" onclick="doLogout()">退出</button>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="showTab('myProducts')">我的商品</div>
+    <div class="tab" onclick="showTab('addFromCatalog')">从商品库添加</div>
+    <div class="tab" onclick="showTab('addNew')">新增商品</div>
+  </div>
+
+  <!-- ── 面板1：我的商品 ── -->
+  <div class="main">
+    <div id="panelMyProducts" class="panel active">
+      <div class="card">
+        <div class="card-header">
+          <span>我的商品 <span id="myCount" style="color:#888;font-weight:400;"></span></span>
+        </div>
+        <div class="search-bar">
+          <input id="mySearch" placeholder="搜索…" oninput="renderMyProducts()">
+          <select id="myCatFilter" onchange="renderMyProducts()">
+            <option value="">全部品类</option>
+            <option value="frozen">冷冻食品</option>
+            <option value="snacks">零食饮料</option>
+            <option value="condiments">粮油调味</option>
+            <option value="fresh">生鲜</option>
+            <option value="grocery">百货</option>
+          </select>
+        </div>
+        <div id="myProductsList"></div>
+      </div>
+    </div>
+
+    <!-- ── 面板2：从商品库添加 ── -->
+    <div id="panelAddFromCatalog" class="panel">
+      <div class="card">
+        <div class="card-header">
+          <span>商品库 <span id="catalogCount" style="color:#888;font-weight:400;"></span></span>
+          <button class="btn btn-primary btn-sm" onclick="saveCatalogSelection()">保存选择</button>
+        </div>
+        <div class="search-bar">
+          <input id="catSearch" placeholder="搜索商品…" oninput="renderCatalog()">
+          <select id="catCatFilter" onchange="renderCatalog()">
+            <option value="">全部品类</option>
+            <option value="frozen">冷冻食品</option>
+            <option value="snacks">零食饮料</option>
+            <option value="condiments">粮油调味</option>
+            <option value="fresh">生鲜</option>
+            <option value="grocery">百货</option>
+          </select>
+        </div>
+        <div id="catalogList"></div>
+      </div>
+    </div>
+
+    <!-- ── 面板3：新增商品 ── -->
+    <div id="panelAddNew" class="panel">
+      <div class="card">
+        <div class="card-header">新增商品到商品库</div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>SKU *</label>
+            <input id="newSku" placeholder="例如：CHIPS-001">
+          </div>
+          <div class="form-group">
+            <label>品类 *</label>
+            <select id="newCat">
+              <option value="frozen">冷冻食品</option>
+              <option value="snacks">零食饮料</option>
+              <option value="condiments">粮油调味</option>
+              <option value="fresh">生鲜</option>
+              <option value="grocery">百货</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>中文名 *</label>
+            <input id="newNameZh" placeholder="乐事薯片青柠味">
+          </div>
+          <div class="form-group">
+            <label>英文名</label>
+            <input id="newNameEn" placeholder="Lay's Chips Lime">
+          </div>
+          <div class="form-group">
+            <label>规格</label>
+            <input id="newSpec" placeholder="135g">
+          </div>
+          <div class="form-group">
+            <label>建议零售价 *</label>
+            <input id="newBasePrice" type="number" step="0.01" placeholder="4.99">
+          </div>
+          <div class="form-group">
+            <label>本店售价（空=建议价）</label>
+            <input id="newStorePrice" type="number" step="0.01" placeholder="留空同上">
+          </div>
+          <div class="form-group">
+            <label>图片链接</label>
+            <input id="newImageUrl" placeholder="https://imagedelivery.net/...">
+          </div>
+        </div>
+        <div class="form-footer">
+          <button class="btn btn-primary" onclick="submitNewProduct()">提交到商品库并加入本店</button>
+        </div>
+        <div id="newProductMsg" style="padding:0 18px 14px;font-size:13px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/.netlify/functions/store-catalog';
+let storeId = '', token = '', storeInfo = null;
+let myProducts = [], allCatalog = [], mySkuSet = new Set();
+let pendingAdd = new Set(), pendingRemove = new Set();
+
+// ── 登录 ──────────────────────────────────────────────────────
+async function doLogin(){
+  const sid = document.getElementById('inputStoreId').value.trim();
+  const tok = document.getElementById('inputToken').value.trim();
+  if(!sid||!tok){ showErr('请填写门店 ID 和令牌'); return; }
+
+  // 从 URL 参数读取（书签方式）
+  const res = await api('GET_STORE_PRODUCTS', sid, tok);
+  if(res.error){ showErr('登录失败：'+res.error); return; }
+
+  storeId = sid; token = tok;
+  storeInfo = res.store;
+  myProducts = res.products || [];
+  buildMySkuSet();
+
+  // 保存到 sessionStorage
+  sessionStorage.setItem('storeId', sid);
+  sessionStorage.setItem('token', tok);
+
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('mainWrap').style.display  = 'block';
+  document.getElementById('headerStoreName').textContent = storeInfo.name_zh + (storeInfo.name_en?' / '+storeInfo.name_en:'');
+  renderMyProducts();
+}
+
+function doLogout(){
+  sessionStorage.clear();
+  location.reload();
+}
+
+function showErr(msg){ document.getElementById('loginErr').textContent = msg; }
+
+// 自动登录（域名识别 + URL 参数 + sessionStorage）
+window.addEventListener('load', async () => {
+  const params = new URLSearchParams(location.search);
+  const tok = params.get('token') || sessionStorage.getItem('token');
+
+  // 1. 从域名自动推断 store_id（调用 get-catalog 取 store 映射）
+  let autoStoreId = '';
+  try {
+    const reg = await fetch('/stores/index.json').then(r=>r.json());
+    const host = location.hostname.replace(/^www\./,'');
+    autoStoreId = reg[host] || '';
+  } catch(e){}
+
+  const sid = params.get('store') || sessionStorage.getItem('storeId') || autoStoreId;
+
+  if(autoStoreId && !params.get('store')){
+    // 域名识别成功：隐藏 store_id 输入框，只显示 token
+    document.getElementById('storeIdRow').style.display = 'none';
+    document.getElementById('loginDesc').textContent = '请输入访问令牌登录';
+  } else {
+    // sorghuman.com 或无法识别：显示 store_id 输入框
+    document.getElementById('storeIdRow').style.display = 'block';
+    document.getElementById('loginDesc').textContent = '请输入门店 ID 和访问令牌';
+  }
+
+  if(sid){ document.getElementById('inputStoreId').value = sid; }
+  if(tok){ document.getElementById('inputToken').value = tok; }
+
+  if(sid && tok){ await doLogin(); }
+});
+
+// ── API 调用 ──────────────────────────────────────────────────
+async function api(action, sid, tok, extra){
+  const body = { action, storeId: sid||storeId, token: tok||token, ...(extra||{}) };
+  const res = await fetch(API, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body)
+  });
+  return res.json();
+}
+
+// ── 标签页切换 ────────────────────────────────────────────────
+function showTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const names = ['myProducts','addFromCatalog','addNew'];
+    t.classList.toggle('active', names[i]===name);
+  });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel'+name.charAt(0).toUpperCase()+name.slice(1)).classList.add('active');
+  if(name==='addFromCatalog' && !allCatalog.length) loadCatalog();
+}
+
+// ── 面板1：我的商品 ───────────────────────────────────────────
+function buildMySkuSet(){ mySkuSet = new Set(myProducts.map(r=>r.sku)); }
+
+function renderMyProducts(){
+  const q   = document.getElementById('mySearch').value.toLowerCase();
+  const cat = document.getElementById('myCatFilter').value;
+  const list = myProducts.filter(r=>{
+    if(!r.products) return false;
+    if(cat && r.products.category!==cat) return false;
+    if(q && !r.sku.toLowerCase().includes(q) &&
+       !r.products.name_zh.toLowerCase().includes(q) &&
+       !r.products.name_en.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('myCount').textContent = '共 '+myProducts.length+' 个';
+  document.getElementById('myProductsList').innerHTML = list.length
+    ? list.map(r=>myRow(r)).join('')
+    : '<div class="empty">暂无商品</div>';
+}
+
+function myRow(r){
+  const p = r.products || {};
+  const img = p.image_url
+    ? `<img class="prod-img" src="${p.image_url.replace(/\/public$/,'/thumb')}" onerror="this.src='${p.image_url}'">`
+    : `<div class="prod-img-ph">🛍</div>`;
+  const priceVal = r.price != null ? r.price : '';
+  const basePrice = p.base_price ? '$'+Number(p.base_price).toFixed(2) : '';
+  return `<div class="prod-row">
+    ${img}
+    <div class="prod-info">
+      <div class="zh">${p.name_zh||''}</div>
+      <div class="en">${p.name_en||''}</div>
+      <div class="spec">${p.spec||''} · <span class="badge">${p.category||''}</span></div>
+    </div>
+    <div style="text-align:right;flex-shrink:0;">
+      <div style="font-size:11px;color:#aaa;margin-bottom:3px;">基准 ${basePrice}</div>
+      <input class="price-input" type="number" step="0.01" value="${priceVal}"
+        placeholder="同基准" onchange="updatePrice('${r.sku}',this.value)">
+    </div>
+    <button class="btn btn-danger btn-sm" onclick="removeProduct('${r.sku}')">下架</button>
+  </div>`;
+}
+
+async function updatePrice(sku, val){
+  await api('UPDATE_PRICE', null, null, { sku, price: val||null });
+}
+
+async function removeProduct(sku){
+  if(!confirm('确定从本店下架此商品？')) return;
+  const res = await api('SAVE_STORE_PRODUCTS', null, null, { toUpsert:[], toRemove:[sku] });
+  if(res.ok){
+    myProducts = myProducts.filter(r=>r.sku!==sku);
+    buildMySkuSet();
+    renderMyProducts();
+    if(allCatalog.length) renderCatalog();
+  }
+}
+
+// ── 面板2：从商品库添加 ───────────────────────────────────────
+async function loadCatalog(){
+  const res = await api('GET_ALL_PRODUCTS');
+  allCatalog = res.products || [];
+  document.getElementById('catalogCount').textContent = '共 '+allCatalog.length+' 个';
+  renderCatalog();
+}
+
+function renderCatalog(){
+  const q   = document.getElementById('catSearch').value.toLowerCase();
+  const cat = document.getElementById('catCatFilter').value;
+  const list = allCatalog.filter(p=>{
+    if(cat && p.category!==cat) return false;
+    if(q && !p.sku.toLowerCase().includes(q) &&
+       !p.name_zh.toLowerCase().includes(q) &&
+       !p.name_en.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById('catalogList').innerHTML = list.length
+    ? list.map(p=>catalogRow(p)).join('')
+    : '<div class="empty">无匹配商品</div>';
+}
+
+function catalogRow(p){
+  const inStore = mySkuSet.has(p.sku) || pendingAdd.has(p.sku);
+  const checked = inStore ? 'checked' : '';
+  const img = p.image_url
+    ? `<img class="prod-img" src="${p.image_url.replace(/\/public$/,'/thumb')}" onerror="this.src='${p.image_url}'">`
+    : `<div class="prod-img-ph">🛍</div>`;
+  return `<div class="prod-row">
+    <input type="checkbox" ${checked} onchange="toggleCatalog('${p.sku}',this.checked)">
+    ${img}
+    <div class="prod-info">
+      <div class="zh">${p.name_zh}</div>
+      <div class="en">${p.name_en}</div>
+      <div class="spec">${p.spec||''} · <span class="badge">${p.category||''}</span></div>
+    </div>
+    <div class="price-tag">$${Number(p.base_price).toFixed(2)}</div>
+  </div>`;
+}
+
+function toggleCatalog(sku, checked){
+  if(checked){ pendingAdd.add(sku); pendingRemove.delete(sku); }
+  else        { pendingRemove.add(sku); pendingAdd.delete(sku); }
+}
+
+async function saveCatalogSelection(){
+  const toUpsert = [...pendingAdd].map(sku=>({ sku, price:null }));
+  const toRemove = [...pendingRemove];
+  const res = await api('SAVE_STORE_PRODUCTS', null, null, { toUpsert, toRemove });
+  if(res.ok){
+    // 刷新我的商品
+    const r2 = await api('GET_STORE_PRODUCTS');
+    myProducts = r2.products || [];
+    buildMySkuSet();
+    renderMyProducts();
+    pendingAdd.clear(); pendingRemove.clear();
+    alert('✓ 已保存！');
+  } else {
+    alert('保存失败：'+(res.error||'未知错误'));
+  }
+}
+
+// ── 面板3：新增商品 ───────────────────────────────────────────
+async function submitNewProduct(){
+  const sku        = document.getElementById('newSku').value.trim();
+  const name_zh    = document.getElementById('newNameZh').value.trim();
+  const name_en    = document.getElementById('newNameEn').value.trim();
+  const spec       = document.getElementById('newSpec').value.trim();
+  const category   = document.getElementById('newCat').value;
+  const base_price = document.getElementById('newBasePrice').value;
+  const store_price= document.getElementById('newStorePrice').value;
+  const image_url  = document.getElementById('newImageUrl').value.trim();
+  const msg        = document.getElementById('newProductMsg');
+
+  if(!sku||!name_zh||!base_price){ msg.style.color='#c0392b'; msg.textContent='请填写 SKU、中文名和价格'; return; }
+
+  msg.style.color='#888'; msg.textContent='提交中…';
+  const res = await api('ADD_NEW_PRODUCT', null, null,
+    { sku, name_zh, name_en, spec, category, base_price, store_price, image_url });
+
+  if(res.ok){
+    msg.style.color='#2A6B3A';
+    msg.textContent='✓ 已添加到商品库并加入本店！';
+    ['newSku','newNameZh','newNameEn','newSpec','newBasePrice','newStorePrice','newImageUrl']
+      .forEach(id=>document.getElementById(id).value='');
+    const r2 = await api('GET_STORE_PRODUCTS');
+    myProducts = r2.products||[];
+    buildMySkuSet();
+  } else {
+    msg.style.color='#c0392b';
+    msg.textContent='失败：'+(res.error||'未知错误');
+  }
+}
+</script>
+</body>
+</html>
