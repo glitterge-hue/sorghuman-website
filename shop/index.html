@@ -392,11 +392,18 @@ function onSearch(q){
   }
 }
 
-function renderSearch(q){
+function fuzzyMatch(text, q){
+    // 支持分词模糊：把搜索词按空格拆开，每段都要匹配
+    var parts = q.split(/\s+/).filter(Boolean);
+    return parts.every(function(part){
+      return text.indexOf(part) >= 0;
+    });
+  }
+
+  function renderSearch(q){
   var matches = (catalog ? catalog.products : []).filter(function(p){
-    return p.name_zh.toLowerCase().includes(q) ||
-           p.name_en.toLowerCase().includes(q)  ||
-           p.sku.toLowerCase().includes(q);
+    var haystack = (p.name_zh + ' ' + p.name_en + ' ' + p.sku).toLowerCase();
+    return fuzzyMatch(haystack, q);
   });
   var label = document.getElementById('searchLabel');
   label.textContent = matches.length
