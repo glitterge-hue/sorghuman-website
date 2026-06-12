@@ -41,6 +41,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .promo-item-note{margin-left:auto;font-size:11px;background:rgba(200,146,42,.28);color:#F0C060;padding:3px 10px;border-radius:12px;white-space:nowrap;flex-shrink:0;}
 .promo-item-add{margin-left:auto;font-size:12px;background:var(--gold);color:#fff;border:none;padding:5px 12px;border-radius:12px;cursor:pointer;font-family:inherit;font-weight:500;white-space:nowrap;flex-shrink:0;}
 /* 品类导航 */
+.search-section{background:#fff;padding:12px 5% 0;border-bottom:none;}
+.search-section input{width:100%;max-width:560px;display:block;margin:0 auto;border:1.5px solid var(--border);border-radius:24px;padding:10px 20px;font-size:14px;font-family:inherit;outline:none;background:#faf9f7;}
+.search-section input:focus{border-color:var(--brand);}
+.search-label{text-align:center;font-size:13px;color:var(--muted);padding:8px 0 4px;}
 .cat-tabs-section{background:#fff;border-bottom:1px solid var(--border);padding:16px 5%;}
 .cat-tabs{max-width:920px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;}
 .cat-tab{padding:9px 18px;border:1.5px solid var(--brand);border-radius:30px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--brand);font-family:inherit;transition:background .15s,color .15s;white-space:nowrap;}
@@ -136,6 +140,10 @@ footer a{color:var(--brand);}
 </div>
 
 <!-- 品类导航 -->
+<div class="search-section">
+  <input id="searchBox" type="search" placeholder="🔍 搜索商品 Search products…" oninput="onSearch(this.value)" autocomplete="off">
+  <div id="searchLabel" class="search-label" style="display:none;"></div>
+</div>
 <div class="cat-tabs-section">
   <div class="cat-tabs" id="catTabs">
     <button class="cat-tab" data-cat="condiments" onclick="setCat('condiments')">米面粮油调味 Pantry</button>
@@ -367,6 +375,56 @@ function priceOf(p){
   var ov = store.prices ? store.prices[p.sku] : undefined;
   if(ov!==undefined && ov!==null && ov!=='') return round2(Number(ov));
   return round2(p.base_price * (store.markup||1));
+}
+
+function onSearch(q){
+  q = q.trim().toLowerCase();
+  var label   = document.getElementById('searchLabel');
+  var catSec  = document.querySelector('.cat-tabs-section');
+  if(q){
+    catSec.style.display = 'none';
+    label.style.display  = 'block';
+    renderSearch(q);
+  } else {
+    catSec.style.display = '';
+    label.style.display  = 'none';
+    renderProducts();
+  }
+}
+
+function renderSearch(q){
+  var matches = (catalog ? catalog.products : []).filter(function(p){
+    return p.name_zh.toLowerCase().includes(q) ||
+           p.name_en.toLowerCase().includes(q)  ||
+           p.sku.toLowerCase().includes(q);
+  });
+  var label = document.getElementById('searchLabel');
+  label.textContent = matches.length
+    ? '找到 '+matches.length+' 个商品 · '+matches.length+' result'+(matches.length>1?'s':'')
+    : '没有找到相关商品 · No results found';
+
+  var col = document.getElementById('productsCol');
+  col.innerHTML = '';
+  matches.forEach(function(p){
+    var row = document.createElement('div');
+    row.className = 'product-row';
+    var imgHtml = p.image_url
+      ? '<img class="prod-img" src="'+p.image_url+'" alt="'+p.name_en+'" loading="lazy">'
+      : '<div class="prod-img-placeholder">🛍</div>';
+    row.innerHTML = imgHtml +
+      '<div class="prod-info">'+
+        '<h3>'+p.name_en+'</h3>'+
+        '<div class="zh">'+p.name_zh+'</div>'+
+        '<div class="spec">'+(p.spec||'')+'</div>'+
+        '<div class="price">'+fmt(priceOf(p))+'</div>'+
+      '</div>'+
+      '<div class="qty-control">'+
+        '<button onclick="adj(''+p.sku+'',-1)">−</button>'+
+        '<span id="q'+p.sku+'">'+(qty[p.sku]||0)+'</span>'+
+        '<button onclick="adj(''+p.sku+'',1)">+</button>'+
+      '</div>';
+    col.appendChild(row);
+  });
 }
 
 function renderProducts(){
