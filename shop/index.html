@@ -426,9 +426,9 @@ function fuzzyMatch(text, q){
         '<div class="price">'+fmt(priceOf(p))+'</div>'+
       '</div>'+
       '<div class="qty-control">'+
-        '<button onclick="adj(''+p.sku+'',-1)">−</button>'+
+        '<button onclick="adj(\''+p.sku+'\',-1)">−</button>'+
         '<span id="q'+p.sku+'">'+(qty[p.sku]||0)+'</span>'+
-        '<button onclick="adj(''+p.sku+'',1)">+</button>'+
+        '<button onclick="adj(\''+p.sku+'\',1)">+</button>'+
       '</div>';
     col.appendChild(row);
   });
