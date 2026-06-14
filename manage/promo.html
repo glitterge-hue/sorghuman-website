@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>活动管理 · Sorghuman Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:#f0f4f0;color:#1a1a18;}
+.topbar{background:#1A4A28;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;position:sticky;top:0;z-index:100;}
+.topbar h1{font-size:16px;font-weight:700;}
+.topbar nav a{color:rgba(255,255,255,.75);text-decoration:none;font-size:13px;margin-left:20px;}
+.topbar nav a:hover,.topbar nav a.active{color:#fff;}
+.topbar .user{font-size:12px;color:rgba(255,255,255,.65);margin-left:20px;cursor:pointer;}
+.main{max-width:900px;margin:0 auto;padding:24px;}
+.card{background:#fff;border-radius:8px;border:1px solid #e8e8e0;overflow:hidden;margin-bottom:20px;}
+.card-header{padding:16px 22px;font-size:14px;font-weight:600;color:#1A4A28;background:#f8f8f5;border-bottom:1px solid #e8e8e0;display:flex;align-items:center;justify-content:space-between;}
+/* 预览 */
+.preview-wrap{margin:18px 22px;border-radius:8px;overflow:hidden;}
+.preview-banner{padding:32px 36px;background:#1A4A28;position:relative;min-height:120px;transition:background .3s;}
+.preview-badge{display:inline-block;background:rgba(255,255,255,.2);color:#fff;padding:3px 12px;border-radius:12px;font-size:12px;margin-bottom:10px;}
+.preview-title{font-size:24px;font-weight:700;color:#fff;}
+.preview-subtitle{font-size:14px;color:rgba(255,255,255,.8);margin-top:6px;}
+.preview-cta{margin-top:16px;padding:10px 24px;background:#fff;border:none;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;color:#1A4A28;}
+/* 表单 */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:22px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-group.full{grid-column:1/-1;}
+.form-group label{font-size:12px;font-weight:600;color:#555;}
+.form-group input,.form-group textarea{border:1px solid #ddd;border-radius:6px;padding:9px 12px;font-size:13px;font-family:inherit;outline:none;resize:none;}
+.form-group input:focus,.form-group textarea:focus{border-color:#2A6B3A;}
+.hint{font-size:11px;color:#aaa;margin-top:3px;}
+.toggle-row{display:flex;align-items:center;gap:12px;padding:16px 22px;border-bottom:1px solid #f0f0ea;}
+.toggle-row label{font-size:14px;font-weight:500;}
+.toggle-row .hint{font-size:12px;color:#888;margin:0;}
+input[type=checkbox]{width:18px;height:18px;accent-color:#2A6B3A;cursor:pointer;}
+/* 颜色选择 */
+.color-row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-top:4px;}
+.color-dot{width:30px;height:30px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:border-color .15s;}
+.color-dot.selected{border-color:#333;}
+/* 按钮 */
+.btn{padding:9px 22px;border-radius:6px;border:none;font-size:13px;font-family:inherit;font-weight:500;cursor:pointer;}
+.btn-primary{background:#2A6B3A;color:#fff;}
+.btn-primary:hover{background:#1A5A2A;}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.form-footer{padding:0 22px 22px;display:flex;align-items:center;justify-content:flex-end;gap:12px;}
+.msg{font-size:13px;}
+/* 说明 */
+.info-box{background:#f0f7f2;border:1px solid #c0ddc8;border-radius:6px;padding:12px 16px;font-size:13px;color:#2A6B3A;margin:0 22px 16px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🌾 Sorghuman Admin</h1>
+  <nav>
+    <a href="products.html">商品管理</a>
+    <a href="stores.html">门店管理</a>
+    <a href="store-products.html">门店商品</a>
+    <a href="orders.html">订单查询</a>
+    <a href="promo.html" class="active">活动管理</a>
+  </nav>
+  <span class="user" id="userEmail" onclick="logout()">退出</span>
+</div>
+
+<div class="main">
+
+  <!-- 预览 -->
+  <div class="card">
+    <div class="card-header">
+      <span>预览效果</span>
+      <span id="statusBadge" style="font-size:12px;font-weight:400;color:#888;">未激活</span>
+    </div>
+    <div class="preview-wrap" id="previewWrap">
+      <div class="preview-banner" id="previewBanner">
+        <div class="preview-badge">🎉 活动预览</div>
+        <div class="preview-title" id="previewTitle">在下方填写活动内容</div>
+        <div class="preview-subtitle" id="previewSubtitle"></div>
+        <button class="preview-cta" id="previewCta">立即选购 Shop Now</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 表单 -->
+  <div class="card">
+    <div class="card-header">高仁全局活动设置</div>
+
+    <div class="info-box">
+      此处设置的活动将在<strong>所有未设置自己活动的门店</strong>中显示。各门店自己的活动优先级更高。
+    </div>
+
+    <div class="toggle-row">
+      <input type="checkbox" id="promoActive" onchange="updatePreview()">
+      <label for="promoActive">开启全局活动</label>
+      <span class="hint">关闭后所有门店的全局活动横幅消失</span>
+    </div>
+
+    <div class="form-grid">
+      <div class="form-group">
+        <label>活动标题（中文）</label>
+        <input id="titleZh" placeholder="端午节特惠" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>活动标题（English）</label>
+        <input id="titleEn" placeholder="Dragon Boat Festival Sale" oninput="updatePreview()">
+      </div>
+      <div class="form-group full">
+        <label>副标题 / 描述</label>
+        <input id="subtitle" placeholder="粽香飘四方，买满$40享九折" oninput="updatePreview()">
+      </div>
+      <div class="form-group">
+        <label>按钮文字（中文）</label>
+        <input id="cta" placeholder="立即选购" value="立即选购" oninput="updatePreview()">
+        <div class="hint">英文 "Shop Now" 自动添加</div>
+      </div>
+      <div class="form-group">
+        <label>横幅背景色</label>
+        <div class="color-row" id="colorRow">
+          <div class="color-dot selected" style="background:#1A4A28;" onclick="pickColor('#1A4A28',this)"></div>
+          <div class="color-dot" style="background:#8B0000;" onclick="pickColor('#8B0000',this)"></div>
+          <div class="color-dot" style="background:#B8860B;" onclick="pickColor('#B8860B',this)"></div>
+          <div class="color-dot" style="background:#1a3a6b;" onclick="pickColor('#1a3a6b',this)"></div>
+          <div class="color-dot" style="background:#6b1a6b;" onclick="pickColor('#6b1a6b',this)"></div>
+          <div class="color-dot" style="background:#2c2c2c;" onclick="pickColor('#2c2c2c',this)"></div>
+          <input type="color" id="customColor" value="#1A4A28" onchange="pickColor(this.value,null)" style="width:30px;height:30px;border:none;border-radius:50%;cursor:pointer;padding:0;">
+        </div>
+      </div>
+      <div class="form-group full">
+        <label>背景图片链接（可选，留空用纯色）</label>
+        <input id="bgImage" placeholder="https://imagedelivery.net/... 或其他公开图片链接" oninput="updatePreview()">
+        <div class="hint">建议使用 Cloudflare Images 链接，Facebook 图片链接可能过期</div>
+      </div>
+    </div>
+
+    <div class="form-footer">
+      <span class="msg" id="saveMsg"></span>
+      <button class="btn btn-primary" id="saveBtn" onclick="savePromo()">保存并发布</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let sb, promoColor = '#1A4A28';
+
+window.addEventListener('load', async () => {
+  await initSb();
+  const { data:{ session } } = await sb.auth.getSession();
+  if (!session) { location.href = 'index.html'; return; }
+  document.getElementById('userEmail').textContent = session.user.email + ' · 退出';
+  await loadPromo();
+});
+
+async function initSb(){
+  const cfg = await fetch('/.netlify/functions/get-config').then(r=>r.json());
+  sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+}
+async function logout(){ await sb.auth.signOut(); location.href='index.html'; }
+
+async function loadPromo(){
+  const { data } = await sb.from('settings').select('value').eq('key','global_promo').single();
+  const p = data?.value || {};
+  document.getElementById('promoActive').checked = p.active||false;
+  document.getElementById('titleZh').value  = p.title_zh||'';
+  document.getElementById('titleEn').value  = p.title_en||'';
+  document.getElementById('subtitle').value = p.subtitle||'';
+  document.getElementById('cta').value      = p.cta||'立即选购';
+  document.getElementById('bgImage').value  = p.image||'';
+  promoColor = p.color||'#1A4A28';
+  document.getElementById('customColor').value = promoColor;
+  document.querySelectorAll('.color-dot').forEach(d=>{
+    d.classList.toggle('selected', d.style.background===promoColor);
+  });
+  updatePreview();
+}
+
+function pickColor(c, el){
+  promoColor = c;
+  document.getElementById('customColor').value = c;
+  document.querySelectorAll('.color-dot').forEach(d=>d.classList.remove('selected'));
+  if(el) el.classList.add('selected');
+  updatePreview();
+}
+
+function updatePreview(){
+  const active   = document.getElementById('promoActive').checked;
+  const titleZh  = document.getElementById('titleZh').value;
+  const titleEn  = document.getElementById('titleEn').value;
+  const subtitle = document.getElementById('subtitle').value;
+  const cta      = document.getElementById('cta').value||'立即选购';
+  const image    = document.getElementById('bgImage').value;
+
+  const banner = document.getElementById('previewBanner');
+  if(image){
+    banner.style.background = `linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url(${image}) center/cover`;
+  } else {
+    banner.style.background = promoColor;
+  }
+  banner.style.opacity = active ? 1 : 0.4;
+
+  document.getElementById('previewTitle').textContent    = [titleZh,titleEn].filter(Boolean).join(' · ') || '在下方填写活动内容';
+  document.getElementById('previewSubtitle').textContent = subtitle;
+  document.getElementById('previewCta').textContent      = cta + ' Shop Now';
+  document.getElementById('statusBadge').textContent     = active ? '✅ 已激活' : '⭕ 未激活';
+  document.getElementById('statusBadge').style.color     = active ? '#2A6B3A' : '#888';
+}
+
+async function savePromo(){
+  const btn = document.getElementById('saveBtn');
+  const msg = document.getElementById('saveMsg');
+  btn.disabled = true; btn.textContent = '保存中…';
+
+  const value = {
+    active  : document.getElementById('promoActive').checked,
+    title_zh: document.getElementById('titleZh').value.trim(),
+    title_en: document.getElementById('titleEn').value.trim(),
+    subtitle: document.getElementById('subtitle').value.trim(),
+    cta     : document.getElementById('cta').value.trim()||'立即选购',
+    color   : promoColor,
+    image   : document.getElementById('bgImage').value.trim(),
+  };
+
+  const { error } = await sb.from('settings')
+    .upsert({ key:'global_promo', value, updated_at: new Date().toISOString() },
+             { onConflict:'key' });
+
+  btn.disabled = false; btn.textContent = '保存并发布';
+  if(error){
+    msg.style.color = '#c0392b';
+    msg.textContent = '保存失败：' + error.message;
+  } else {
+    msg.style.color = '#2A6B3A';
+    msg.textContent = '✓ 已发布！所有未设置自己活动的门店立刻生效。';
+    setTimeout(()=>msg.textContent='', 4000);
+  }
+}
+</script>
+</body>
+</html>
