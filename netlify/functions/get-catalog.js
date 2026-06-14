@@ -38,7 +38,7 @@ exports.handler = async (event) => {
       sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
       sb('store_products',
         `store_id=eq.${storeId}&active=eq.true` +
-        `&select=sku,price,sort_order,products(name_zh,name_en,spec,category,base_price,image_url,sort_order)` +
+        `&select=sku,price,sort_order,products(name_zh,name_en,spec,category,base_price,image_url,sort_order,featured)` +
         `&order=sort_order.asc`),
     ]);
 
@@ -63,6 +63,7 @@ exports.handler = async (event) => {
           : parseFloat((sp.products.base_price * markup).toFixed(2)),
         common    : true,
         image_url : sp.products.image_url,
+        featured  : sp.products.featured || false,
       }));
 
     return {
