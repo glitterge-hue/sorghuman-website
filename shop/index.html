@@ -134,6 +134,7 @@ footer a{color:var(--brand);}
       <div class="promo-tagline" id="promoTagline"></div>
       <div class="promo-intro" id="promoIntroZh"></div>
       <div class="promo-intro" id="promoIntroEn" style="margin-top:8px;"></div>
+      <button id="promoCta" onclick="goFeatured()" style="display:none;margin-top:16px;padding:10px 24px;background:#fff;border:none;border-radius:24px;font-size:14px;font-weight:600;cursor:pointer;color:#1A4A28;"></button>
     </div>
     <div class="promo-items" id="promoItems"></div>
   </div>
@@ -274,6 +275,9 @@ async function loadPromo(){
     document.getElementById('promoTagline').textContent = sp.subtitle||'';
     document.getElementById('promoIntroZh').textContent = '';
     document.getElementById('promoIntroEn').textContent = '';
+    var ctaBtn = document.getElementById('promoCta');
+    ctaBtn.textContent = sp.cta || '立即选购 Shop Now';
+    ctaBtn.style.display = 'inline-block';
     return;
   }
   // 全局活动（fallback）
@@ -309,6 +313,12 @@ async function loadPromo(){
     el.appendChild(right);
     box.appendChild(el);
   });
+}
+
+function goFeatured(){
+  setCat('featured');
+  var el = document.querySelector('.cat-tab[data-cat="featured"]');
+  if(el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
 function addPromoSku(sku){
