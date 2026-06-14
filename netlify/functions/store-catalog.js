@@ -135,6 +135,20 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
+    // ── 切换爆品状态 ──────────────────────────────────────────────
+    if (action === 'TOGGLE_FEATURED') {
+      const { sku, featured } = body;
+      await fetch(
+        `${SUPA_URL}/rest/v1/store_products?store_id=eq.${storeId}&sku=eq.${sku}`,
+        {
+          method : 'PATCH',
+          headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
+          body   : JSON.stringify({ featured: !!featured }),
+        }
+      );
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
+    }
+
     return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Unknown action' }) };
 
   } catch (e) {
