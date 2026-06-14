@@ -79,8 +79,8 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
 <div id="loginWrap" class="login-wrap">
   <div class="login-box">
     <h2>🌾 门店管理</h2>
-    <p>请输入您的门店 ID 和访问令牌</p>
-    <div class="form-group">
+    <p id="loginDesc">正在识别门店…</p>
+    <div id="storeIdRow" class="form-group" style="display:none;">
       <label>门店 ID Store ID</label>
       <input id="inputStoreId" placeholder="例如：fareast" autocomplete="off">
     </div>
@@ -244,16 +244,35 @@ function doLogout(){
 
 function showErr(msg){ document.getElementById('loginErr').textContent = msg; }
 
-// 自动登录（URL 参数 or sessionStorage）
+// 自动登录（域名识别 + URL 参数 + sessionStorage）
 window.addEventListener('load', async () => {
   const params = new URLSearchParams(location.search);
-  const sid = params.get('store') || sessionStorage.getItem('storeId');
   const tok = params.get('token') || sessionStorage.getItem('token');
-  if(sid && tok){
-    document.getElementById('inputStoreId').value = sid;
-    document.getElementById('inputToken').value   = tok;
-    await doLogin();
+
+  // 1. 从域名自动推断 store_id（调用 get-catalog 取 store 映射）
+  let autoStoreId = '';
+  try {
+    const reg = await fetch('/stores/index.json').then(r=>r.json());
+    const host = location.hostname.replace(/^www\./,'');
+    autoStoreId = reg[host] || '';
+  } catch(e){}
+
+  const sid = params.get('store') || sessionStorage.getItem('storeId') || autoStoreId;
+
+  if(autoStoreId && !params.get('store')){
+    // 域名识别成功：隐藏 store_id 输入框，只显示 token
+    document.getElementById('storeIdRow').style.display = 'none';
+    document.getElementById('loginDesc').textContent = '请输入访问令牌登录';
+  } else {
+    // sorghuman.com 或无法识别：显示 store_id 输入框
+    document.getElementById('storeIdRow').style.display = 'block';
+    document.getElementById('loginDesc').textContent = '请输入门店 ID 和访问令牌';
   }
+
+  if(sid){ document.getElementById('inputStoreId').value = sid; }
+  if(tok){ document.getElementById('inputToken').value = tok; }
+
+  if(sid && tok){ await doLogin(); }
 });
 
 // ── API 调用 ──────────────────────────────────────────────────
@@ -316,8 +335,24 @@ function myRow(r){
       <input class="price-input" type="number" step="0.01" value="${priceVal}"
         placeholder="同基准" onchange="updatePrice('${r.sku}',this.value)">
     </div>
+    <button onclick="toggleMyFeat('${r.sku}',${!!r.featured})"
+      style="background:none;border:none;font-size:22px;cursor:pointer;padding:0 8px;
+             opacity:${r.featured?1:0.2}" title="设为/取消爆品">🔥</button>
     <button class="btn btn-danger btn-sm" onclick="removeProduct('${r.sku}')">下架</button>
   </div>`;
+}
+
+async function toggleMyFeat(sku, current){
+  const res = await api('TOGGLE_FEATURED', null, null, { sku, featured: !current });
+  if(res.ok){
+    // 刷新我的商品列表
+    const r2 = await api('GET_STORE_PRODUCTS');
+    myProducts = r2.products || [];
+    buildMySkuSet();
+    renderMyProducts();
+  } else {
+    alert('操作失败：'+(res.error||'未知错误'));
+  }
 }
 
 async function updatePrice(sku, val){
