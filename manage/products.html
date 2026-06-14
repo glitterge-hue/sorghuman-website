@@ -397,9 +397,20 @@ async function importCsv() {
   // 跳过表头行
   if (lines[0].toLowerCase().startsWith('sku')) startIdx = 1;
 
+  // 正确解析 CSV（支持引号内含逗号）
+  function parseCSVLine(line) {
+    const cols = []; let cur = ''; let inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      if (line[i] === '"') { inQ = !inQ; }
+      else if (line[i] === ',' && !inQ) { cols.push(cur); cur = ''; }
+      else { cur += line[i]; }
+    }
+    cols.push(cur);
+    return cols;
+  }
   const rows = [];
   for (let i = startIdx; i < lines.length; i++) {
-    const cols = lines[i].split(',');
+    const cols = parseCSVLine(lines[i]);
     if (cols.length < 6) continue;
     const row = {
       sku        : cols[0].trim(),
