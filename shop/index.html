@@ -280,19 +280,25 @@ async function loadPromo(){
     ctaBtn.style.display = 'inline-block';
     return;
   }
-  // 全局活动（fallback）
-  var p = await tryFetch('/promo/current.json');
-  if(!p || !p.active) return;
+  // 全局活动（fallback）—— 从 Supabase settings 读取
+  var gp = window._globalPromo;
+  if(!gp || !gp.active || (!gp.title_zh && !gp.title_en)) return;
   var sec = document.getElementById('promoSection');
   sec.style.display = 'block';
-  document.getElementById('promoDeco').textContent    = p.icon || '🐉';
-  document.getElementById('promoBadge').textContent   = (p.icon||'') + ' ' + p.festival_zh + ' · ' + p.festival_en;
-  document.getElementById('promoTitleZh').textContent = p.festival_zh;
-  document.getElementById('promoTitleEn').textContent = p.festival_en;
-  document.getElementById('promoDate').textContent    = p.date_zh + ' · ' + p.date_en;
-  document.getElementById('promoTagline').textContent = p.tagline_zh;
-  document.getElementById('promoIntroZh').textContent = p.intro_zh;
-  document.getElementById('promoIntroEn').textContent = p.intro_en;
+  sec.style.background = gp.image
+    ? 'linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('+gp.image+') center/cover'
+    : (gp.color||'#1A4A28');
+  document.getElementById('promoDeco').textContent    = '🎉';
+  document.getElementById('promoBadge').textContent   = (gp.title_zh||'') + (gp.title_en?' · '+gp.title_en:'');
+  document.getElementById('promoTitleZh').textContent = gp.title_zh||'';
+  document.getElementById('promoTitleEn').textContent = gp.title_en||'';
+  document.getElementById('promoDate').textContent    = '';
+  document.getElementById('promoTagline').textContent = gp.subtitle||'';
+  document.getElementById('promoIntroZh').textContent = '';
+  document.getElementById('promoIntroEn').textContent = '';
+  var ctaBtn = document.getElementById('promoCta');
+  ctaBtn.textContent = (gp.cta||'立即选购') + ' Shop Now';
+  ctaBtn.style.display = 'inline-block';
   var box = document.getElementById('promoItems');
   box.innerHTML = '';
   (p.featured_items || []).forEach(function(item){
