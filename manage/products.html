@@ -293,12 +293,23 @@ function renderTable(list) {
       <td><span class="badge badge-${p.category}">${CAT_LABELS[p.category]||p.category}</span></td>
       <td class="price">$${Number(p.base_price).toFixed(2)}</td>
       <td style="text-align:center;">${p.common?'✓':''}</td>
+      <td style="text-align:center;">
+        <button onclick="toggleFeatured('${p.sku}',${!!p.featured})"
+          style="background:none;border:none;font-size:20px;cursor:pointer;opacity:${p.featured?1:0.25};padding:0"
+          title="${p.featured?'取消爆品':'设为爆品'}">🔥</button>
+      </td>
       <td><span class="badge ${p.active?'badge-on':'badge-off'}">${p.active?'上架':'下架'}</span></td>
       <td>
         <button class="btn btn-secondary btn-sm" onclick="openEdit('${p.sku}')">编辑</button>
         <button class="btn btn-danger btn-sm" style="margin-left:6px;" onclick="deleteProduct('${p.sku}','${p.name_zh}')">删除</button>
       </td>
     </tr>`).join('');
+}
+
+async function toggleFeatured(sku, current) {
+  const { error } = await sb.from('products').update({ featured: !current }).eq('sku', sku);
+  if (error) { alert('操作失败: ' + error.message); return; }
+  loadProducts();
 }
 
 // ── 新增/编辑 ─────────────────────────────────────────────────
