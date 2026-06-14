@@ -16,7 +16,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .nav-store{font-family:'DM Serif Display',serif;font-size:18px;color:var(--brand);}
 .nav-tagline{font-size:11px;color:var(--muted);}
 /* Hero */
-.page-header{background:var(--brand);padding:90px 5% 42px;color:#fff;}
+.page-header{opacity:0;transition:opacity .3s;background:var(--brand);padding:90px 5% 42px;color:#fff;}
 .page-header-inner{max-width:920px;margin:0 auto;}
 .eyebrow{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.6rem;}
 .page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,42px);line-height:1.15;margin-bottom:.3rem;}
@@ -116,7 +116,7 @@ footer a{color:var(--brand);}
 <header class="page-header">
   <div class="page-header-inner">
     <div class="eyebrow">Local Delivery · 本地配送</div>
-    <h1 id="heroTitle">远东超市</h1>
+    <h1 id="heroTitle"></h1>
     <p class="hero-en" id="heroEnName"></p>
     <p id="heroSub">选择品类，开始购物。</p>
   </div>
@@ -369,6 +369,9 @@ async function boot(){
 
 function applyStore(){
   document.documentElement.style.setProperty('--brand', store.theme||'#2A6B3A');
+  // 数据到位后才显示 hero 内容，避免闪烁
+  var hero = document.querySelector('.page-header');
+  if(hero) hero.style.opacity = '1';
   document.getElementById('navStore').textContent   = store.name_zh;
   document.getElementById('navTag').textContent     = store.tagline||'';
   document.getElementById('heroTitle').textContent  = store.name_zh;
