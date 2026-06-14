@@ -135,6 +135,17 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
+    // ── 保存门店活动配置 ──────────────────────────────────────────
+    if (action === 'SAVE_PROMO') {
+      const { promo } = body;
+      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+        method : 'PATCH',
+        headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
+        body   : JSON.stringify({ promo }),
+      });
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
+    }
+
     // ── 切换爆品状态 ──────────────────────────────────────────────
     if (action === 'TOGGLE_FEATURED') {
       const { sku, featured } = body;
