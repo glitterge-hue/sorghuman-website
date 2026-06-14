@@ -34,14 +34,21 @@ exports.handler = async (event) => {
     if (!storeId) storeId = 'default';
 
     // 并行读门店配置 + 该店商品（含商品详情）
-    const [storeRows, spRows, settingsRows] = await Promise.all([
+    const [storeRows, spRows] = await Promise.all([
       sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
       sb('store_products',
         `store_id=eq.${storeId}&active=eq.true` +
         `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order)` +
         `&order=sort_order.asc`),
-      sb('settings', `key=eq.global_promo&select=value&limit=1`),
     ]);
+
+    // 单独查全局活动（不存在时不影响主流程）
+    let settingsRows = [];
+    try {
+      settingsRows = await sb('settings', `key=eq.global_promo&select=value&limit=1`);
+    } catch(e) {
+      console.log('settings 表未就绪，跳过全局活动');
+    }
 
     if (!storeRows.length)
       return { statusCode: 404, headers: CORS,
@@ -67,10 +74,11 @@ exports.handler = async (event) => {
         featured  : sp.featured || false,  // 门店级爆品
       }));
 
+    const globalPromo = settingsRows[0]?.value || null;
+
     return {
       statusCode: 200,
-      headers: { ...CORS, 'Cache-Control': 'public, max-age=60' },
-      const globalPromo = settingsRows[0]?.value || null;
+      headers: { ...CORS, 'Cache-Control': 'no-cache' },
       body: JSON.stringify({
         store,
         products: storeProducts,
