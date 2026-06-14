@@ -337,6 +337,7 @@ async function boot(){
   var data = await tryFetch('/.netlify/functions/get-catalog?store='+storeId);
   if(data && data.store && data.products){
     store   = data.store;
+    if(data.globalPromo) window._globalPromo = data.globalPromo;
     catalog = { currency:'USD', categories: data.categories, products: data.products };
   } else {
     catalog = FALLBACK_CATALOG;
