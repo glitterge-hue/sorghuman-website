@@ -299,26 +299,8 @@ async function loadPromo(){
   var ctaBtn = document.getElementById('promoCta');
   ctaBtn.textContent = (gp.cta||'立即选购') + ' Shop Now';
   ctaBtn.style.display = 'inline-block';
-  var box = document.getElementById('promoItems');
-  box.innerHTML = '';
-  (p.featured_items || []).forEach(function(item){
-    var el = document.createElement('div');
-    el.className = 'promo-item';
-    var right = document.createElement(item.sku ? 'button' : 'span');
-    right.className = item.sku ? 'promo-item-add' : 'promo-item-note';
-    right.textContent = item.sku ? '加购 Add +' : '即将上架 Soon';
-    if(item.sku){ right.onclick = function(){ addPromoSku(item.sku); }; }
-    var info = document.createElement('div');
-    info.innerHTML = '<div class="promo-item-zh">' + item.name_zh + '</div>' +
-                     '<div class="promo-item-en">' + item.name_en + '</div>';
-    var ico = document.createElement('div');
-    ico.className = 'promo-item-icon';
-    ico.textContent = item.icon || '';
-    el.appendChild(ico);
-    el.appendChild(info);
-    el.appendChild(right);
-    box.appendChild(el);
-  });
+  // 全局活动不需要 featured_items 列表，CTA 按钮已指向爆品页
+  document.getElementById('promoItems').innerHTML = '';
 }
 
 function goFeatured(){
