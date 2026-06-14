@@ -34,12 +34,13 @@ exports.handler = async (event) => {
     if (!storeId) storeId = 'default';
 
     // 并行读门店配置 + 该店商品（含商品详情）
-    const [storeRows, spRows] = await Promise.all([
+    const [storeRows, spRows, settingsRows] = await Promise.all([
       sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
       sb('store_products',
         `store_id=eq.${storeId}&active=eq.true` +
         `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order)` +
         `&order=sort_order.asc`),
+      sb('settings', `key=eq.global_promo&select=value&limit=1`),
     ]);
 
     if (!storeRows.length)
@@ -69,9 +70,11 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: { ...CORS, 'Cache-Control': 'public, max-age=60' },
+      const globalPromo = settingsRows[0]?.value || null;
       body: JSON.stringify({
         store,
         products: storeProducts,
+        globalPromo,
         categories: {
           condiments: '米面粮油和调味品 Pantry & Condiments',
           snacks    : '零食和饮料 Snacks & Beverages',
