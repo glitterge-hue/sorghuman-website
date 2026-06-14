@@ -234,6 +234,7 @@ var FALLBACK_STORES = {
 };
 
 var CAT_INFO = [
+  {cat:'featured',   icon:'🔥', zh:'爆品',             en:'Hot Items'},
   {cat:'condiments', icon:'🌾', zh:'米面粮油和调味品', en:'Pantry & Condiments'},
   {cat:'snacks',     icon:'🧃', zh:'零食和饮料',       en:'Snacks & Drinks'},
   {cat:'frozen',     icon:'❄',  zh:'冷冻食品',         en:'Frozen Foods'},
@@ -463,7 +464,8 @@ function renderProducts(){
 
   var count = 0;
   catalog.products.forEach(function(p){
-    if(!carries(p) || p.category!==activeCat) return;
+    if(!carries(p)) return;
+    if(activeCat === 'featured' ? !p.featured : p.category !== activeCat) return;
     count++;
     qty[p.sku] = qty[p.sku]||0;
     var row = document.createElement('div');
