@@ -257,6 +257,26 @@ async function tryFetch(url){
 }
 
 async function loadPromo(){
+  // 优先用门店自己的活动，没有则用全局活动
+  var sp = store && store.promo;
+  if(sp && sp.active && (sp.title_zh || sp.title_en)){
+    var sec = document.getElementById('promoSection');
+    sec.style.display = 'block';
+    // 用门店自定义颜色覆盖背景
+    sec.style.background = sp.image
+      ? 'linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url('+sp.image+') center/cover'
+      : (sp.color || '#1A4A28');
+    document.getElementById('promoDeco').textContent    = '🎉';
+    document.getElementById('promoBadge').textContent   = (sp.title_zh||'') + (sp.title_en?' · '+sp.title_en:'');
+    document.getElementById('promoTitleZh').textContent = sp.title_zh||'';
+    document.getElementById('promoTitleEn').textContent = sp.title_en||'';
+    document.getElementById('promoDate').textContent    = '';
+    document.getElementById('promoTagline').textContent = sp.subtitle||'';
+    document.getElementById('promoIntroZh').textContent = '';
+    document.getElementById('promoIntroEn').textContent = '';
+    return;
+  }
+  // 全局活动（fallback）
   var p = await tryFetch('/promo/current.json');
   if(!p || !p.active) return;
   var sec = document.getElementById('promoSection');
