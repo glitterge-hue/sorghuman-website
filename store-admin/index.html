@@ -107,6 +107,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div class="tab active" onclick="showTab('myProducts')">我的商品</div>
     <div class="tab" onclick="showTab('addFromCatalog')">从商品库添加</div>
     <div class="tab" onclick="showTab('addNew')">新增商品</div>
+    <div class="tab" onclick="showTab('promo')">🎉 活动</div>
   </div>
 
   <!-- ── 面板1：我的商品 ── -->
@@ -204,7 +205,67 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
       </div>
     </div>
   </div>
-</div>
+    <!-- ── 面板4：活动设置 ── -->
+    <div id="panelPromo" class="panel">
+      <div class="card">
+        <div class="card-header">🎉 本店活动设置</div>
+
+        <!-- 预览区 -->
+        <div id="promoPreview" style="margin:16px 18px;border-radius:8px;overflow:hidden;display:none;">
+          <div id="previewBanner" style="padding:28px 32px;position:relative;background:#1A4A28;">
+            <div id="previewTitle" style="font-size:22px;font-weight:700;color:#fff;"></div>
+            <div id="previewSubtitle" style="font-size:14px;color:rgba(255,255,255,.8);margin-top:6px;"></div>
+            <button id="previewCta" style="margin-top:14px;padding:8px 20px;background:#fff;border:none;border-radius:20px;font-weight:600;cursor:pointer;font-size:13px;"></button>
+          </div>
+        </div>
+
+        <div class="form-grid" style="padding:18px;">
+          <div class="form-group full" style="flex-direction:row;align-items:center;gap:12px;">
+            <label style="white-space:nowrap;">开启活动</label>
+            <input type="checkbox" id="promoActive" style="width:18px;height:18px;" onchange="previewPromo()">
+            <span style="font-size:12px;color:#888;">关闭后顾客看不到活动横幅</span>
+          </div>
+          <div class="form-group">
+            <label>活动标题（中文）</label>
+            <input id="promoTitleZh" placeholder="父亲节特惠" oninput="previewPromo()">
+          </div>
+          <div class="form-group">
+            <label>活动标题（English）</label>
+            <input id="promoTitleEn" placeholder="Father's Day Sale" oninput="previewPromo()">
+          </div>
+          <div class="form-group full">
+            <label>副标题 / 描述</label>
+            <input id="promoSubtitle" placeholder="感谢父亲，买满$50享9折优惠" oninput="previewPromo()">
+          </div>
+          <div class="form-group">
+            <label>按钮文字</label>
+            <input id="promoCta" placeholder="立即选购" value="立即选购" oninput="previewPromo()">
+          </div>
+          <div class="form-group">
+            <label>横幅背景色</label>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:4px;" id="colorPicker">
+              <span onclick="setColor('#1A4A28')" style="width:28px;height:28px;border-radius:50%;background:#1A4A28;cursor:pointer;border:3px solid #1A4A28;"></span>
+              <span onclick="setColor('#8B0000')" style="width:28px;height:28px;border-radius:50%;background:#8B0000;cursor:pointer;"></span>
+              <span onclick="setColor('#B8860B')" style="width:28px;height:28px;border-radius:50%;background:#B8860B;cursor:pointer;"></span>
+              <span onclick="setColor('#1a3a6b')" style="width:28px;height:28px;border-radius:50%;background:#1a3a6b;cursor:pointer;"></span>
+              <span onclick="setColor('#6b1a6b')" style="width:28px;height:28px;border-radius:50%;background:#6b1a6b;cursor:pointer;"></span>
+              <span onclick="setColor('#2c2c2c')" style="width:28px;height:28px;border-radius:50%;background:#2c2c2c;cursor:pointer;"></span>
+              <input type="color" id="customColor" value="#1A4A28" onchange="setColor(this.value)" style="width:28px;height:28px;border:none;border-radius:50%;cursor:pointer;padding:0;">
+            </div>
+          </div>
+          <div class="form-group full">
+            <label>背景图片链接（可选，留空用纯色）</label>
+            <input id="promoImage" placeholder="https://imagedelivery.net/..." oninput="previewPromo()">
+          </div>
+        </div>
+        <div class="form-footer">
+          <span id="promoMsg" style="font-size:13px;margin-right:12px;"></span>
+          <button class="btn btn-primary" onclick="savePromo()">保存活动</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- main -->
+</div><!-- mainWrap -->
 
 <script>
 const API = '/.netlify/functions/store-catalog';
@@ -340,6 +401,91 @@ function myRow(r){
              opacity:${r.featured?1:0.2}" title="设为/取消爆品">🔥</button>
     <button class="btn btn-danger btn-sm" onclick="removeProduct('${r.sku}')">下架</button>
   </div>`;
+}
+
+// ── 活动设置 ──────────────────────────────────────────────────
+var promoColor = '#1A4A28';
+
+function showTab(name){
+  document.querySelectorAll('.tab').forEach((t,i)=>{
+    const names=['myProducts','addFromCatalog','addNew','promo'];
+    t.classList.toggle('active',names[i]===name);
+  });
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  const panelId='panel'+name.charAt(0).toUpperCase()+name.slice(1);
+  const el=document.getElementById(panelId);
+  if(el) el.classList.add('active');
+  if(name==='addFromCatalog'&&!allCatalog.length) loadCatalog();
+  if(name==='promo') loadPromo();
+}
+
+async function loadPromo(){
+  const res = await api('GET_STORE_PRODUCTS');
+  const promo = res.store?.promo;
+  if(promo){
+    document.getElementById('promoActive').checked  = promo.active||false;
+    document.getElementById('promoTitleZh').value   = promo.title_zh||'';
+    document.getElementById('promoTitleEn').value   = promo.title_en||'';
+    document.getElementById('promoSubtitle').value  = promo.subtitle||'';
+    document.getElementById('promoCta').value       = promo.cta||'立即选购';
+    document.getElementById('promoImage').value     = promo.image||'';
+    promoColor = promo.color||'#1A4A28';
+    document.getElementById('customColor').value    = promoColor;
+  }
+  previewPromo();
+}
+
+function setColor(c){
+  promoColor = c;
+  document.getElementById('customColor').value = c;
+  document.querySelectorAll('#colorPicker span').forEach(s=>{
+    s.style.border = s.style.background===c ? '3px solid #333' : '3px solid transparent';
+  });
+  previewPromo();
+}
+
+function previewPromo(){
+  const zh  = document.getElementById('promoTitleZh').value;
+  const en  = document.getElementById('promoTitleEn').value;
+  const sub = document.getElementById('promoSubtitle').value;
+  const cta = document.getElementById('promoCta').value;
+  const img = document.getElementById('promoImage').value;
+  const active = document.getElementById('promoActive').checked;
+  const preview = document.getElementById('promoPreview');
+  if(!zh && !en){ preview.style.display='none'; return; }
+  preview.style.display='block';
+  const banner = document.getElementById('previewBanner');
+  if(img){
+    banner.style.background=`linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url(${img}) center/cover`;
+  } else {
+    banner.style.background = promoColor;
+  }
+  banner.style.opacity = active ? 1 : 0.4;
+  document.getElementById('previewTitle').textContent    = [zh,en].filter(Boolean).join(' · ');
+  document.getElementById('previewSubtitle').textContent = sub;
+  document.getElementById('previewCta').textContent      = cta||'立即选购';
+}
+
+async function savePromo(){
+  const promo = {
+    active  : document.getElementById('promoActive').checked,
+    title_zh: document.getElementById('promoTitleZh').value.trim(),
+    title_en: document.getElementById('promoTitleEn').value.trim(),
+    subtitle: document.getElementById('promoSubtitle').value.trim(),
+    cta     : document.getElementById('promoCta').value.trim()||'立即选购',
+    color   : promoColor,
+    image   : document.getElementById('promoImage').value.trim(),
+  };
+  const msg = document.getElementById('promoMsg');
+  msg.style.color='#888'; msg.textContent='保存中…';
+  const res = await api('SAVE_PROMO', null, null, { promo });
+  if(res.ok){
+    msg.style.color='#2A6B3A';
+    msg.textContent='✓ 活动已保存，顾客端立刻生效！';
+  } else {
+    msg.style.color='#c0392b';
+    msg.textContent='保存失败：'+(res.error||'未知错误');
+  }
 }
 
 async function toggleMyFeat(sku, current){
