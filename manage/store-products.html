@@ -173,8 +173,8 @@ async function onStoreChange(){
 
   storeSet = {}; origSet = {};
   (data||[]).forEach(r=>{
-    storeSet[r.sku] = { in: r.active!==false, price: r.price };
-    origSet[r.sku]  = { in: r.active!==false, price: r.price };
+    storeSet[r.sku] = { in: r.active!==false, price: r.price, featured: r.featured||false };
+    origSet[r.sku]  = { in: r.active!==false, price: r.price, featured: r.featured||false };
   });
 
   document.getElementById('storeInfo').textContent = '';
@@ -217,6 +217,13 @@ function renderTable(){
       <td><input class="price-input" type="number" step="0.01" min="0"
             id="price-${p.sku}" value="${priceVal}" ${disabled}
             placeholder="同基准价" onchange="setPrice('${p.sku}',this.value)"></td>
+      <td style="text-align:center;">
+        <button id="feat-${p.sku}" onclick="toggleFeat('${p.sku}')"
+          style="background:none;border:none;font-size:20px;cursor:pointer;padding:0;
+                 opacity:${storeSet[p.sku]?.featured?1:0.2};
+                 display:${storeSet[p.sku]?.in?'inline':'none'}"
+          title="设为/取消爆品">🔥</button>
+      </td>
     </tr>`;
   }).join('');
 
@@ -226,6 +233,7 @@ function renderTable(){
         <th style="width:40px;">选</th>
         <th>SKU</th><th>中文名</th><th>英文名</th>
         <th>品类</th><th>基准价</th>
+        <th style="width:50px;text-align:center;">🔥</th>
         <th style="width:120px;">门店售价（空=基准价）</th>
       </tr></thead>
       <tbody>${tbody||'<tr><td colspan="7" style="text-align:center;padding:30px;color:#888;">无匹配商品</td></tr>'}</tbody>
@@ -234,11 +242,22 @@ function renderTable(){
 }
 
 function toggleProduct(sku, checked){
-  if(!storeSet[sku]) storeSet[sku] = { in:false, price:null };
+  if(!storeSet[sku]) storeSet[sku] = { in:false, price:null, featured:false };
   storeSet[sku].in = checked;
   const priceEl = document.getElementById('price-'+sku);
   if(priceEl) priceEl.disabled = !checked;
+  const featEl = document.getElementById('feat-'+sku);
+  if(featEl) featEl.style.display = checked ? 'inline' : 'none';
+  if(!checked) storeSet[sku].featured = false;
   updateStats();
+  updateChangeCount();
+}
+
+function toggleFeat(sku){
+  if(!storeSet[sku]) return;
+  storeSet[sku].featured = !storeSet[sku].featured;
+  const btn = document.getElementById('feat-'+sku);
+  if(btn) btn.style.opacity = storeSet[sku].featured ? 1 : 0.2;
   updateChangeCount();
 }
 
@@ -284,7 +303,7 @@ async function saveChanges(){
   allProducts.forEach(p=>{
     const cur = storeSet[p.sku] || {in:false,price:null};
     if(cur.in){
-      toUpsert.push({store_id:currentStore, sku:p.sku, price:cur.price||null, active:true});
+      toUpsert.push({store_id:currentStore, sku:p.sku, price:cur.price||null, active:true, featured:cur.featured||false});
     } else {
       toDelete.push(p.sku);
     }
