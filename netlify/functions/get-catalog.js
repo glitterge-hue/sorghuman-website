@@ -1,158 +1,89 @@
-// netlify/functions/store-catalog.js
-// 店主端商品管理 API（token 验证，不需要 Supabase 账号）
+// netlify/functions/get-catalog.js
+// 从 store_products 表读取每家店的商品（新架构）
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
+
 const CORS = {
   'Access-Control-Allow-Origin' : '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Content-Type'                 : 'application/json',
 };
 
-async function sb(method, table, qs, body) {
-  const url = `${SUPA_URL}/rest/v1/${table}${qs ? '?'+qs : ''}`;
-  const res = await fetch(url, {
-    method: method||'GET',
-    headers: {
-      'apikey'        : SUPA_KEY,
-      'Authorization' : `Bearer ${SUPA_KEY}`,
-      'Content-Type'  : 'application/json',
-      'Prefer'        : 'return=representation',
-    },
-    body: body ? JSON.stringify(body) : undefined,
+async function sb(table, qs) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${qs}`, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
   });
-  if (!res.ok) {
-    const t = await res.text();
-    throw new Error(`Supabase ${table} ${method}: ${t}`);
-  }
-  const text = await res.text();
-  return text ? JSON.parse(text) : [];
-}
-
-// token 验证：返回 store 对象或 null
-// origin = 请求来源域名（用于校验只能从自家或 sorghuman.com 访问）
-async function verifyToken(storeId, token, origin) {
-  if (!storeId || !token) return null;
-  const rows = await sb('GET', 'stores',
-    `store_id=eq.${storeId}&admin_token=eq.${token}&select=store_id,name_zh,name_en,domain,markup`);
-  const store = rows[0];
-  if (!store) return null;
-  // 域名校验：只允许自家域名或 sorghuman.com 访问
-  if (origin) {
-    const isMaster = origin.includes('sorghuman.com');
-    const isOwn    = origin.includes(store.domain);
-    if (!isMaster && !isOwn) return null;
-  }
-  return store;
+  if (!res.ok) throw new Error(`Supabase ${table}: ${res.status}`);
+  return res.json();
 }
 
 exports.handler = async (event) => {
   if (event.httpMethod === 'OPTIONS')
     return { statusCode: 200, headers: CORS, body: '' };
-  if (event.httpMethod !== 'POST')
-    return { statusCode: 405, headers: CORS, body: JSON.stringify({ error: 'Method not allowed' }) };
 
-  let body;
-  try { body = JSON.parse(event.body || '{}'); }
-  catch { return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
-
-  const { action, storeId, token } = body;
-
-  // ── 验证 token ──────────────────────────────────────────────
-  const origin = event.headers.origin || event.headers.referer || '';
-  const store = await verifyToken(storeId, token, origin);
-  if (!store)
-    return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: '无效的访问令牌' }) };
+  let storeId = (event.queryStringParameters || {}).store;
 
   try {
-    // ── 获取该店商品（含商品详情）──────────────────────────────
-    if (action === 'GET_STORE_PRODUCTS') {
-      const rows = await sb('GET', 'store_products',
+    // 按域名查门店
+    if (!storeId) {
+      const host = (event.headers.host || '').replace(/^www\./, '');
+      const rows = await sb('stores', `domain=eq.${host}&select=store_id&limit=1`);
+      if (rows.length) storeId = rows[0].store_id;
+    }
+    if (!storeId) storeId = 'default';
+
+    // 并行读门店配置 + 该店商品（含商品详情）
+    const [storeRows, spRows] = await Promise.all([
+      sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
+      sb('store_products',
         `store_id=eq.${storeId}&active=eq.true` +
-        `&select=sku,price,sort_order,products(name_zh,name_en,spec,category,base_price,image_url)` +
-        `&order=sort_order.asc`);
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ store, products: rows }) };
-    }
+        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order)` +
+        `&order=sort_order.asc`),
+    ]);
 
-    // ── 获取全部商品库（用于选品）──────────────────────────────
-    if (action === 'GET_ALL_PRODUCTS') {
-      const rows = await sb('GET', 'products',
-        `active=eq.true&select=sku,name_zh,name_en,spec,category,base_price,image_url&order=sort_order.asc`);
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ products: rows }) };
-    }
+    if (!storeRows.length)
+      return { statusCode: 404, headers: CORS,
+               body: JSON.stringify({ error: `Store not found: ${storeId}` }) };
 
-    // ── 批量保存门店商品选择 ───────────────────────────────────
-    if (action === 'SAVE_STORE_PRODUCTS') {
-      const { toUpsert, toRemove } = body;
-      if (toUpsert?.length) {
-        await sb('POST', 'store_products', null,
-          toUpsert.map(r => ({ store_id: storeId, sku: r.sku, price: r.price||null, active: true })));
-      }
-      if (toRemove?.length) {
-        await fetch(
-          `${SUPA_URL}/rest/v1/store_products?store_id=eq.${storeId}&sku=in.(${toRemove.join(',')})`,
-          { method:'DELETE', headers:{ 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}` } }
-        );
-      }
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
-    }
+    const store  = storeRows[0];
+    const markup = parseFloat(store.markup) || 1.0;
 
-    // ── 新增商品到总商品库（同时加入本店）─────────────────────
-    if (action === 'ADD_NEW_PRODUCT') {
-      const { sku, name_zh, name_en, spec, category, base_price, image_url, store_price } = body;
-      if (!sku || !name_zh || !base_price)
-        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '缺少必填字段' }) };
+    // 合并商品信息和门店价格
+    const storeProducts = spRows
+      .filter(sp => sp.products)
+      .map(sp => ({
+        sku       : sp.sku,
+        name_zh   : sp.products.name_zh,
+        name_en   : sp.products.name_en,
+        spec      : sp.products.spec,
+        category  : sp.products.category,
+        base_price: sp.price != null
+          ? parseFloat(sp.price)
+          : parseFloat((sp.products.base_price * markup).toFixed(2)),
+        common    : true,
+        image_url : sp.products.image_url,
+        featured  : sp.featured || false,  // 门店级爆品
+      }));
 
-      // 写入全局商品库
-      await sb('POST', 'products', null, [{
-        sku, name_zh, name_en: name_en||'', spec: spec||null,
-        category: category||'grocery',
-        base_price: parseFloat(base_price),
-        common: false, active: true,
-      }]);
-
-      // 同时加入本店
-      await sb('POST', 'store_products', null, [{
-        store_id: storeId, sku,
-        price: store_price ? parseFloat(store_price) : null,
-        active: true,
-      }]);
-
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
-    }
-
-    // ── 更新单个商品门店价格 ───────────────────────────────────
-    if (action === 'UPDATE_PRICE') {
-      const { sku, price } = body;
-      await fetch(
-        `${SUPA_URL}/rest/v1/store_products?store_id=eq.${storeId}&sku=eq.${sku}`,
-        {
-          method: 'PATCH',
-          headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
-          body: JSON.stringify({ price: price||null }),
+    return {
+      statusCode: 200,
+      headers: { ...CORS, 'Cache-Control': 'public, max-age=60' },
+      body: JSON.stringify({
+        store,
+        products: storeProducts,
+        categories: {
+          condiments: '米面粮油和调味品 Pantry & Condiments',
+          snacks    : '零食和饮料 Snacks & Beverages',
+          frozen    : '冷冻食品 Frozen Foods',
+          fresh     : '生鲜 Fresh Produce',
+          grocery   : '百货 Grocery',
         }
-      );
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
-    }
-
-    // ── 切换爆品状态 ──────────────────────────────────────────────
-    if (action === 'TOGGLE_FEATURED') {
-      const { sku, featured } = body;
-      await fetch(
-        `${SUPA_URL}/rest/v1/store_products?store_id=eq.${storeId}&sku=eq.${sku}`,
-        {
-          method : 'PATCH',
-          headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
-          body   : JSON.stringify({ featured: !!featured }),
-        }
-      );
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
-    }
-
-    return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Unknown action' }) };
+      })
+    };
 
   } catch (e) {
-    console.error('store-catalog error:', e.message);
+    console.error('get-catalog error:', e.message);
     return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: e.message }) };
   }
 };
