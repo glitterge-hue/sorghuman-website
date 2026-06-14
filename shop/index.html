@@ -276,7 +276,7 @@ async function loadPromo(){
     document.getElementById('promoIntroZh').textContent = '';
     document.getElementById('promoIntroEn').textContent = '';
     var ctaBtn = document.getElementById('promoCta');
-    ctaBtn.textContent = sp.cta || '立即选购 Shop Now';
+    ctaBtn.textContent = sp.cta ? sp.cta + ' Shop Now' : '立即选购 Shop Now';
     ctaBtn.style.display = 'inline-block';
     return;
   }
