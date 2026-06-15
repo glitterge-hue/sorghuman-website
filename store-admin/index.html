@@ -311,12 +311,15 @@ window.addEventListener('load', async () => {
   const params = new URLSearchParams(location.search);
   const tok = params.get('token') || sessionStorage.getItem('token');
 
-  // 1. 从域名自动推断 store_id（调用 get-catalog 取 store 映射）
+  // 1. 从域名自动推断 store_id（查 Supabase stores 表，无需 stores/index.json）
   let autoStoreId = '';
   try {
-    const reg = await fetch('/stores/index.json').then(r=>r.json());
-    const host = location.hostname.replace(/^www\./,'');
-    autoStoreId = reg[host] || '';
+    const res = await fetch('/.netlify/functions/store-catalog', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ action:'LOOKUP_DOMAIN', domain: location.hostname.replace(/^www\./,'') })
+    }).then(r=>r.json());
+    autoStoreId = res.store_id || '';
   } catch(e){}
 
   const sid = params.get('store') || sessionStorage.getItem('storeId') || autoStoreId;
