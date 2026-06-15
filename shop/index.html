@@ -328,13 +328,12 @@ async function boot(){
   }
 
   var params  = new URLSearchParams(location.search);
-  var forced  = params.get('store');
-  var host    = location.hostname.replace(/^www\./,'');
-  var registry = await tryFetch('/stores/index.json') || FALLBACK_REGISTRY;
-  var storeId = forced || registry[location.hostname] || registry[host] || 'default';
+  var forced  = params.get('store');  // 仍支持 ?store=xxx 强制指定（调试用）
 
   // 从 Supabase（经 get-catalog 函数）拉取门店商品目录
-  var data = await tryFetch('/.netlify/functions/get-catalog?store='+storeId);
+  // 不传 store 参数时，服务端自动按域名识别门店，无需 stores/index.json
+  var storeParam = forced ? '?store='+forced : '';
+  var data = await tryFetch('/.netlify/functions/get-catalog'+storeParam);
   if(data && data.store && data.products){
     store   = data.store;
     if(data.globalPromo) window._globalPromo = data.globalPromo;
