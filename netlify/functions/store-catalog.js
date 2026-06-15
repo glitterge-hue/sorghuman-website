@@ -135,6 +135,14 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
+    // ── 按域名查门店 ID（无需认证，公开接口）──────────────────────
+    if (action === 'LOOKUP_DOMAIN') {
+      const { domain } = body;
+      if (!domain) return { statusCode: 400, headers: CORS, body: JSON.stringify({ store_id: null }) };
+      const rows = await sb('GET', 'stores', `domain=eq.${domain}&select=store_id&limit=1`);
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ store_id: rows[0]?.store_id || null }) };
+    }
+
     // ── 保存门店活动配置 ──────────────────────────────────────────
     if (action === 'SAVE_PROMO') {
       const { promo } = body;
