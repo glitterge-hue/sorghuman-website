@@ -109,6 +109,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div class="tab" onclick="showTab('addNew')">新增商品</div>
     <div class="tab" onclick="showTab('promo')">🎉 活动</div>
     <div class="tab" onclick="showTab('zips')">📦 配送范围</div>
+    <div class="tab" onclick="showTab('drivers')">🛵 兼职司机</div>
   </div>
 
   <!-- ── 面板1：我的商品 ── -->
@@ -267,6 +268,28 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
       </div>
     </div>
   </div><!-- main -->
+    <!-- ── 面板6：兼职司机管理 ── -->
+    <div id="panelDrivers" class="panel">
+      <div class="card">
+        <div class="card-header">🛵 兼职司机管理（最多5位）</div>
+        <div style="padding:16px 22px 4px;">
+          <p style="font-size:13px;color:#555;margin-bottom:16px;">
+            填写司机电话，来单后系统自动发短信通知（需开通短信服务）。
+          </p>
+          <div id="driverList"></div>
+          <div id="addDriverBtn" style="margin-top:10px;">
+            <button class="btn btn-secondary" onclick="addDriverRow()" style="font-size:13px;">
+              + 添加司机
+            </button>
+          </div>
+        </div>
+        <div style="padding:12px 22px 20px;display:flex;align-items:center;justify-content:flex-end;gap:12px;">
+          <span id="driverMsg" style="font-size:13px;"></span>
+          <button class="btn btn-primary" onclick="saveDrivers()">保存司机名单</button>
+        </div>
+      </div>
+    </div>
+
     <!-- ── 面板5：配送邮编管理 ── -->
     <div id="panelZips" class="panel">
       <div class="card">
@@ -437,6 +460,67 @@ function myRow(r){
   </div>`;
 }
 
+// ── 兼职司机管理 ──────────────────────────────────────────────
+var currentDrivers = [];
+const MAX_DRIVERS = 5;
+
+async function loadDrivers(){
+  const res = await api('GET_STORE_PRODUCTS');
+  currentDrivers = res.store?.drivers || [];
+  renderDriverList();
+}
+
+function renderDriverList(){
+  const list = document.getElementById('driverList');
+  const addBtn = document.getElementById('addDriverBtn');
+  list.innerHTML = currentDrivers.map((d,i)=>`
+    <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
+      <span style="font-size:13px;color:#888;width:20px;">${i+1}.</span>
+      <input value="${d.name||''}" placeholder="姓名（选填）"
+        style="border:1px solid #ddd;border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;width:120px;outline:none;"
+        onchange="currentDrivers[${i}].name=this.value">
+      <input value="${d.phone||''}" placeholder="电话 +1xxxxxxxxxx"
+        style="border:1px solid #ddd;border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;width:160px;outline:none;"
+        onchange="currentDrivers[${i}].phone=this.value">
+      <button onclick="removeDriver(${i})"
+        style="background:none;border:1px solid #e8a0a0;border-radius:6px;color:#c0392b;padding:6px 12px;cursor:pointer;font-size:12px;">
+        删除
+      </button>
+    </div>`).join('');
+  addBtn.style.display = currentDrivers.length >= MAX_DRIVERS ? 'none' : 'block';
+  if(!currentDrivers.length){
+    list.innerHTML = '<p style="font-size:13px;color:#aaa;margin-bottom:10px;">暂无司机，点下方添加</p>';
+  }
+}
+
+function addDriverRow(){
+  if(currentDrivers.length >= MAX_DRIVERS) return;
+  currentDrivers.push({ name:'', phone:'' });
+  renderDriverList();
+}
+
+function removeDriver(i){
+  currentDrivers.splice(i,1);
+  renderDriverList();
+}
+
+async function saveDrivers(){
+  // 过滤掉电话为空的
+  const valid = currentDrivers.filter(d=>d.phone.trim());
+  const msg = document.getElementById('driverMsg');
+  const res = await api('SAVE_DRIVERS', null, null, { drivers: valid });
+  if(res.ok){
+    currentDrivers = valid;
+    msg.style.color='#2A6B3A';
+    msg.textContent='✓ 司机名单已保存！';
+    renderDriverList();
+    setTimeout(()=>msg.textContent='', 3000);
+  } else {
+    msg.style.color='#c0392b';
+    msg.textContent='保存失败：'+(res.error||'未知');
+  }
+}
+
 // ── 邮编管理 ──────────────────────────────────────────────────
 var currentZips = [];
 
@@ -497,7 +581,7 @@ var promoColor = '#1A4A28';
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['myProducts','addFromCatalog','addNew','promo','zips'];
+    const names=['myProducts','addFromCatalog','addNew','promo','zips','drivers'];
     t.classList.toggle('active',names[i]===name);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -507,6 +591,7 @@ function showTab(name){
   if(name==='addFromCatalog'&&!allCatalog.length) loadCatalog();
   if(name==='promo') loadPromo();
   if(name==='zips') loadZips();
+  if(name==='drivers') loadDrivers();
 }
 
 async function loadPromo(){
