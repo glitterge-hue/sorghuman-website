@@ -7,62 +7,55 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',system-ui,sans-serif;background:#f0f4f0;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-.card{background:#fff;border-radius:12px;padding:32px 24px;max-width:420px;width:100%;box-shadow:0 4px 20px rgba(0,0,0,.08);text-align:center;}
+.card{background:#fff;border-radius:12px;padding:32px 24px;max-width:400px;width:100%;box-shadow:0 4px 20px rgba(0,0,0,.08);text-align:center;}
 .logo{font-size:36px;margin-bottom:8px;}
-.title{font-size:20px;font-weight:700;color:#1A4A28;}
-.title-sub{font-size:13px;color:#888;margin-bottom:4px;}
-.order-id{font-size:14px;color:#555;margin:8px 0 4px;font-family:monospace;font-weight:600;}
-.store{font-size:14px;color:#888;margin-bottom:6px;}
+.title{font-size:18px;font-weight:700;color:#1A4A28;}
+.title-en{font-size:14px;color:#888;margin-bottom:16px;}
+.order-id{font-size:13px;color:#aaa;font-family:monospace;margin-bottom:4px;}
+.store{font-size:15px;font-weight:600;color:#333;margin-bottom:4px;}
 .addr-label{font-size:11px;color:#aaa;margin-bottom:4px;}
-.addr{font-size:15px;font-weight:600;color:#1a1a18;padding:12px 16px;background:#f8f8f5;border-radius:8px;margin-bottom:8px;line-height:1.5;}
-.phone-row{font-size:13px;color:#555;margin-bottom:20px;}
-.phone-row a{color:#1A4A28;font-weight:600;text-decoration:none;}
-.btn{display:block;width:100%;padding:18px 16px;border-radius:10px;border:none;font-size:15px;font-weight:700;font-family:inherit;cursor:pointer;margin-bottom:12px;transition:opacity .15s;line-height:1.4;}
+.addr{font-size:14px;font-weight:600;color:#1a1a18;padding:10px 14px;background:#f8f8f5;border-radius:6px;margin-bottom:24px;}
+.btn{display:block;width:100%;padding:16px 12px;border-radius:10px;border:none;cursor:pointer;margin-bottom:12px;transition:opacity .15s;text-align:center;}
 .btn:active{opacity:.8;}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn-zh{font-size:15px;font-weight:700;}
+.btn-en{font-size:12px;font-weight:400;opacity:.8;margin-top:2px;}
 .btn-pickup{background:#2A6B3A;color:#fff;}
 .btn-delivered{background:#1a3a6b;color:#fff;}
-.btn:disabled{opacity:.35;cursor:not-allowed;}
-.btn .en{display:block;font-size:12px;font-weight:400;opacity:.85;margin-top:2px;}
-.status{margin-top:16px;padding:16px;border-radius:8px;font-size:14px;font-weight:600;display:none;line-height:1.5;}
+.status{margin-top:16px;padding:14px;border-radius:8px;font-size:14px;font-weight:600;display:none;}
 .status.ok{background:#f0f7f2;color:#2A6B3A;display:block;}
 .status.err{background:#fdf2f2;color:#c0392b;display:block;}
 .divider{border:none;border-top:1px solid #f0f0ea;margin:20px 0;}
-.note{font-size:12px;color:#aaa;line-height:1.8;}
-.amount{font-size:22px;font-weight:700;color:#2A6B3A;margin-bottom:16px;}
+.note{font-size:11px;color:#aaa;line-height:1.7;}
 </style>
 </head>
 <body>
 <div class="card">
   <div class="logo">🛵</div>
   <div class="title">配送操作</div>
-  <div class="title-sub">Delivery Update</div>
+  <div class="title-en">Delivery Actions</div>
 
-  <div class="order-id" id="orderId">加载中 Loading…</div>
+  <div class="order-id" id="orderId">Loading...</div>
   <div class="store" id="storeName"></div>
-  <div class="amount" id="amount"></div>
-
   <div class="addr-label">配送地址 Delivery Address</div>
-  <div class="addr" id="address">—</div>
-
-  <div class="phone-row" id="customerPhone"></div>
+  <div class="addr" id="address">Loading address...</div>
 
   <button class="btn btn-pickup" id="btnPickup" onclick="update('pickup')">
-    ✅ 我已到店取货
-    <span class="en">Arrived at Store — Picked Up Order</span>
+    <div class="btn-zh">✅ 我已到店取货</div>
+    <div class="btn-en">Picked Up from Store</div>
   </button>
+
   <button class="btn btn-delivered" id="btnDelivered" onclick="update('delivered')">
-    🏠 已送达顾客
-    <span class="en">Order Delivered to Customer</span>
+    <div class="btn-zh">🏠 已送达顾客</div>
+    <div class="btn-en">Delivered to Customer</div>
   </button>
 
   <div class="status" id="statusMsg"></div>
 
   <hr class="divider">
   <div class="note">
-    点击按钮后顾客自动收到短信通知<br>
-    Customer will receive SMS notification automatically.<br><br>
-    每个状态只能更新一次<br>
-    Each status can only be updated once.
+    点击后系统自动发短信通知顾客 · Customer is notified automatically<br>
+    每个状态只能更新一次 · Each status can only be updated once
   </div>
 </div>
 
@@ -72,74 +65,63 @@ const orderId = params.get('id');
 const API     = '/.netlify/functions/delivery-update';
 
 async function loadOrder(){
-  if(!orderId){ showErr('链接无效 Invalid link'); return; }
+  if(!orderId){ showErr('链接无效 · Invalid link'); return; }
   try {
     const res = await fetch(`/.netlify/functions/get-order?id=${orderId}`).then(r=>r.json());
-    if(res.error){ showErr('订单不存在 Order not found'); return; }
+    if(res.error){ showErr('订单不存在 · Order not found'); return; }
     const o = res.order;
-    document.getElementById('orderId').textContent   = '#' + (o.id||'').slice(-8).toUpperCase();
+    document.getElementById('orderId').textContent   = 'Order #' + (o.id||'').slice(-8).toUpperCase();
     document.getElementById('storeName').textContent = res.storeName || '';
-    document.getElementById('amount').textContent    = o.total ? '$' + Number(o.total).toFixed(2) : '';
     const addr = o.shipping_address;
     document.getElementById('address').textContent   = addr
-      ? [addr.line1, addr.line2, addr.city, addr.state, addr.postal_code].filter(Boolean).join(', ')
-      : '地址未提供 Address not provided';
-    if(o.customer_phone){
-      document.getElementById('customerPhone').innerHTML =
-        `顾客电话 Customer: <a href="tel:${o.customer_phone}">${o.customer_phone}</a>`;
-    }
-    if(o.status==='delivered'){
-      document.getElementById('btnPickup').disabled    = true;
-      document.getElementById('btnDelivered').disabled = true;
-      showOk('✅ 此订单已送达 Order already delivered');
-    } else if(o.status==='delivering'){
+      ? [addr.line1, addr.city, addr.state, addr.postal_code].filter(Boolean).join(', ')
+      : 'Address not available';
+    if(o.status === 'delivered'){
+      disableAll();
+      showOk('已送达 · Delivered ✓');
+    } else if(o.status === 'delivering'){
       document.getElementById('btnPickup').disabled = true;
-      document.getElementById('btnPickup').textContent = '✅ 已取货 Picked Up';
     }
-  } catch(e){ showErr('加载失败，请刷新 Load failed, please refresh'); }
+  } catch(e){ showErr('加载失败，请刷新 · Load failed, please refresh'); }
 }
 
 async function update(action){
-  const btn = action==='pickup' ? document.getElementById('btnPickup') : document.getElementById('btnDelivered');
+  const btn = document.getElementById(action==='pickup' ? 'btnPickup' : 'btnDelivered');
   btn.disabled = true;
-  btn.innerHTML = action==='pickup'
-    ? '处理中… Processing…'
-    : '处理中… Processing…';
+  btn.querySelector('.btn-zh').textContent = '处理中… Processing…';
+
   try {
     const res = await fetch(`${API}?id=${orderId}&a=${action}`).then(r=>r.json());
     if(res.ok){
       if(action==='pickup'){
-        btn.innerHTML = '✅ 已到店取货 Picked Up';
-        showOk('✅ 顾客已收到短信：配送中\nCustomer notified: Order on the way');
+        btn.querySelector('.btn-zh').textContent = '✅ 已取货 Picked Up';
+        showOk('已通知顾客配送中 · Customer notified: on the way');
       } else {
-        document.getElementById('btnPickup').disabled    = true;
-        document.getElementById('btnDelivered').disabled = true;
-        document.getElementById('btnDelivered').innerHTML = '🏠 已送达 Delivered';
-        showOk('🏠 顾客已收到短信：订单送达\nCustomer notified: Order delivered!');
+        disableAll();
+        showOk('🏠 已通知顾客送达 · Customer notified: delivered!');
       }
     } else {
-      showErr((res.error||'操作失败 Operation failed') + '\n请重试 Please try again');
+      showErr((res.error||'操作失败') + ' · Action failed');
       btn.disabled = false;
     }
   } catch(e){
-    showErr('网络错误，请重试\nNetwork error, please retry');
+    showErr('网络错误，请重试 · Network error, please retry');
     btn.disabled = false;
   }
 }
 
+function disableAll(){
+  document.getElementById('btnPickup').disabled    = true;
+  document.getElementById('btnDelivered').disabled = true;
+}
 function showOk(msg){
   const el = document.getElementById('statusMsg');
-  el.className='status ok';
-  el.style.whiteSpace='pre-line';
-  el.textContent=msg;
+  el.className='status ok'; el.textContent=msg;
 }
 function showErr(msg){
   const el = document.getElementById('statusMsg');
-  el.className='status err';
-  el.style.whiteSpace='pre-line';
-  el.textContent=msg;
-  document.getElementById('btnPickup').disabled    = true;
-  document.getElementById('btnDelivered').disabled = true;
+  el.className='status err'; el.textContent=msg;
+  disableAll();
 }
 
 loadOrder();
