@@ -231,6 +231,45 @@ exports.handler = async (event) => {
 </table>
 </body></html>`;
 
+    // ── 通过 Twilio 发短信给门店 + 兼职司机 ────────────────────────
+    const TWILIO_SID   = process.env.TWILIO_SID;
+    const TWILIO_TOKEN = process.env.TWILIO_TOKEN;
+    const TWILIO_FROM  = process.env.TWILIO_PHONE;
+
+    if (TWILIO_SID && TWILIO_TOKEN && TWILIO_FROM) {
+      const smsBody =
+        `新订单 #${orderId} · ${store.name_zh}
+` +
+        `金额：$${total}
+` +
+        `顾客：${update.customer_phone||'未填'}
+` +
+        `地址：${addrStr}
+` +
+        `详情已发至邮箱`;
+
+      // 发给门店联系电话（如果有）
+      const phones = [];
+      if (store.contact_phone) phones.push(store.contact_phone);
+
+      // 发给兼职司机（最多5个）
+      const drivers = store.drivers || [];
+      drivers.forEach(d => { if(d.phone) phones.push(d.phone); });
+
+      const twilioAuth = Buffer.from(`${TWILIO_SID}:${TWILIO_TOKEN}`).toString('base64');
+      await Promise.all(phones.map(phone =>
+        fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`, {
+          method : 'POST',
+          headers: {
+            'Authorization': `Basic ${twilioAuth}`,
+            'Content-Type' : 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({ From: TWILIO_FROM, To: phone, Body: smsBody }),
+        }).catch(e => console.error('短信发送失败:', phone, e.message))
+      ));
+      console.log(`短信已发送给 ${phones.length} 人`);
+    }
+
     // ── 通过 Resend 发送邮件 ──────────────────────────────────────
     const emailRes = await fetch('https://api.resend.com/emails', {
       method : 'POST',

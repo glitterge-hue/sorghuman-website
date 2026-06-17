@@ -135,6 +135,20 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
+    // ── 保存司机名单 ──────────────────────────────────────────────
+    if (action === 'SAVE_DRIVERS') {
+      const { drivers } = body;
+      if (!Array.isArray(drivers))
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '格式错误' }) };
+      const valid = drivers.filter(d=>d.phone).slice(0,5); // 最多5个
+      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+        method : 'PATCH',
+        headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
+        body   : JSON.stringify({ drivers: valid }),
+      });
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
+    }
+
     // ── 保存配送邮编 ──────────────────────────────────────────────
     if (action === 'SAVE_ZIPS') {
       const { zips } = body;
