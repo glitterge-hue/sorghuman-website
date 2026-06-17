@@ -78,17 +78,17 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
 <!-- 登录状态下隐藏，未登录时显示 -->
 <div id="loginWrap" class="login-wrap">
   <div class="login-box">
-    <h2>🌾 门店管理</h2>
-    <p id="loginDesc">正在识别门店…</p>
+    <h2>🌾 门店管理 Store Admin</h2>
+    <p id="loginDesc">正在识别门店… Detecting store…</p>
     <div id="storeIdRow" class="form-group" style="display:none;">
       <label>门店 ID Store ID</label>
       <input id="inputStoreId" placeholder="例如：fareast" autocomplete="off">
     </div>
     <div class="form-group" style="margin-top:12px;">
       <label>访问令牌 Token</label>
-      <input id="inputToken" type="password" placeholder="粘贴您的访问令牌">
+      <input id="inputToken" type="password" placeholder="访问令牌 Access Token">
     </div>
-    <button class="btn btn-primary" style="width:100%;margin-top:16px;padding:10px;" onclick="doLogin()">登录</button>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px;padding:10px;" onclick="doLogin()">登录 Login</button>
     <div id="loginErr" class="err"></div>
   </div>
 </div>
@@ -100,16 +100,16 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
       <div class="brand">🌾 Sorghuman 门店管理</div>
       <div class="store-name" id="headerStoreName"></div>
     </div>
-    <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;" onclick="doLogout()">退出</button>
+    <button class="btn" style="background:rgba(255,255,255,.15);color:#fff;font-size:12px;" onclick="doLogout()">退出 Logout</button>
   </div>
 
   <div class="tabs">
-    <div class="tab active" onclick="showTab('myProducts')">我的商品</div>
-    <div class="tab" onclick="showTab('addFromCatalog')">从商品库添加</div>
-    <div class="tab" onclick="showTab('addNew')">新增商品</div>
-    <div class="tab" onclick="showTab('promo')">🎉 活动</div>
-    <div class="tab" onclick="showTab('zips')">📦 配送范围</div>
-    <div class="tab" onclick="showTab('drivers')">🛵 兼职司机</div>
+    <div class="tab active" onclick="showTab('myProducts')">我的商品 My Products</div>
+    <div class="tab" onclick="showTab('addFromCatalog')">添加商品 Add Products</div>
+    <div class="tab" onclick="showTab('addNew')">新增 New Item</div>
+    <div class="tab" onclick="showTab('promo')">🎉 促销 Promo</div>
+    <div class="tab" onclick="showTab('zips')">📦 配送 Delivery</div>
+    <div class="tab" onclick="showTab('drivers')">🛵 司机 Drivers</div>
   </div>
 
   <!-- ── 面板1：我的商品 ── -->
@@ -117,10 +117,10 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div id="panelMyProducts" class="panel active">
       <div class="card">
         <div class="card-header">
-          <span>我的商品 <span id="myCount" style="color:#888;font-weight:400;"></span></span>
+          <span>My Products · 我的商品 <span id="myCount" style="color:#888;font-weight:400;"></span></span>
         </div>
         <div class="search-bar">
-          <input id="mySearch" placeholder="搜索…" oninput="renderMyProducts()">
+          <input id="mySearch" placeholder="搜索 Search…" oninput="renderMyProducts()">
           <select id="myCatFilter" onchange="renderMyProducts()">
             <option value="">全部品类</option>
             <option value="frozen">冷冻食品</option>
@@ -138,11 +138,11 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div id="panelAddFromCatalog" class="panel">
       <div class="card">
         <div class="card-header">
-          <span>商品库 <span id="catalogCount" style="color:#888;font-weight:400;"></span></span>
-          <button class="btn btn-primary btn-sm" onclick="saveCatalogSelection()">保存选择</button>
+          <span>Product Catalog · 商品库 <span id="catalogCount" style="color:#888;font-weight:400;"></span></span>
+          <button class="btn btn-primary btn-sm" onclick="saveCatalogSelection()">保存 Save</button>
         </div>
         <div class="search-bar">
-          <input id="catSearch" placeholder="搜索商品…" oninput="renderCatalog()">
+          <input id="catSearch" placeholder="搜索商品 Search…" oninput="renderCatalog()">
           <select id="catCatFilter" onchange="renderCatalog()">
             <option value="">全部品类</option>
             <option value="frozen">冷冻食品</option>
@@ -159,7 +159,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <!-- ── 面板3：新增商品 ── -->
     <div id="panelAddNew" class="panel">
       <div class="card">
-        <div class="card-header">新增商品到商品库</div>
+        <div class="card-header">新增商品 Add New Product</div>
         <div class="form-grid">
           <div class="form-group">
             <label>SKU *</label>
@@ -201,7 +201,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
           </div>
         </div>
         <div class="form-footer">
-          <button class="btn btn-primary" onclick="submitNewProduct()">提交到商品库并加入本店</button>
+          <button class="btn btn-primary" onclick="submitNewProduct()">提交 Submit & Add to Store</button>
         </div>
         <div id="newProductMsg" style="padding:0 18px 14px;font-size:13px;"></div>
       </div>
@@ -263,7 +263,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
         </div>
         <div class="form-footer">
           <span id="promoMsg" style="font-size:13px;margin-right:12px;"></span>
-          <button class="btn btn-primary" onclick="savePromo()">保存活动</button>
+          <button class="btn btn-primary" onclick="savePromo()">保存 Save Promo</button>
         </div>
       </div>
     </div>
@@ -279,13 +279,13 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
           <div id="driverList"></div>
           <div id="addDriverBtn" style="margin-top:10px;">
             <button class="btn btn-secondary" onclick="addDriverRow()" style="font-size:13px;">
-              + 添加司机
+              + 添加司机 Add Driver
             </button>
           </div>
         </div>
         <div style="padding:12px 22px 20px;display:flex;align-items:center;justify-content:flex-end;gap:12px;">
           <span id="driverMsg" style="font-size:13px;"></span>
-          <button class="btn btn-primary" onclick="saveDrivers()">保存司机名单</button>
+          <button class="btn btn-primary" onclick="saveDrivers()">保存 Save Drivers</button>
         </div>
       </div>
     </div>
@@ -305,16 +305,16 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
 
           <!-- 添加邮编 -->
           <div style="display:flex;gap:10px;align-items:center;">
-            <input id="zipInput" type="text" placeholder="输入邮编，如 18052" maxlength="10"
+            <input id="zipInput" type="text" placeholder="邮编 ZIP Code (e.g. 18052)" maxlength="10"
               style="border:1px solid #ddd;border-radius:6px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none;width:160px;"
               onkeydown="if(event.key==='Enter')addZip()"
               onfocus="this.style.borderColor='#2A6B3A'" onblur="this.style.borderColor='#ddd'">
-            <button class="btn btn-primary" onclick="addZip()">+ 添加</button>
+            <button class="btn btn-primary" onclick="addZip()">+ 添加 Add</button>
             <span id="zipMsg" style="font-size:13px;color:#888;"></span>
           </div>
         </div>
         <div style="padding:0 22px 20px;display:flex;justify-content:flex-end;">
-          <button class="btn btn-primary" onclick="saveZips()">保存配送范围</button>
+          <button class="btn btn-primary" onclick="saveZips()">保存 Save Zones</button>
         </div>
       </div>
     </div>
@@ -456,7 +456,7 @@ function myRow(r){
     <button onclick="toggleMyFeat('${r.sku}',${!!r.featured})"
       style="background:none;border:none;font-size:22px;cursor:pointer;padding:0 8px;
              opacity:${r.featured?1:0.2}" title="设为/取消爆品">🔥</button>
-    <button class="btn btn-danger btn-sm" onclick="removeProduct('${r.sku}')">下架</button>
+    <button class="btn btn-danger btn-sm" onclick="removeProduct('${r.sku}')">下架 Remove</button>
   </div>`;
 }
 
@@ -476,10 +476,10 @@ function renderDriverList(){
   list.innerHTML = currentDrivers.map((d,i)=>`
     <div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;">
       <span style="font-size:13px;color:#888;width:20px;">${i+1}.</span>
-      <input value="${d.name||''}" placeholder="姓名（选填）"
+      <input value="${d.name||''}" placeholder="姓名 Name (optional)"
         style="border:1px solid #ddd;border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;width:120px;outline:none;"
         onchange="currentDrivers[${i}].name=this.value">
-      <input value="${d.phone||''}" placeholder="电话 +1xxxxxxxxxx"
+      <input value="${d.phone||''}" placeholder="电话 Phone +1xxxxxxxxxx"
         style="border:1px solid #ddd;border-radius:6px;padding:8px 10px;font-size:13px;font-family:inherit;width:160px;outline:none;"
         onchange="currentDrivers[${i}].phone=this.value">
       <button onclick="removeDriver(${i})"
