@@ -135,6 +135,19 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
+    // ── 保存配送邮编 ──────────────────────────────────────────────
+    if (action === 'SAVE_ZIPS') {
+      const { zips } = body;
+      if (!Array.isArray(zips))
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '格式错误' }) };
+      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+        method : 'PATCH',
+        headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
+        body   : JSON.stringify({ delivery_zips: zips }),
+      });
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
+    }
+
     // ── 按域名查门店 ID（无需认证，公开接口）──────────────────────
     if (action === 'LOOKUP_DOMAIN') {
       const { domain } = body;
