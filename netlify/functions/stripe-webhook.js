@@ -237,37 +237,61 @@ exports.handler = async (event) => {
     const TWILIO_FROM  = process.env.TWILIO_PHONE;
 
     if (TWILIO_SID && TWILIO_TOKEN && TWILIO_FROM) {
-      const smsBody =
-        `新订单 #${orderId} · ${store.name_zh}
-` +
-        `金额：$${total}
-` +
-        `顾客：${update.customer_phone||'未填'}
-` +
-        `地址：${addrStr}
-` +
-        `详情已发至邮箱`;
-
-      // 发给门店联系电话（如果有）
-      const phones = [];
-      if (store.contact_phone) phones.push(store.contact_phone);
-
-      // 发给兼职司机（最多5个）
-      const drivers = store.drivers || [];
-      drivers.forEach(d => { if(d.phone) phones.push(d.phone); });
-
       const twilioAuth = Buffer.from(`${TWILIO_SID}:${TWILIO_TOKEN}`).toString('base64');
-      await Promise.all(phones.map(phone =>
-        fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`, {
+      const smsSend = (to, body) => fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`,
+        {
           method : 'POST',
-          headers: {
-            'Authorization': `Basic ${twilioAuth}`,
-            'Content-Type' : 'application/x-www-form-urlencoded',
-          },
-          body: new URLSearchParams({ From: TWILIO_FROM, To: phone, Body: smsBody }),
-        }).catch(e => console.error('短信发送失败:', phone, e.message))
+          headers: { 'Authorization':`Basic ${twilioAuth}`, 'Content-Type':'application/x-www-form-urlencoded' },
+          body   : new URLSearchParams({ From:TWILIO_FROM, To:to, Body:body }),
+        }
+      ).catch(e => console.error('短信失败:', to, e.message));
+
+      const siteBase = `https://sorghuman.com`;
+      const deliveryLink = `${siteBase}/delivery/?id=${session.id}`;
+
+      // 1. 通知顾客：订单已确认
+      if (update.customer_phone) {
+        await smsSend(update.customer_phone,
+          `【${store.name_zh}】您的订单 #${orderId} 已确认
+` +
+          `金额：$${total}
+` +
+          `我们正在为您备货，配送员即将出发。
+回复 STOP 退订。`
+        );
+      }
+
+      // 2. 通知门店
+      if (store.contact_phone) {
+        await smsSend(store.contact_phone,
+          `新订单 #${orderId} · $${total}
+` +
+          `顾客：${update.customer_phone||'未填'}
+` +
+          `地址：${addrStr}
+` +
+          `详情请查收邮件`
+        );
+      }
+
+      // 3. 通知兼职司机（附配送操作链接）
+      const drivers = store.drivers || [];
+      await Promise.all(drivers.filter(d=>d.phone).map(d =>
+        smsSend(d.phone,
+          `新配送任务 #${orderId}
+` +
+          `${store.name_zh} → ${addrStr}
+` +
+          `顾客电话：${update.customer_phone||'未填'}
+` +
+          `金额：$${total}
+` +
+          `操作链接：${deliveryLink}`
+        )
       ));
-      console.log(`短信已发送给 ${phones.length} 人`);
+
+      console.log(`短信已发：顾客+门店+${drivers.length}位司机`);
     }
 
     // ── 通过 Resend 发送邮件 ──────────────────────────────────────
