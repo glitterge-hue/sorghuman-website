@@ -108,6 +108,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div class="tab" onclick="showTab('addFromCatalog')">从商品库添加</div>
     <div class="tab" onclick="showTab('addNew')">新增商品</div>
     <div class="tab" onclick="showTab('promo')">🎉 活动</div>
+    <div class="tab" onclick="showTab('zips')">📦 配送范围</div>
   </div>
 
   <!-- ── 面板1：我的商品 ── -->
@@ -266,6 +267,35 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
       </div>
     </div>
   </div><!-- main -->
+    <!-- ── 面板5：配送邮编管理 ── -->
+    <div id="panelZips" class="panel">
+      <div class="card">
+        <div class="card-header">📦 配送范围管理</div>
+        <div style="padding:20px 22px;">
+          <p style="font-size:13px;color:#555;margin-bottom:16px;">
+            设置本店可配送的邮编。顾客结账时系统自动验证地址是否在配送范围内。
+          </p>
+
+          <!-- 当前邮编标签 -->
+          <div style="font-size:12px;font-weight:600;color:#555;margin-bottom:8px;">当前配送邮编</div>
+          <div id="zipTags" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;padding:12px;background:#f8f8f5;border-radius:6px;border:1px solid #e8e8e0;margin-bottom:16px;"></div>
+
+          <!-- 添加邮编 -->
+          <div style="display:flex;gap:10px;align-items:center;">
+            <input id="zipInput" type="text" placeholder="输入邮编，如 18052" maxlength="10"
+              style="border:1px solid #ddd;border-radius:6px;padding:9px 12px;font-size:14px;font-family:inherit;outline:none;width:160px;"
+              onkeydown="if(event.key==='Enter')addZip()"
+              onfocus="this.style.borderColor='#2A6B3A'" onblur="this.style.borderColor='#ddd'">
+            <button class="btn btn-primary" onclick="addZip()">+ 添加</button>
+            <span id="zipMsg" style="font-size:13px;color:#888;"></span>
+          </div>
+        </div>
+        <div style="padding:0 22px 20px;display:flex;justify-content:flex-end;">
+          <button class="btn btn-primary" onclick="saveZips()">保存配送范围</button>
+        </div>
+      </div>
+    </div>
+  </div><!-- main -->
 </div><!-- mainWrap -->
 
 <script>
@@ -407,12 +437,67 @@ function myRow(r){
   </div>`;
 }
 
+// ── 邮编管理 ──────────────────────────────────────────────────
+var currentZips = [];
+
+async function loadZips(){
+  const res = await api('GET_STORE_PRODUCTS');
+  currentZips = res.store?.delivery_zips || [];
+  renderZipTags();
+}
+
+function renderZipTags(){
+  const container = document.getElementById('zipTags');
+  if(!currentZips.length){
+    container.innerHTML = '<span style="font-size:13px;color:#aaa;">暂无配送邮编</span>';
+    return;
+  }
+  container.innerHTML = currentZips.map(z=>`
+    <span style="display:inline-flex;align-items:center;gap:6px;background:#fff;border:1px solid #2A6B3A;
+      color:#2A6B3A;padding:4px 10px;border-radius:16px;font-size:13px;font-weight:500;">
+      ${z}
+      <button onclick="removeZip('${z}')" style="background:none;border:none;cursor:pointer;
+        color:#2A6B3A;font-size:16px;line-height:1;padding:0;">×</button>
+    </span>`).join('');
+}
+
+function addZip(){
+  const input = document.getElementById('zipInput');
+  const zip = input.value.trim().replace(/\D/g,'');
+  const msg = document.getElementById('zipMsg');
+  if(!zip){ msg.textContent='请输入邮编'; return; }
+  if(zip.length < 5){ msg.textContent='邮编至少5位'; return; }
+  if(currentZips.includes(zip)){ msg.textContent='该邮编已存在'; return; }
+  currentZips.push(zip);
+  input.value='';
+  msg.textContent='';
+  renderZipTags();
+}
+
+function removeZip(zip){
+  currentZips = currentZips.filter(z=>z!==zip);
+  renderZipTags();
+}
+
+async function saveZips(){
+  const res = await api('SAVE_ZIPS', null, null, { zips: currentZips });
+  const msg = document.getElementById('zipMsg');
+  if(res.ok){
+    msg.style.color='#2A6B3A';
+    msg.textContent='✓ 配送范围已保存！';
+    setTimeout(()=>msg.textContent='', 3000);
+  } else {
+    msg.style.color='#c0392b';
+    msg.textContent='保存失败：'+(res.error||'未知错误');
+  }
+}
+
 // ── 活动设置 ──────────────────────────────────────────────────
 var promoColor = '#1A4A28';
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['myProducts','addFromCatalog','addNew','promo'];
+    const names=['myProducts','addFromCatalog','addNew','promo','zips'];
     t.classList.toggle('active',names[i]===name);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -421,6 +506,7 @@ function showTab(name){
   if(el) el.classList.add('active');
   if(name==='addFromCatalog'&&!allCatalog.length) loadCatalog();
   if(name==='promo') loadPromo();
+  if(name==='zips') loadZips();
 }
 
 async function loadPromo(){
