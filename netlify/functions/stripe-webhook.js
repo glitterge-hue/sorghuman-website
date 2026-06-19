@@ -232,18 +232,23 @@ exports.handler = async (event) => {
 </body></html>`;
 
     // ── 通过 Twilio 发短信给门店 + 兼职司机 ────────────────────────
-    const TWILIO_SID   = process.env.TWILIO_SID;
-    const TWILIO_TOKEN = process.env.TWILIO_TOKEN;
-    const TWILIO_FROM  = process.env.TWILIO_PHONE;
+    const TWILIO_SID     = process.env.TWILIO_SID;
+    const TWILIO_TOKEN   = process.env.TWILIO_TOKEN;
+    const TWILIO_FROM    = process.env.TWILIO_PHONE;
+    const TWILIO_MSG_SVC = process.env.TWILIO_MESSAGING_SERVICE_SID; // 已审批的 Messaging Service（推荐走这个）
 
-    if (TWILIO_SID && TWILIO_TOKEN && TWILIO_FROM) {
+    if (TWILIO_SID && TWILIO_TOKEN && (TWILIO_MSG_SVC || TWILIO_FROM)) {
       const twilioAuth = Buffer.from(`${TWILIO_SID}:${TWILIO_TOKEN}`).toString('base64');
       const smsSend = (to, body) => fetch(
         `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_SID}/Messages.json`,
         {
           method : 'POST',
           headers: { 'Authorization':`Basic ${twilioAuth}`, 'Content-Type':'application/x-www-form-urlencoded' },
-          body   : new URLSearchParams({ From:TWILIO_FROM, To:to, Body:body }),
+          body   : new URLSearchParams(
+            TWILIO_MSG_SVC
+              ? { MessagingServiceSid: TWILIO_MSG_SVC, To: to, Body: body }
+              : { From: TWILIO_FROM, To: to, Body: body }
+          ),
         }
       ).catch(e => console.error('短信失败:', to, e.message));
 
