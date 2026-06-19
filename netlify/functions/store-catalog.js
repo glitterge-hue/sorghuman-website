@@ -108,6 +108,7 @@ exports.handler = async (event) => {
         sku, name_zh, name_en: name_en||'', spec: spec||null,
         category: category||'grocery',
         base_price: parseFloat(base_price),
+        image_url: image_url || null,
         common: false, active: true,
       }]);
 
