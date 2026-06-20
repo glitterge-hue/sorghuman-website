@@ -294,6 +294,30 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <!-- ── 面板5：配送邮编管理 ── -->
     <div id="panelZips" class="panel">
       <div class="card">
+        <div class="card-header">🚚 配送设置 Delivery Settings</div>
+        <div class="form-grid" style="padding:18px;">
+          <div class="form-group">
+            <label>免运费门槛 Free Delivery Over ($)</label>
+            <input id="freeThreshold" type="number" step="0.01" min="0" placeholder="例如 50">
+          </div>
+          <div class="form-group">
+            <label>运费 Delivery Fee ($)</label>
+            <input id="deliveryFee" type="number" step="0.01" min="0" placeholder="例如 5">
+          </div>
+          <div class="form-group full">
+            <p style="font-size:12px;color:#888;margin:0;">
+              满「免运费门槛」免运费，否则收取「运费」。修改后顾客结账立即生效。<br>
+              Orders at or above the threshold ship free; otherwise the delivery fee applies.
+            </p>
+          </div>
+        </div>
+        <div style="padding:0 18px 18px;display:flex;align-items:center;justify-content:flex-end;gap:12px;">
+          <span id="deliveryMsg" style="font-size:13px;"></span>
+          <button class="btn btn-primary" onclick="saveDelivery()">保存 Save Settings</button>
+        </div>
+      </div>
+
+      <div class="card">
         <div class="card-header">📦 配送范围管理</div>
         <div style="padding:20px 22px;">
           <p style="font-size:13px;color:#555;margin-bottom:16px;">
@@ -550,6 +574,30 @@ async function loadZips(){
   const res = await api('GET_STORE_PRODUCTS');
   currentZips = res.store?.delivery_zips || [];
   renderZipTags();
+  // 预填配送设置（免运费门槛 + 运费）
+  const t = res.store?.free_delivery_threshold;
+  const f = res.store?.delivery_fee;
+  document.getElementById('freeThreshold').value = (t!=null ? t : '');
+  document.getElementById('deliveryFee').value   = (f!=null ? f : '');
+}
+
+async function saveDelivery(){
+  const tRaw = document.getElementById('freeThreshold').value.trim();
+  const fRaw = document.getElementById('deliveryFee').value.trim();
+  const msg  = document.getElementById('deliveryMsg');
+  msg.style.color='#888'; msg.textContent='保存中…';
+  const res = await api('SAVE_DELIVERY', null, null, {
+    free_delivery_threshold: tRaw==='' ? null : parseFloat(tRaw),
+    delivery_fee           : fRaw==='' ? null : parseFloat(fRaw),
+  });
+  if(res.ok){
+    msg.style.color='#2A6B3A';
+    msg.textContent='✓ 已保存，结账立即生效！';
+    setTimeout(()=>msg.textContent='', 3000);
+  } else {
+    msg.style.color='#c0392b';
+    msg.textContent='保存失败：'+(res.error||'未知错误');
+  }
 }
 
 function renderZipTags(){
