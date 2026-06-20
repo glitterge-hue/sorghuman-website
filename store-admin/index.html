@@ -110,6 +110,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div class="tab" onclick="showTab('promo')">🎉 促销 Promo</div>
     <div class="tab" onclick="showTab('zips')">📦 配送 Delivery</div>
     <div class="tab" onclick="showTab('drivers')">🛵 司机 Drivers</div>
+    <div class="tab" onclick="showTab('orders')">📋 订单 Orders</div>
   </div>
 
   <!-- ── 面板1：我的商品 ── -->
@@ -316,6 +317,27 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
         <div style="padding:0 22px 20px;display:flex;justify-content:flex-end;">
           <button class="btn btn-primary" onclick="saveZips()">保存 Save Zones</button>
         </div>
+      </div>
+    </div>
+
+    <!-- ── 面板7：订单管理 ── -->
+    <div id="panelOrders" class="panel">
+      <div class="card">
+        <div class="card-header">
+          <span>📋 我的订单 My Orders <span id="ordersCount" style="color:#888;font-weight:400;"></span></span>
+          <button class="btn btn-add btn-sm" onclick="loadOrders()">刷新 Refresh</button>
+        </div>
+        <div class="search-bar">
+          <select id="orderStatusFilter" onchange="renderOrders()">
+            <option value="">全部状态 All</option>
+            <option value="paid">已付款 Paid</option>
+            <option value="preparing">备货中 Preparing</option>
+            <option value="delivering">配送中 Delivering</option>
+            <option value="completed">已完成 Completed</option>
+            <option value="cancelled">已取消 Cancelled</option>
+          </select>
+        </div>
+        <div id="ordersList"><div class="empty">加载中… Loading…</div></div>
       </div>
     </div>
   </div><!-- main -->
@@ -581,7 +603,7 @@ var promoColor = '#1A4A28';
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['myProducts','addFromCatalog','addNew','promo','zips','drivers'];
+    const names=['myProducts','addFromCatalog','addNew','promo','zips','drivers','orders'];
     t.classList.toggle('active',names[i]===name);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -592,6 +614,7 @@ function showTab(name){
   if(name==='promo') loadPromo();
   if(name==='zips') loadZips();
   if(name==='drivers') loadDrivers();
+  if(name==='orders') loadOrders();
 }
 
 async function loadPromo(){
@@ -783,6 +806,120 @@ async function submitNewProduct(){
   } else {
     msg.style.color='#c0392b';
     msg.textContent='失败：'+(res.error||'未知错误');
+  }
+}
+
+// ── 面板7：订单管理 ───────────────────────────────────────────
+const ORDERS_API = '/.netlify/functions/store-orders';
+var ordersData = [];
+const ORDER_STATUS = {
+  paid      : { label:'已付款 Paid',       bg:'#d4edda', fg:'#155724' },
+  preparing : { label:'备货中 Preparing',  bg:'#cce5ff', fg:'#004085' },
+  delivering: { label:'配送中 Delivering', bg:'#e2d4f0', fg:'#5a2a82' },
+  completed : { label:'已完成 Completed',  bg:'#e2e2e2', fg:'#444'    },
+  cancelled : { label:'已取消 Cancelled',  bg:'#f8d7da', fg:'#721c24' },
+};
+
+async function ordersApi(action, extra){
+  const res = await fetch(ORDERS_API, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action, storeId, token, ...(extra||{}) })
+  });
+  return res.json();
+}
+
+async function loadOrders(){
+  const box = document.getElementById('ordersList');
+  box.innerHTML = '<div class="empty">加载中… Loading…</div>';
+  const res = await ordersApi('GET_ORDERS');
+  if(res.error){ box.innerHTML = '<div class="empty">加载失败：'+res.error+'</div>'; return; }
+  ordersData = res.orders || [];
+  renderOrders();
+}
+
+function orderMoney(n){ return '$'+(Number(n)||0).toFixed(2); }
+
+function orderTime(s){
+  if(!s) return '';
+  return new Date(s).toLocaleString('zh-CN',{ timeZone:'America/New_York',
+    month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit' });
+}
+
+function orderAddr(o){
+  const a = o.shipping_address;
+  if(!a) return '';
+  if(typeof a === 'string') return a;
+  return [a.line1, a.line2, [a.city,a.state,a.postal_code].filter(Boolean).join(' ')]
+    .filter(Boolean).join(', ');
+}
+
+function orderSkuName(sku){
+  const r = myProducts.find(x=>x.sku===sku);
+  if(r && r.products) return (r.products.name_zh||'') + (r.products.name_en?' '+r.products.name_en:'');
+  return sku;
+}
+
+function orderItemsHtml(items){
+  let arr = items;
+  if(typeof items==='string'){ try{ arr=JSON.parse(items);}catch(e){ return ''; } }
+  if(!Array.isArray(arr)||!arr.length) return '';
+  return '<div style="margin-top:8px;">' + arr.map(it=>{
+    const name = it.sku ? orderSkuName(it.sku) : (it.name_zh||it.name||it.name_en||'商品');
+    const qty  = it.qty||it.quantity||1;
+    return '<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px dashed #f0f0ea;">'
+         + '<span>'+name+'</span><span style="color:#888;">×'+qty+'</span></div>';
+  }).join('') + '</div>';
+}
+
+function orderCard(o){
+  const st  = ORDER_STATUS[o.status] || { label:o.status||'—', bg:'#f0f0ea', fg:'#666' };
+  const pill = '<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:11px;'
+             + 'font-weight:600;background:'+st.bg+';color:'+st.fg+';">'+st.label+'</span>';
+  const idShort = String(o.id||'').slice(-8).toUpperCase();
+  const cust = [];
+  if(o.shipping_name)  cust.push('<span style="color:#aaa;">收货人 </span>'+o.shipping_name);
+  if(o.customer_phone) cust.push('<span style="color:#aaa;">电话 </span>'+o.customer_phone);
+  const addr = orderAddr(o);
+  if(addr)             cust.push('<span style="color:#aaa;">地址 </span>'+addr);
+  if(o.customer_email) cust.push('<span style="color:#aaa;">邮箱 </span>'+o.customer_email);
+
+  const opts = ['paid','preparing','delivering','completed','cancelled'].map(s=>
+    '<option value="'+s+'"'+(s===o.status?' selected':'')+'>'+ORDER_STATUS[s].label+'</option>').join('');
+
+  return '<div style="padding:14px 18px;border-bottom:1px solid #f0f0ea;">'
+    + '<div style="display:flex;flex-wrap:wrap;align-items:center;gap:10px;">'
+      + '<span style="font-weight:600;font-family:monospace;">#'+idShort+'</span>'
+      + '<span style="font-size:12px;color:#aaa;">'+orderTime(o.created_at)+'</span>'
+      + pill
+      + '<span style="margin-left:auto;font-weight:700;color:#2A6B3A;font-size:15px;">'+orderMoney(o.total)+'</span>'
+    + '</div>'
+    + (cust.length?'<div style="margin-top:8px;font-size:13px;line-height:1.6;">'+cust.join('<br>')+'</div>':'')
+    + orderItemsHtml(o.items)
+    + '<div style="margin-top:10px;display:flex;gap:8px;align-items:center;">'
+      + '<select id="ost-'+idShort+'" style="border:1px solid #ddd;border-radius:6px;padding:5px 8px;font-size:13px;font-family:inherit;">'+opts+'</select>'
+      + '<button class="btn btn-primary btn-sm" onclick="changeOrderStatus(\''+o.id+'\',\''+idShort+'\')">更新状态 Update</button>'
+    + '</div>'
+  + '</div>';
+}
+
+function renderOrders(){
+  const filter = document.getElementById('orderStatusFilter').value;
+  const list = filter ? ordersData.filter(o=>o.status===filter) : ordersData;
+  document.getElementById('ordersCount').textContent = '共 '+ordersData.length+' 单';
+  const box = document.getElementById('ordersList');
+  box.innerHTML = list.length ? list.map(orderCard).join('') : '<div class="empty">暂无订单 No orders</div>';
+}
+
+async function changeOrderStatus(orderId, idShort){
+  const sel = document.getElementById('ost-'+idShort);
+  if(!sel) return;
+  const res = await ordersApi('UPDATE_ORDER_STATUS', { orderId, status: sel.value });
+  if(res.ok){
+    const o = ordersData.find(x=>String(x.id)===String(orderId));
+    if(o) o.status = res.order.status;
+    renderOrders();
+  } else {
+    alert('更新失败 Update failed：'+(res.error||'未知错误'));
   }
 }
 </script>
