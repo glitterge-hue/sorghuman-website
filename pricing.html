@@ -158,12 +158,12 @@
 
 <!-- PLANS -->
 <!--
-  STRIPE 付款按钮配置 — 把每个套餐的 href 换成对应的 Stripe Payment Link 网址：
-    基础 $299 → 产品 prod_Ueo3deteoukqdo
-    标准 $399 → 产品 prod_UjJlwIJc6UHmQc
-    大型 $499 → 产品 prod_UjJmmuy0bkspW2
-  在 Stripe 后台 Payment Links 给每个产品的“月度订阅价格”各建一个链接，
-  得到 https://buy.stripe.com/xxxx，替换下面 href 里的 PASTE_... 占位。
+  流程：套餐按钮 → /sign?plan=basic|standard|large（在线签约）→ 签署后自动跳对应 Stripe 订阅链接付款。
+  各档 Stripe 订阅链接现统一维护在 sign.html 的 PLANS 配置里：
+    基础 $299 (basic)    prod_Ueo3deteoukqdo → https://buy.stripe.com/28E9AS6go0iS9Yt8XG0RG03
+    标准 $399 (standard) prod_UjJlwIJc6UHmQc → https://buy.stripe.com/6oUeVcdIQ4z81rX4Hq0RG02
+    大型 $499 (large)    prod_UjJmmuy0bkspW2 → https://buy.stripe.com/5kQcN47ksghQ5Idgq80RG01
+  如需改链接，改 sign.html 里的 PLANS.pay 即可；本页按钮只指向 /sign。
 -->
 <section class="plans-wrap">
   <div class="plans">
@@ -174,7 +174,7 @@
       <p class="en">Basic Store</p>
       <div class="price">$299<small> / 月</small></div>
       <p class="criteria">3,000 平方英尺以下，<strong>并且</strong> 2,000 个单品以下。<br>3,000 sq ft &amp; under 2,000 SKUs.</p>
-      <a class="plan-btn" href="https://buy.stripe.com/28E9AS6go0iS9Yt8XG0RG03" data-prod="prod_Ueo3deteoukqdo">订阅 · Subscribe</a>
+      <a class="plan-btn" href="/sign?plan=basic" data-prod="prod_Ueo3deteoukqdo">签约并订阅 · Sign &amp; Subscribe</a>
     </div>
 
     <div class="plan featured">
@@ -183,7 +183,7 @@
       <p class="en">Standard Store</p>
       <div class="price">$399<small> / 月</small></div>
       <p class="criteria">3,000–8,000 平方英尺，<strong>或</strong> 2,000–5,000 个单品。<br>3,000–8,000 sq ft, or 2,000–5,000 SKUs.</p>
-      <a class="plan-btn" href="https://buy.stripe.com/6oUeVcdIQ4z81rX4Hq0RG02" data-prod="prod_UjJlwIJc6UHmQc">订阅 · Subscribe</a>
+      <a class="plan-btn" href="/sign?plan=standard" data-prod="prod_UjJlwIJc6UHmQc">签约并订阅 · Sign &amp; Subscribe</a>
     </div>
 
     <div class="plan">
@@ -192,7 +192,7 @@
       <p class="en">Large Store</p>
       <div class="price">$499<small> / 月</small></div>
       <p class="criteria">超过 8,000 平方英尺，<strong>或</strong> 超过 5,000 个单品。<br>Over 8,000 sq ft, or over 5,000 SKUs.</p>
-      <a class="plan-btn" href="https://buy.stripe.com/5kQcN47ksghQ5Idgq80RG01" data-prod="prod_UjJmmuy0bkspW2">订阅 · Subscribe</a>
+      <a class="plan-btn" href="/sign?plan=large" data-prod="prod_UjJmmuy0bkspW2">签约并订阅 · Sign &amp; Subscribe</a>
     </div>
 
   </div>
