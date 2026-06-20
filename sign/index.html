@@ -1,1 +1,404 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>平台服务协议 · 在线签约 | Sorghuman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --brand:#1A4A28; --brand-2:#2A6B3A; --gold:#C9A24B; --gold-bright:#F0C060;
+    --cream:#FAF7F2; --paper:#FFFFFF; --ink:#23201b; --muted:#8a857c; --border:#e7e1d6;
+    --danger:#b4452f;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--cream);color:var(--ink);font-family:'DM Sans',-apple-system,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  a{color:var(--brand);}
+  .wrap{max-width:860px;margin:0 auto;padding:0 22px 80px;}
 
+  /* 顶部品牌栏 */
+  header{background:var(--brand);color:#fff;padding:16px 0;margin-bottom:0;}
+  .header-in{max-width:860px;margin:0 auto;padding:0 22px;display:flex;align-items:baseline;gap:12px;}
+  .brand-zh{font-family:'DM Serif Display',serif;font-size:20px;color:#fff;}
+  .brand-en{font-size:12px;letter-spacing:.18em;color:var(--gold-bright);text-transform:uppercase;}
+
+  /* 标题区 */
+  .hero{padding:40px 0 22px;}
+  .eyebrow{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600;}
+  .hero h1{font-family:'DM Serif Display',serif;font-weight:400;font-size:38px;line-height:1.1;margin:10px 0 8px;color:var(--brand);}
+  .hero p{margin:0;color:var(--muted);font-size:15px;max-width:60ch;}
+
+  /* 区块标号 */
+  .step{display:flex;align-items:center;gap:12px;margin:34px 0 16px;}
+  .step .num{font-family:'DM Serif Display',serif;font-size:15px;color:#fff;background:var(--brand);width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .step h2{font-size:17px;margin:0;font-weight:600;}
+  .step .en{color:var(--muted);font-weight:400;font-size:14px;}
+
+  /* 表单 */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .field{display:flex;flex-direction:column;gap:6px;}
+  .field.full{grid-column:1/-1;}
+  label{font-size:13px;font-weight:500;color:#5a554c;}
+  label .req{color:var(--danger);}
+  input,textarea{font-family:inherit;font-size:15px;color:var(--ink);background:var(--paper);border:1px solid var(--border);border-radius:8px;padding:11px 13px;outline:none;transition:border-color .15s,box-shadow .15s;}
+  input:focus,textarea:focus{border-color:var(--brand-2);box-shadow:0 0 0 3px rgba(42,107,58,.12);}
+  textarea{resize:vertical;min-height:60px;}
+
+  /* 套餐选择 */
+  .plans{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .plan{background:var(--paper);border:1.5px solid var(--border);border-radius:12px;padding:20px 18px;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .1s;position:relative;}
+  .plan:hover{border-color:var(--brand-2);}
+  .plan.sel{border-color:var(--brand);box-shadow:0 0 0 3px rgba(26,74,40,.12);}
+  .plan.sel::after{content:'✓';position:absolute;top:12px;right:14px;width:22px;height:22px;border-radius:50%;background:var(--brand);color:var(--gold-bright);font-size:13px;display:flex;align-items:center;justify-content:center;}
+  .plan-name{font-size:14px;font-weight:600;color:var(--brand);}
+  .plan-price{font-family:'DM Serif Display',serif;font-size:30px;color:var(--ink);margin:6px 0 2px;}
+  .plan-price span{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--muted);font-weight:400;}
+  .plan-feat{font-size:12.5px;color:var(--muted);line-height:1.5;margin-top:8px;}
+  @media(max-width:640px){ .plans{grid-template-columns:1fr;} }
+
+  /* 合同纸 */
+  .paper{background:var(--paper);border:1px solid var(--border);border-radius:12px;padding:36px 40px;margin-top:6px;box-shadow:0 1px 0 rgba(0,0,0,.02);}
+  .paper .doc-title{font-family:'DM Serif Display',serif;font-size:24px;color:var(--brand);text-align:center;margin:0 0 4px;}
+  .paper .doc-sub{text-align:center;color:var(--muted);font-size:12px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:26px;}
+  .clause{margin:0 0 18px;}
+  .clause h3{font-size:15px;color:var(--brand);margin:0 0 6px;font-weight:600;}
+  .clause p{margin:0;font-size:14.5px;color:#3c382f;}
+  .clause ul{margin:6px 0 0;padding-left:20px;font-size:14.5px;color:#3c382f;}
+  .clause li{margin:3px 0;}
+  .mg{color:var(--brand-2);font-weight:600;border-bottom:1px solid rgba(42,107,58,.35);padding:0 2px;}
+  .mg.blank{color:var(--muted);font-weight:400;border-bottom-style:dashed;border-bottom-color:var(--border);min-width:90px;display:inline-block;}
+  .fee-box{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-top:6px;}
+  .fee-row{display:flex;justify-content:space-between;font-size:14.5px;padding:5px 0;border-bottom:1px dashed var(--border);}
+  .fee-row:last-child{border-bottom:none;}
+  .fee-row b{color:var(--brand);}
+
+  /* 签名区 */
+  .sign-card{background:var(--paper);border:1px solid var(--border);border-radius:12px;padding:28px 32px;margin-top:18px;}
+  .sig-line-wrap{margin:14px 0 6px;}
+  .sig-line{border-bottom:2px solid var(--brand);min-height:54px;display:flex;align-items:flex-end;padding-bottom:4px;}
+  .sig-render{font-family:'Caveat',cursive;font-size:38px;color:var(--brand);line-height:1;}
+  .sig-render.empty{color:#cfc9bd;}
+  .sig-hint{font-size:12px;color:var(--muted);margin-top:6px;}
+  .agree{display:flex;align-items:flex-start;gap:11px;margin:22px 0 6px;cursor:pointer;}
+  .agree input{width:20px;height:20px;margin-top:2px;accent-color:var(--brand);flex-shrink:0;cursor:pointer;}
+  .agree span{font-size:14px;color:#3c382f;}
+  .btn{font-family:inherit;font-size:16px;font-weight:600;color:#fff;background:var(--brand);border:none;border-radius:8px;padding:14px 26px;cursor:pointer;transition:background .15s,opacity .15s;width:100%;margin-top:16px;}
+  .btn:hover{background:#143a20;}
+  .btn:disabled{background:#b9c3bb;cursor:not-allowed;}
+  .formmsg{font-size:13.5px;margin-top:12px;text-align:center;min-height:18px;}
+  .formmsg.err{color:var(--danger);}
+
+  /* 成功态 */
+  .done{background:var(--paper);border:1px solid var(--border);border-radius:12px;padding:40px;text-align:center;}
+  .done .check{width:56px;height:56px;border-radius:50%;background:var(--brand);color:var(--gold-bright);display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 16px;}
+  .done h2{font-family:'DM Serif Display',serif;font-weight:400;font-size:26px;color:var(--brand);margin:0 0 6px;}
+  .done .aid{font-family:monospace;font-size:18px;color:var(--brand);background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:8px 14px;display:inline-block;margin:10px 0;}
+  .done p{color:var(--muted);font-size:14px;margin:6px 0;}
+  .btn-ghost{background:#fff;color:var(--brand);border:1.5px solid var(--brand);width:auto;display:inline-block;margin-top:18px;padding:11px 22px;}
+  .btn-ghost:hover{background:var(--brand);color:#fff;}
+
+  @media(max-width:640px){
+    .grid{grid-template-columns:1fr;}
+    .hero h1{font-size:30px;}
+    .paper{padding:26px 20px;}
+    .sign-card{padding:22px 18px;}
+  }
+
+  /* 打印：只留合同与签名 */
+  @media print{
+    header,.hero,.step,#formCard,.agree,.btn,.formmsg,.btn-ghost,.print-hide{display:none !important;}
+    body{background:#fff;}
+    .wrap{padding:0;max-width:none;}
+    .paper,.sign-card,.done{border:none;box-shadow:none;margin:0;padding:0 0 18px;}
+    .done{text-align:left;}
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-in">
+    <span class="brand-zh">高仁控股</span>
+    <span class="brand-en">Sorghuman&nbsp;Platform</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">Platform Service Agreement</div>
+    <h1>平台服务协议<br>在线签约</h1>
+    <p>填写门店信息，条款将自动填入下方协议。勾选同意并签署，即完成具有法律效力的电子签约。Fill in your store details, review the agreement, then sign electronically — checking the box is your signature.</p>
+  </div>
+
+  <!-- 第1步：选择套餐 -->
+  <div class="step"><span class="num">1</span><h2>选择套餐 <span class="en">Choose your plan</span></h2></div>
+  <div class="plans" id="plans">
+    <div class="plan" data-plan="basic"    onclick="pickPlan('basic')">
+      <div class="plan-name">基础门店 Basic</div>
+      <div class="plan-price">$299<span>/月 mo</span></div>
+      <div class="plan-feat">3,000 平方英尺以下 <b>且</b> 2,000 单品以下<br>Under 3,000 sq ft &amp; 2,000 SKUs</div>
+    </div>
+    <div class="plan" data-plan="standard"  onclick="pickPlan('standard')">
+      <div class="plan-name">标准门店 Standard</div>
+      <div class="plan-price">$399<span>/月 mo</span></div>
+      <div class="plan-feat">3,000–8,000 平方英尺 <b>或</b> 2,000–5,000 单品<br>3,000–8,000 sq ft or 2,000–5,000 SKUs</div>
+    </div>
+    <div class="plan" data-plan="large"     onclick="pickPlan('large')">
+      <div class="plan-name">大型门店 Large</div>
+      <div class="plan-price">$499<span>/月 mo</span></div>
+      <div class="plan-feat">8,000 平方英尺以上 <b>或</b> 5,000 单品以上<br>Over 8,000 sq ft or 5,000 SKUs</div>
+    </div>
+  </div>
+
+  <!-- 第2步：填写信息 -->
+  <div id="formCard">
+    <div class="step"><span class="num">2</span><h2>填写信息 <span class="en">Your details</span></h2></div>
+    <div class="grid">
+      <div class="field">
+        <label>店铺名 Store name <span class="req">*</span></label>
+        <input id="f_store" placeholder="例如 Far East Asian Market" autocomplete="organization">
+      </div>
+      <div class="field">
+        <label>法定名称 Legal entity name <span class="req">*</span></label>
+        <input id="f_legal" placeholder="例如 Far East Trading Inc." autocomplete="off">
+      </div>
+      <div class="field">
+        <label>联系人 Contact person <span class="req">*</span></label>
+        <input id="f_contact" placeholder="姓名 Full name" autocomplete="name">
+      </div>
+      <div class="field">
+        <label>电子邮件 Email <span class="req">*</span></label>
+        <input id="f_email" type="email" placeholder="name@example.com" autocomplete="email">
+      </div>
+      <div class="field">
+        <label>联系电话 Phone</label>
+        <input id="f_phone" type="tel" placeholder="(选填 optional)" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label>营业地址 Business address</label>
+        <input id="f_address" placeholder="(选填 optional)" autocomplete="street-address">
+      </div>
+    </div>
+  </div>
+
+  <!-- 第2步：协议 -->
+  <div class="step"><span class="num">3</span><h2>阅读协议 <span class="en">Review the agreement</span></h2></div>
+  <div class="paper" id="contract">
+    <div class="doc-title">平台服务协议</div>
+    <div class="doc-sub">Platform Service Agreement</div>
+
+    <div class="clause">
+      <h3>协议双方 Parties</h3>
+      <p>本协议由 <b>Sorghuman Holding LLC</b>（高仁控股国际有限公司，下称"平台方 / Provider"）与
+      <span class="mg blank" id="m_legal">［法定名称］</span>（下称"商户 / Merchant"，经营店铺
+      <span class="mg blank" id="m_store">［店铺名］</span>）共同签订。</p>
+    </div>
+
+    <div class="clause">
+      <h3>一、服务内容 Services</h3>
+      <p>平台方为商户提供独立品牌在线商城（白标电商平台），包含：</p>
+      <ul>
+        <li>独立域名下的网上店铺与商品目录 Branded storefront &amp; catalog</li>
+        <li>后台商品、价格、爆品与促销管理 Product / price / promo management</li>
+        <li>订单管理与状态更新 Order management</li>
+        <li>配送范围（邮编）与免运费门槛设置 Delivery zones &amp; free-delivery threshold</li>
+        <li>顾客、门店、配送员三方短信通知 SMS notifications</li>
+      </ul>
+    </div>
+
+    <div class="clause">
+      <h3>二、费用 Fees</h3>
+      <div class="fee-box">
+        <div class="fee-row"><span>每月平台服务费 Monthly platform fee（<span id="m_planname">基础门店 Basic</span>）</span><b id="m_fee">$299.00</b></div>
+        <div class="fee-row"><span>支付处理费 Payment processing</span><b>3.5% + $0.30 / 笔 per txn</b></div>
+        <div class="fee-row"><span>平台佣金 Platform commission（2026–2027）</span><b>$0 零佣金</b></div>
+      </div>
+      <p style="margin-top:8px;font-size:13px;color:var(--muted);">档位依据 Tier basis：<span id="m_plancriteria">3,000 平方英尺以下且 2,000 单品以下</span>。面积与单品数对应不同档位时，以较高档位为准。</p>
+      <p style="margin-top:4px;font-size:13px;color:var(--muted);">支付处理费为支付通道实际成本，平台不另加价。Processing fees reflect payment-network cost only.</p>
+    </div>
+
+    <div class="clause">
+      <h3>三、期限与终止 Term &amp; termination</h3>
+      <p>本协议自签署之日起生效，按月自动续订。任一方可提前三十（30）日书面（含电子邮件）通知对方终止。Effective on signing, renews monthly; either party may terminate with 30 days' written notice.</p>
+    </div>
+
+    <div class="clause">
+      <h3>四、数据与隐私 Data &amp; privacy</h3>
+      <p>商户的商品、订单与顾客数据归商户所有；平台方仅为提供本服务之目的处理该等数据，不向第三方出售。Merchant owns its data; Provider processes it solely to deliver the service and does not sell it.</p>
+    </div>
+
+    <div class="clause">
+      <h3>五、电子签署 Electronic signature</h3>
+      <p>商户确认：在下方勾选同意并提交，即构成《电子签名法》(ESIGN Act / UETA) 项下具有法律效力的签署，与手写签名具有同等效力。Checking the box below and submitting constitutes a legally binding electronic signature.</p>
+    </div>
+  </div>
+
+  <!-- 第3步：签署 -->
+  <div class="step"><span class="num">4</span><h2>签署 <span class="en">Sign</span></h2></div>
+  <div class="sign-card" id="signCard">
+    <div class="field">
+      <label>签字人姓名 Full name of signatory <span class="req">*</span></label>
+      <input id="f_signer" placeholder="键入您的姓名 Type your name">
+    </div>
+    <div class="sig-line-wrap">
+      <div class="sig-line"><span class="sig-render empty" id="sigRender">您的签名 Your signature</span></div>
+      <div class="sig-hint">键入姓名即生成签名 · Typing your name renders your signature</div>
+    </div>
+
+    <label class="agree">
+      <input type="checkbox" id="f_agree">
+      <span>我已阅读并同意本《平台服务协议》的全部条款，并确认本人有权代表
+        <b id="m_legal2">该法定主体</b> 签署本协议。
+        I have read and agree to all terms, and am authorized to sign on behalf of this entity.</span>
+    </label>
+
+    <button class="btn" id="signBtn" disabled onclick="submitSign()">签署协议 Sign agreement</button>
+    <div class="formmsg" id="formMsg"></div>
+  </div>
+
+  <!-- 成功态 -->
+  <div class="done" id="doneCard" style="display:none;">
+    <div class="check">✓</div>
+    <h2>协议已签署 Agreement signed</h2>
+    <div class="aid" id="doneAid">—</div>
+    <p id="doneWhen"></p>
+    <p>已签署的协议副本已发送至您填写的邮箱。A signed copy has been emailed to you.</p>
+    <div style="margin-top:20px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+      <a class="btn" id="payBtn" href="#" style="width:auto;display:inline-block;text-decoration:none;margin-top:0;">下一步：订阅付款 Subscribe &amp; pay →</a>
+      <button class="btn-ghost print-hide" style="margin-top:0;" onclick="window.print()">打印 / 保存 PDF · Print / Save PDF</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const SIGN_API = '/.netlify/functions/sign-agreement';
+const $ = id => document.getElementById(id);
+
+// 三档套餐（价格仅作展示，最终以服务端为准）；pay = 对应 Stripe 订阅链接
+const PLANS = {
+  basic   : { name:'基础门店 Basic',    price:299, criteria:'3,000 平方英尺以下且 2,000 单品以下', pay:'https://buy.stripe.com/28E9AS6go0iS9Yt8XG0RG03' },
+  standard: { name:'标准门店 Standard', price:399, criteria:'3,000–8,000 平方英尺，或 2,000–5,000 单品', pay:'https://buy.stripe.com/6oUeVcdIQ4z81rX4Hq0RG02' },
+  large   : { name:'大型门店 Large',    price:499, criteria:'8,000 平方英尺以上，或 5,000 单品以上', pay:'https://buy.stripe.com/5kQcN47ksghQ5Idgq80RG01' },
+};
+let selectedPlan = 'basic';
+
+function pickPlan(id){
+  if(!PLANS[id]) id = 'basic';
+  selectedPlan = id;
+  document.querySelectorAll('.plan').forEach(c=>{
+    c.classList.toggle('sel', c.getAttribute('data-plan')===id);
+  });
+  $('m_planname').textContent = PLANS[id].name;
+  $('m_fee').textContent = '$' + PLANS[id].price.toFixed(2);
+  const crit = $('m_plancriteria'); if(crit) crit.textContent = PLANS[id].criteria;
+}
+
+// 支持从 pricing 页带 ?plan=standard 预选
+(function(){
+  const p = new URLSearchParams(location.search).get('plan');
+  pickPlan(PLANS[p] ? p : 'basic');
+})();
+
+const fStore   = $('f_store'),   fLegal = $('f_legal'), fContact = $('f_contact');
+const fEmail   = $('f_email'),   fPhone = $('f_phone'), fAddress = $('f_address');
+const fSigner  = $('f_signer'),  fAgree = $('f_agree'), signBtn  = $('signBtn');
+
+function isEmail(s){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s||''); }
+
+// 合同字段实时合并
+function setMerge(el, val, placeholder){
+  if(val){ el.textContent = val; el.classList.remove('blank'); }
+  else   { el.textContent = placeholder; el.classList.add('blank'); }
+}
+function syncContract(){
+  setMerge($('m_store'), fStore.value.trim(), '［店铺名］');
+  setMerge($('m_legal'), fLegal.value.trim(), '［法定名称］');
+  $('m_legal2').textContent = fLegal.value.trim() || '该法定主体';
+}
+
+// 签名手写体渲染
+function syncSig(){
+  const v = fSigner.value.trim();
+  const r = $('sigRender');
+  if(v){ r.textContent = v; r.classList.remove('empty'); }
+  else { r.textContent = '您的签名 Your signature'; r.classList.add('empty'); }
+}
+
+// 联系人填了、签字人为空时，自动带入
+function autofillSigner(){
+  if(!fSigner.value.trim() && fContact.value.trim()){
+    fSigner.value = fContact.value.trim();
+    syncSig();
+  }
+}
+
+function valid(){
+  return fStore.value.trim() && fLegal.value.trim() && fContact.value.trim()
+      && isEmail(fEmail.value.trim()) && fSigner.value.trim() && fAgree.checked;
+}
+function refresh(){ signBtn.disabled = !valid(); }
+
+[fStore,fLegal,fContact,fEmail,fPhone,fAddress].forEach(el=>{
+  el.addEventListener('input', ()=>{ syncContract(); refresh(); });
+});
+fContact.addEventListener('blur', autofillSigner);
+fSigner.addEventListener('input', ()=>{ syncSig(); refresh(); });
+fAgree.addEventListener('change', refresh);
+syncContract(); syncSig();
+
+async function submitSign(){
+  const msg = $('formMsg');
+  msg.className = 'formmsg'; msg.textContent = '签署中… Signing…';
+  signBtn.disabled = true;
+  try{
+    const res = await fetch(SIGN_API, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        plan          : selectedPlan,
+        store_name    : fStore.value.trim(),
+        legal_name    : fLegal.value.trim(),
+        contact_name  : fContact.value.trim(),
+        email         : fEmail.value.trim(),
+        phone         : fPhone.value.trim(),
+        address       : fAddress.value.trim(),
+        signatory_name: fSigner.value.trim(),
+        agreed        : fAgree.checked,
+      }),
+    });
+    const data = await res.json();
+    if(!res.ok || !data.ok){ throw new Error(data.error || '签署失败，请重试'); }
+
+    // 成功：在合同上盖上签名/编号，切到成功态
+    $('formCard').style.display = 'none';
+    $('signCard').style.display = 'none';
+    document.querySelectorAll('.step').forEach(s=>s.style.display='none');
+    $('doneAid').textContent  = data.agreement_id;
+    const payBtn = $('payBtn'); if(payBtn) payBtn.href = PLANS[selectedPlan].pay;
+    const when = new Date(data.signed_at).toLocaleString('zh-CN',{
+      year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    $('doneWhen').textContent = '签署时间 Signed: ' + when;
+    $('doneCard').style.display = 'block';
+
+    // 在合同纸末尾追加正式签名块（供打印）
+    const sigBlock = document.createElement('div');
+    sigBlock.className = 'clause';
+    sigBlock.style.marginTop = '24px';
+    sigBlock.innerHTML =
+      '<h3>签署 Executed</h3>'
+      + '<div style="font-family:Caveat,cursive;font-size:34px;color:#1A4A28;">'+fSigner.value.trim()+'</div>'
+      + '<div style="font-size:13px;color:#8a857c;">'
+      + '代表 on behalf of '+fLegal.value.trim()+'<br>'
+      + '协议编号 No. '+data.agreement_id+' · '+when+'</div>';
+    $('contract').appendChild(sigBlock);
+
+    window.scrollTo({top:0,behavior:'smooth'});
+  }catch(e){
+    msg.className = 'formmsg err'; msg.textContent = e.message;
+    signBtn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
