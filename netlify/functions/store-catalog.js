@@ -34,7 +34,8 @@ async function sb(method, table, qs, body) {
 async function verifyToken(storeId, token, origin) {
   if (!storeId || !token) return null;
   const rows = await sb('GET', 'stores',
-    `store_id=eq.${storeId}&admin_token=eq.${token}&select=store_id,name_zh,name_en,domain,markup`);
+    `store_id=eq.${storeId}&admin_token=eq.${token}` +
+    `&select=store_id,name_zh,name_en,domain,markup,delivery_zips,drivers,promo,free_delivery_threshold,delivery_fee`);
   const store = rows[0];
   if (!store) return null;
   // 域名校验：只允许自家域名或 sorghuman.com 访问
@@ -159,6 +160,34 @@ exports.handler = async (event) => {
         method : 'PATCH',
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
         body   : JSON.stringify({ delivery_zips: zips }),
+      });
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
+    }
+
+    // ── 保存配送设置（免运费门槛 + 运费）──────────────────────────
+    if (action === 'SAVE_DELIVERY') {
+      const { free_delivery_threshold, delivery_fee } = body;
+      const patch = {};
+      if (free_delivery_threshold !== undefined) {
+        const v = (free_delivery_threshold === null || free_delivery_threshold === '')
+                ? null : Number(free_delivery_threshold);
+        if (v !== null && (isNaN(v) || v < 0))
+          return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '免运费门槛无效' }) };
+        patch.free_delivery_threshold = v;
+      }
+      if (delivery_fee !== undefined) {
+        const v = (delivery_fee === null || delivery_fee === '')
+                ? null : Number(delivery_fee);
+        if (v !== null && (isNaN(v) || v < 0))
+          return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '运费无效' }) };
+        patch.delivery_fee = v;
+      }
+      if (!Object.keys(patch).length)
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '无可保存字段' }) };
+      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+        method : 'PATCH',
+        headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
+        body   : JSON.stringify(patch),
       });
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
