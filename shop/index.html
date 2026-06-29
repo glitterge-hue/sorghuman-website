@@ -13,7 +13,13 @@
 }
 body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);line-height:1.55;}
 nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:60px;}
-.nav-store{font-family:'DM Serif Display',serif;font-size:18px;color:var(--brand);}
+.nav-store{font-family:'DM Serif Display',serif;font-size:18px;color:var(--brand);text-decoration:none;cursor:pointer;transition:opacity .15s;}
+.nav-store:hover{opacity:.7;}
+.nav-right{display:flex;align-items:center;gap:16px;}
+.nav-home{font-size:13px;color:var(--brand);text-decoration:none;font-weight:500;white-space:nowrap;transition:opacity .15s;}
+.nav-home:hover{opacity:.65;}
+footer #footStore{text-decoration:none;color:var(--muted);transition:color .15s;}
+footer #footStore:hover{color:var(--brand);}
 .nav-tagline{font-size:11px;color:var(--muted);}
 /* Hero */
 .page-header{opacity:0;transition:opacity .3s;background:var(--brand);padding:90px 5% 42px;color:#fff;}
@@ -107,8 +113,11 @@ footer a{color:var(--brand);}
 <body>
 
 <nav>
-  <span class="nav-store" id="navStore">店铺</span>
-  <span class="nav-tagline" id="navTag"></span>
+  <a class="nav-store" id="navStore" href="https://sorghuman.com/">店铺</a>
+  <div class="nav-right">
+    <span class="nav-tagline" id="navTag"></span>
+    <a class="nav-home" id="navHome" href="https://sorghuman.com/">← 返回主页 · Home</a>
+  </div>
 </nav>
 
 <div class="demo-flag" id="demoFlag" style="display:none;"></div>
@@ -183,7 +192,7 @@ footer a{color:var(--brand);}
 </div>
 
 <footer>
-  <p id="footStore">远东超市</p>
+  <p><a id="footStore" href="https://sorghuman.com/">远东超市</a></p>
   <p id="footContact"></p>
   <p id="footLegal"><a href="/shop/privacy.html">Privacy Policy</a> &middot; <a href="/shop/terms.html">Terms of Service</a></p>
 </footer>
@@ -357,10 +366,15 @@ function applyStore(){
   if(hero) hero.style.opacity = '1';
   document.getElementById('navStore').textContent   = store.name_zh;
   document.getElementById('navTag').textContent     = store.tagline||'';
+  // 返回主页链接：指向该店铺自己域名的主页
+  var homeUrl = store.domain ? 'https://'+store.domain+'/' : 'https://sorghuman.com/';
+  document.getElementById('navStore').href = homeUrl;
+  document.getElementById('navHome').href  = homeUrl;
   document.getElementById('heroTitle').textContent  = store.name_zh;
   document.getElementById('heroEnName').textContent = store.name_en||'';
   document.getElementById('heroSub').textContent    = '选择品类，开始购物。 Browse by category.';
   document.getElementById('footStore').textContent  = store.name_zh + (store.name_en ? ' · '+store.name_en : '');
+  document.getElementById('footStore').href = homeUrl;
   var parts = [];
   if(store.contact_phone) parts.push(store.contact_phone);
   if(store.contact_email) parts.push('<a href="mailto:'+store.contact_email+'">'+store.contact_email+'</a>');
