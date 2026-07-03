@@ -15,11 +15,11 @@ const CORS = {
 
 // 分类中英文标题（可按需增删）
 const CATEGORY_LABELS = {
-  buns      : '包点 Buns & Dim Sum',
+  buns      : '包子系列 Steamed Buns',
   frozen    : '冷冻食品 Frozen',
   dumplings : '水饺 Dumplings',
   beverages : '饮品 Beverages',
-  rice      : '米面粮油 Rice & Grains',
+  rice      : '优质大米 Premium Rice',
   grocery   : '百货 Grocery',
 };
 
@@ -30,7 +30,7 @@ exports.handler = async (event) => {
   try {
     const res = await fetch(
       `${SUPA_URL}/rest/v1/products?active=eq.true&showcase=eq.true` +
-      `&select=sku,name_zh,name_en,spec,category,image_url,description,sort_order` +
+      `&select=sku,name_zh,name_en,spec,category,showcase_category,image_url,description,sort_order` +
       `&order=sort_order.asc`,
       { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }
     );
