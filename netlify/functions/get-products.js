@@ -42,7 +42,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: { ...CORS, 'Cache-Control': 'public, max-age=60' },
+      headers: { ...CORS, 'Cache-Control': 'no-cache, no-store, must-revalidate' },
       body: JSON.stringify({ products, categories: CATEGORY_LABELS }),
     };
   } catch (e) {
