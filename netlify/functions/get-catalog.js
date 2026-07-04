@@ -84,9 +84,11 @@ exports.handler = async (event) => {
         products: storeProducts,
         globalPromo,
         categories: {
-          condiments: '米面粮油和调味品 Pantry & Condiments',
-          snacks    : '零食和饮料 Snacks & Beverages',
           frozen    : '冷冻食品 Frozen Foods',
+          grains    : '米面粮油 Rice, Flour & Oil',
+          condiments: '调味品 Condiments',
+          snacks    : '零食 Snacks',
+          beverages : '饮料 Beverages',
           fresh     : '生鲜 Fresh Produce',
           grocery   : '百货 Grocery',
         }
