@@ -148,11 +148,18 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
           <select id="catCatFilter" onchange="renderCatalog()">
             <option value="">全部品类</option>
             <option value="frozen">冷冻食品</option>
-            <option value="snacks">零食饮料</option>
-            <option value="condiments">粮油调味</option>
+            <option value="grains">米面粮油</option>
+            <option value="condiments">调味品</option>
+            <option value="snacks">零食</option>
+            <option value="beverages">饮料</option>
             <option value="fresh">生鲜</option>
             <option value="grocery">百货</option>
           </select>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;padding:8px 22px;border-bottom:1px solid #f0f0ea;">
+          <button class="btn btn-add btn-sm" onclick="selectAllCatalog()">✓ 全选（当前筛选）</button>
+          <button class="btn btn-sm" style="background:#eee;color:#555;" onclick="clearAllCatalog()">✗ 全不选</button>
+          <span id="catalogSelInfo" style="font-size:13px;color:#888;margin-left:auto;"></span>
         </div>
         <div id="catalogList"></div>
       </div>
@@ -790,23 +797,41 @@ async function loadCatalog(){
   renderCatalog();
 }
 
-function renderCatalog(){
+function filteredCatalog(){
   const q   = document.getElementById('catSearch').value.toLowerCase();
   const cat = document.getElementById('catCatFilter').value;
-  const list = allCatalog.filter(p=>{
+  return allCatalog.filter(p=>{
     if(cat && p.category!==cat) return false;
     if(q && !p.sku.toLowerCase().includes(q) &&
-       !p.name_zh.toLowerCase().includes(q) &&
-       !p.name_en.toLowerCase().includes(q)) return false;
+       !(p.name_zh||'').toLowerCase().includes(q) &&
+       !(p.name_en||'').toLowerCase().includes(q)) return false;
     return true;
   });
+}
+
+function catalogSelectedCount(){
+  let n=0;
+  allCatalog.forEach(p=>{
+    if((mySkuSet.has(p.sku)||pendingAdd.has(p.sku)) && !pendingRemove.has(p.sku)) n++;
+  });
+  return n;
+}
+
+function updateCatalogBar(shown){
+  const el=document.getElementById('catalogSelInfo');
+  if(el) el.textContent = '已选 '+catalogSelectedCount()+' 个 · 当前筛选 '+shown+' 个';
+}
+
+function renderCatalog(){
+  const list = filteredCatalog();
   document.getElementById('catalogList').innerHTML = list.length
     ? list.map(p=>catalogRow(p)).join('')
     : '<div class="empty">无匹配商品</div>';
+  updateCatalogBar(list.length);
 }
 
 function catalogRow(p){
-  const inStore = mySkuSet.has(p.sku) || pendingAdd.has(p.sku);
+  const inStore = (mySkuSet.has(p.sku) || pendingAdd.has(p.sku)) && !pendingRemove.has(p.sku);
   const checked = inStore ? 'checked' : '';
   const img = p.image_url
     ? `<img class="prod-img" src="${p.image_url.replace(/\/public$/,'/thumb')}" onerror="this.src='${p.image_url}'">`
@@ -826,6 +851,27 @@ function catalogRow(p){
 function toggleCatalog(sku, checked){
   if(checked){ pendingAdd.add(sku); pendingRemove.delete(sku); }
   else        { pendingRemove.add(sku); pendingAdd.delete(sku); }
+  updateCatalogBar(filteredCatalog().length);
+}
+
+// 一键全选（当前筛选结果全部选中）
+function selectAllCatalog(){
+  const list = filteredCatalog();
+  list.forEach(p=>{
+    if(!mySkuSet.has(p.sku)) pendingAdd.add(p.sku);
+    pendingRemove.delete(p.sku);
+  });
+  renderCatalog();
+}
+
+// 一键全不选（当前筛选结果全部取消）
+function clearAllCatalog(){
+  const list = filteredCatalog();
+  list.forEach(p=>{
+    pendingAdd.delete(p.sku);
+    if(mySkuSet.has(p.sku)) pendingRemove.add(p.sku);
+  });
+  renderCatalog();
 }
 
 async function saveCatalogSelection(){
