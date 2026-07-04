@@ -156,9 +156,11 @@ footer a{color:var(--brand);}
 </div>
 <div class="cat-tabs-section">
   <div class="cat-tabs" id="catTabs">
-    <button class="cat-tab" data-cat="condiments" onclick="setCat('condiments')">米面粮油调味 Pantry</button>
-    <button class="cat-tab" data-cat="snacks"     onclick="setCat('snacks')">零食和饮料 Snacks</button>
     <button class="cat-tab" data-cat="frozen"     onclick="setCat('frozen')">冷冻食品 Frozen</button>
+    <button class="cat-tab" data-cat="grains"     onclick="setCat('grains')">米面粮油 Pantry</button>
+    <button class="cat-tab" data-cat="condiments" onclick="setCat('condiments')">调味品 Condiments</button>
+    <button class="cat-tab" data-cat="snacks"     onclick="setCat('snacks')">零食 Snacks</button>
+    <button class="cat-tab" data-cat="beverages"  onclick="setCat('beverages')">饮料 Beverages</button>
     <button class="cat-tab" data-cat="fresh"      onclick="setCat('fresh')">生鲜 Fresh</button>
     <button class="cat-tab" data-cat="grocery"    onclick="setCat('grocery')">百货 Grocery</button>
   </div>
@@ -203,9 +205,11 @@ var CHECKOUT_URL = 'https://sorghuman.com/.netlify/functions/create-checkout';
 var FALLBACK_CATALOG = {
   currency:'USD',
   categories:{
-    condiments:'米面粮油和调味品 Pantry & Condiments',
-    snacks:'零食和饮料 Snacks & Beverages',
     frozen:'冷冻食品 Frozen Foods',
+    grains:'米面粮油 Rice, Flour & Oil',
+    condiments:'调味品 Condiments',
+    snacks:'零食 Snacks',
+    beverages:'饮料 Beverages',
     fresh:'生鲜 Fresh Produce',
     grocery:'百货 Grocery'
   },
@@ -217,10 +221,10 @@ var FALLBACK_CATALOG = {
     {sku:'7985',  name_en:'Shredded Radish Bun',           name_zh:'千顺萝卜丝包', spec:'16 oz / 6 pcs', category:'frozen', base_price:4.99, common:true},
     {sku:'9615',  name_en:'Bok Choy & Shiitake Bun',       name_zh:'青菜香菇包',   spec:'16 oz / 6 pcs', category:'frozen', base_price:4.99, common:true},
     {sku:'9913',  name_en:'Adzuki Bean Bun',               name_zh:'豆沙包',       spec:'10.58 oz / 6 pcs', category:'frozen', base_price:4.99, common:true},
-    {sku:'PLUM-1',   name_en:'Sour Plum Soup (single)',    name_zh:'酸梅汤 单瓶',  spec:'16 fl oz', category:'snacks', base_price:2.99, common:true},
-    {sku:'PLUM-20',  name_en:'Sour Plum Soup (case/20)',   name_zh:'酸梅汤 整箱',  spec:'20x16 fl oz', category:'snacks', base_price:49.99, common:true},
-    {sku:'PLUM-CONC',name_en:'Sour Plum Concentrate',      name_zh:'酸梅汁浓缩液', spec:'浓缩', category:'snacks', base_price:9.99, common:true},
-    {sku:'RICE-ST25',name_en:'ST25 Vietnamese Rice',       name_zh:'蟹老伯ST25大米',spec:'5 kg', category:'snacks', base_price:25.00, common:true}
+    {sku:'PLUM-1',   name_en:'Sour Plum Soup (single)',    name_zh:'酸梅汤 单瓶',  spec:'16 fl oz', category:'beverages', base_price:2.99, common:true},
+    {sku:'PLUM-20',  name_en:'Sour Plum Soup (case/20)',   name_zh:'酸梅汤 整箱',  spec:'20x16 fl oz', category:'beverages', base_price:49.99, common:true},
+    {sku:'PLUM-CONC',name_en:'Sour Plum Concentrate',      name_zh:'酸梅汁浓缩液', spec:'浓缩', category:'beverages', base_price:9.99, common:true},
+    {sku:'RICE-ST25',name_en:'ST25 Vietnamese Rice',       name_zh:'蟹老伯ST25大米',spec:'5 kg', category:'grains', base_price:25.00, common:true}
   ]
 };
 
@@ -245,12 +249,14 @@ var FALLBACK_STORES = {
 };
 
 var CAT_INFO = [
-  {cat:'featured',   icon:'🔥', zh:'爆品',             en:'Hot Items'},
-  {cat:'condiments', icon:'🌾', zh:'米面粮油和调味品', en:'Pantry & Condiments'},
-  {cat:'snacks',     icon:'🧃', zh:'零食和饮料',       en:'Snacks & Drinks'},
-  {cat:'frozen',     icon:'❄',  zh:'冷冻食品',         en:'Frozen Foods'},
-  {cat:'fresh',      icon:'🥬', zh:'生鲜',             en:'Fresh Produce'},
-  {cat:'grocery',    icon:'🛒', zh:'百货',             en:'Grocery'}
+  {cat:'featured',   icon:'🔥', zh:'爆品',     en:'Hot Items'},
+  {cat:'frozen',     icon:'❄',  zh:'冷冻食品', en:'Frozen Foods'},
+  {cat:'grains',     icon:'🌾', zh:'米面粮油', en:'Rice, Flour & Oil'},
+  {cat:'condiments', icon:'🧂', zh:'调味品',   en:'Condiments'},
+  {cat:'snacks',     icon:'🍿', zh:'零食',     en:'Snacks'},
+  {cat:'beverages',  icon:'🧃', zh:'饮料',     en:'Beverages'},
+  {cat:'fresh',      icon:'🥬', zh:'生鲜',     en:'Fresh Produce'},
+  {cat:'grocery',    icon:'🛒', zh:'百货',     en:'Grocery'}
 ];
 
 var catalog = null, store = null, qty = {}, isDemo = false;
