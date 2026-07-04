@@ -110,6 +110,7 @@ td{padding:10px 14px;vertical-align:middle;}
     </select>
     <button class="btn btn-primary" onclick="openAdd()">+ 新增商品</button>
     <button class="btn btn-secondary" onclick="openCsv()">📥 批量导入 CSV</button>
+    <button class="btn btn-secondary" onclick="exportCsv()">📤 一键导出全部</button>
   </div>
 
   <div class="table-wrap">
@@ -382,6 +383,44 @@ async function deleteProduct(sku, name) {
   const { error } = await sb.from('products').delete().eq('sku', sku);
   if (error) alert('删除失败: ' + error.message);
   else loadProducts();
+}
+
+// ── CSV 导出（一键导出全部产品）─────────────────────────────
+// 前 8 列与"批量导入"格式完全一致，可直接回导；后几列为完整备份，导入时自动忽略。
+function exportCsv() {
+  if (!allProducts || !allProducts.length) { alert('暂无产品可导出'); return; }
+
+  const COLS = ['sku','name_zh','name_en','spec','category','base_price','common',
+                'image_url','showcase','showcase_category','description','featured','sort_order','active'];
+
+  const cell = v => {
+    if (v === null || v === undefined) return '';
+    let s = String(v);
+    if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';  // 含逗号/引号/换行时加引号
+    return s;
+  };
+
+  // 按 sort_order、sku 排序，和后台一致
+  const rows = [...allProducts].sort((a,b)=>{
+    const so = (a.sort_order||0)-(b.sort_order||0);
+    return so !== 0 ? so : String(a.sku||'').localeCompare(String(b.sku||''));
+  });
+
+  const lines = [COLS.join(',')];
+  rows.forEach(p => lines.push(COLS.map(c => cell(p[c])).join(',')));
+  const csv = '\uFEFF' + lines.join('\r\n');   // BOM：让 Excel 正确识别中文
+
+  const now = new Date();
+  const ymd = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url  = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `products_${ymd}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
 
 // ── CSV 导入 ─────────────────────────────────────────────────
