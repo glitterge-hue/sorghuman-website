@@ -53,6 +53,8 @@ td{padding:10px 14px;vertical-align:middle;}
 .badge-condiments{background:#f0f7f2;color:#2A6B3A;}
 .badge-fresh{background:#f0fff0;color:#1a7a1a;}
 .badge-grocery{background:#f5f0ff;color:#5a3a9a;}
+.badge-grains{background:#fdf6e3;color:#9a7b1a;}
+.badge-beverages{background:#e8f7fb;color:#1a7a8a;}
 .badge-on{background:#f0f7f2;color:#2A6B3A;}
 .badge-off{background:#fdf2f2;color:#c0392b;}
 /* 弹窗 */
@@ -91,7 +93,7 @@ td{padding:10px 14px;vertical-align:middle;}
     <div class="stat-card"><div class="num" id="statTotal">-</div><div class="lbl">全部商品</div></div>
     <div class="stat-card"><div class="num" id="statActive">-</div><div class="lbl">上架中</div></div>
     <div class="stat-card"><div class="num" id="statFrozen">-</div><div class="lbl">冷冻食品</div></div>
-    <div class="stat-card"><div class="num" id="statSnacks">-</div><div class="lbl">零食饮料</div></div>
+    <div class="stat-card"><div class="num" id="statSnacks">-</div><div class="lbl">零食</div></div>
   </div>
 
   <div class="toolbar">
@@ -99,8 +101,10 @@ td{padding:10px 14px;vertical-align:middle;}
     <select id="catFilter" onchange="filterProducts()">
       <option value="">全部品类</option>
       <option value="frozen">冷冻食品</option>
-      <option value="snacks">零食和饮料</option>
-      <option value="condiments">米面粮油调味</option>
+      <option value="grains">米面粮油</option>
+      <option value="condiments">调味品</option>
+      <option value="snacks">零食</option>
+      <option value="beverages">饮料</option>
       <option value="fresh">生鲜</option>
       <option value="grocery">百货</option>
     </select>
@@ -149,8 +153,10 @@ td{padding:10px 14px;vertical-align:middle;}
         <label>品类 Category *</label>
         <select id="fCat">
           <option value="frozen">冷冻食品 Frozen</option>
-          <option value="snacks">零食和饮料 Snacks</option>
-          <option value="condiments">米面粮油调味 Pantry</option>
+          <option value="grains">米面粮油 Rice, Flour & Oil</option>
+          <option value="condiments">调味品 Condiments</option>
+          <option value="snacks">零食 Snacks</option>
+          <option value="beverages">饮料 Beverages</option>
           <option value="fresh">生鲜 Fresh</option>
           <option value="grocery">百货 Grocery</option>
         </select>
@@ -207,7 +213,7 @@ td{padding:10px 14px;vertical-align:middle;}
     <div class="csv-hint">
       上传 <code>.xlsx</code> Excel 文件（也支持 .csv）。第一行必须是表头。<br>
       必需列：<code>sku, name_zh, base_price</code>；可选列：<code>name_en, spec, category, common, image_url, showcase, showcase_category, description, sort_order</code><br>
-      品类可选值：<code>frozen</code> / <code>snacks</code> / <code>condiments</code> / <code>fresh</code> / <code>grocery</code><br>
+      品类可选值：<code>frozen</code> / <code>grains</code> / <code>condiments</code> / <code>snacks</code> / <code>beverages</code> / <code>fresh</code> / <code>grocery</code><br>
       已存在的 SKU 会自动更新（upsert）。<br>
       💡 最省事：先点「一键导出 Excel」下载现有产品，在 Excel 里改完再传回来。
     </div>
@@ -232,7 +238,8 @@ async function initSupabase(){
 }
 
 const CAT_LABELS = {
-  frozen:'冷冻食品', snacks:'零食饮料', condiments:'粮油调味', fresh:'生鲜', grocery:'百货'
+  frozen:'冷冻食品', grains:'米面粮油', condiments:'调味品',
+  snacks:'零食', beverages:'饮料', fresh:'生鲜', grocery:'百货'
 };
 
 let allProducts = [], editingSku = null;
