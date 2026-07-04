@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>商品管理 · Sorghuman Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:#f0f4f0;color:#1a1a18;}
@@ -109,8 +110,8 @@ td{padding:10px 14px;vertical-align:middle;}
       <option value="false">下架</option>
     </select>
     <button class="btn btn-primary" onclick="openAdd()">+ 新增商品</button>
-    <button class="btn btn-secondary" onclick="openCsv()">📥 批量导入 CSV</button>
-    <button class="btn btn-secondary" onclick="exportCsv()">📤 一键导出全部</button>
+    <button class="btn btn-secondary" onclick="openCsv()">📥 批量导入 Excel</button>
+    <button class="btn btn-secondary" onclick="exportXlsx()">📤 一键导出 Excel</button>
   </div>
 
   <div class="table-wrap">
@@ -199,25 +200,24 @@ td{padding:10px 14px;vertical-align:middle;}
   </div>
 </div>
 
-<!-- CSV 导入弹窗 -->
+<!-- Excel 导入弹窗 -->
 <div class="overlay" id="csvOverlay" onclick="closeCsv(event)">
   <div class="modal">
-    <h2>批量导入商品 CSV</h2>
+    <h2>批量导入商品 Excel</h2>
     <div class="csv-hint">
-      每行一个商品，用英文逗号分隔，第一行为表头（可省略）。<br>
-      格式：<code>sku,name_zh,name_en,spec,category,base_price,common,image_url</code><br>
+      上传 <code>.xlsx</code> Excel 文件（也支持 .csv）。第一行必须是表头。<br>
+      必需列：<code>sku, name_zh, base_price</code>；可选列：<code>name_en, spec, category, common, image_url, showcase, showcase_category, description, sort_order</code><br>
       品类可选值：<code>frozen</code> / <code>snacks</code> / <code>condiments</code> / <code>fresh</code> / <code>grocery</code><br>
-      已存在的 SKU 会自动更新（upsert）。
+      已存在的 SKU 会自动更新（upsert）。<br>
+      💡 最省事：先点「一键导出 Excel」下载现有产品，在 Excel 里改完再传回来。
     </div>
     <div class="form-group" style="margin-top:12px;">
-      <label>粘贴 CSV 内容 或 上传文件</label>
-      <input type="file" accept=".csv,.txt" id="csvFile" onchange="readFile()" style="margin-bottom:8px;">
-      <textarea id="csvText" rows="10" placeholder="4650,糯米烧卖,Glutinous Rice Shaomai,16 oz / 6 pcs,frozen,4.99,true
-9913,豆沙包,Adzuki Bean Bun,10.58 oz / 6 pcs,frozen,4.99,true"></textarea>
+      <label>选择 Excel 文件</label>
+      <input type="file" accept=".xlsx,.xls,.csv" id="csvFile" style="margin-bottom:8px;">
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeCsvDirect()">取消</button>
-      <button class="btn btn-primary" id="importBtn" onclick="importCsv()">导入</button>
+      <button class="btn btn-primary" id="importBtn" onclick="importXlsx()">导入</button>
     </div>
     <div id="csvMsg" style="margin-top:10px;font-size:13px;"></div>
   </div>
@@ -385,42 +385,30 @@ async function deleteProduct(sku, name) {
   else loadProducts();
 }
 
-// ── CSV 导出（一键导出全部产品）─────────────────────────────
-// 前 8 列与"批量导入"格式完全一致，可直接回导；后几列为完整备份，导入时自动忽略。
-function exportCsv() {
+// ── Excel 导出（一键导出全部产品）───────────────────────────
+// 表头与导入识别的列名一致，可直接改完回导。
+function exportXlsx() {
   if (!allProducts || !allProducts.length) { alert('暂无产品可导出'); return; }
 
   const COLS = ['sku','name_zh','name_en','spec','category','base_price','common',
                 'image_url','showcase','showcase_category','description','featured','sort_order','active'];
 
-  const cell = v => {
-    if (v === null || v === undefined) return '';
-    let s = String(v);
-    if (/[",\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';  // 含逗号/引号/换行时加引号
-    return s;
-  };
-
-  // 按 sort_order、sku 排序，和后台一致
   const rows = [...allProducts].sort((a,b)=>{
     const so = (a.sort_order||0)-(b.sort_order||0);
     return so !== 0 ? so : String(a.sku||'').localeCompare(String(b.sku||''));
   });
 
-  const lines = [COLS.join(',')];
-  rows.forEach(p => lines.push(COLS.map(c => cell(p[c])).join(',')));
-  const csv = '\uFEFF' + lines.join('\r\n');   // BOM：让 Excel 正确识别中文
+  const aoa = [COLS];
+  rows.forEach(p => aoa.push(COLS.map(c => (p[c] === null || p[c] === undefined) ? '' : p[c])));
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols'] = COLS.map(c => ({ wch: c==='name_zh'||c==='name_en'||c==='description'||c==='image_url' ? 24 : 12 }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Products');
 
   const now = new Date();
   const ymd = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url  = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `products_${ymd}.csv`;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  XLSX.writeFile(wb, `products_${ymd}.xlsx`);
 }
 
 // ── CSV 导入 ─────────────────────────────────────────────────
@@ -428,56 +416,59 @@ function openCsv() { document.getElementById('csvOverlay').classList.add('show')
 function closeCsv(e) { if(e.target.id==='csvOverlay') closeCsvDirect(); }
 function closeCsvDirect() { document.getElementById('csvOverlay').classList.remove('show'); }
 
-function readFile() {
-  const file = document.getElementById('csvFile').files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => { document.getElementById('csvText').value = e.target.result; };
-  reader.readAsText(file, 'UTF-8');
-}
-
-async function importCsv() {
-  const text = document.getElementById('csvText').value.trim();
+async function importXlsx() {
   const msg  = document.getElementById('csvMsg');
-  if (!text) { msg.style.color='#c0392b'; msg.textContent='请粘贴 CSV 内容'; return; }
+  const file = document.getElementById('csvFile').files[0];
+  if (!file) { msg.style.color='#c0392b'; msg.textContent='请选择 Excel 文件'; return; }
 
-  const lines = text.split('\n').map(l=>l.trim()).filter(Boolean);
-  const HEADERS = ['sku','name_zh','name_en','spec','category','base_price','common'];
-  let startIdx = 0;
-
-  // 跳过表头行
-  if (lines[0].toLowerCase().startsWith('sku')) startIdx = 1;
-
-  // 正确解析 CSV（支持引号内含逗号）
-  function parseCSVLine(line) {
-    const cols = []; let cur = ''; let inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      if (line[i] === '"') { inQ = !inQ; }
-      else if (line[i] === ',' && !inQ) { cols.push(cur); cur = ''; }
-      else { cur += line[i]; }
-    }
-    cols.push(cur);
-    return cols;
+  let aoa;
+  try {
+    const buf = await file.arrayBuffer();
+    const wb  = XLSX.read(buf, { type:'array' });
+    const ws  = wb.Sheets[wb.SheetNames[0]];
+    aoa = XLSX.utils.sheet_to_json(ws, { header:1, blankrows:false, defval:'' });
+  } catch (err) {
+    msg.style.color='#c0392b'; msg.textContent='读取文件失败：'+err.message; return;
   }
+  if (!aoa || aoa.length < 2) { msg.style.color='#c0392b'; msg.textContent='文件没有数据（至少要有表头 + 一行）'; return; }
+
+  // 按表头列名映射（顺序随意，只认列名）
+  const headers = aoa[0].map(h => String(h).trim().toLowerCase());
+  const col = name => headers.indexOf(name);
+  if (col('sku') < 0 || col('name_zh') < 0 || col('base_price') < 0) {
+    msg.style.color='#c0392b'; msg.textContent='缺少必需列：sku / name_zh / base_price（请检查表头）'; return;
+  }
+  const has = name => col(name) >= 0;
+  const val = (r, name) => { const j = col(name); return j >= 0 ? r[j] : ''; };
+  const str = v => String(v == null ? '' : v).trim();
+
   const rows = [];
-  for (let i = startIdx; i < lines.length; i++) {
-    const cols = parseCSVLine(lines[i]);
-    if (cols.length < 6) continue;
+  for (let i = 1; i < aoa.length; i++) {
+    const r = aoa[i];
+    const sku = str(val(r,'sku'));
+    const name_zh = str(val(r,'name_zh'));
+    const base_price = parseFloat(val(r,'base_price')) || 0;
+    if (!sku || !name_zh || !(base_price > 0)) continue;
+
     const row = {
-      sku        : cols[0].trim(),
-      name_zh    : cols[1].trim(),
-      name_en    : cols[2].trim(),
-      spec       : cols[3].trim() || null,
-      category   : cols[4].trim() || 'frozen',
-      base_price : parseFloat(cols[5]) || 0,
-      common     : cols[6] ? cols[6].trim().toLowerCase() !== 'false' : true,
-      image_url  : cols[7] ? cols[7].trim() || null : null,
-      active     : true,
+      sku, name_zh,
+      name_en   : str(val(r,'name_en')),
+      spec      : str(val(r,'spec')) || null,
+      category  : str(val(r,'category')) || 'frozen',
+      base_price,
+      common    : has('common') ? str(val(r,'common')).toLowerCase() !== 'false' : true,
+      image_url : str(val(r,'image_url')) || null,
+      active    : true,
     };
-    if (row.sku && row.name_zh && row.base_price > 0) rows.push(row);
+    // 可选的新列，存在才写（不覆盖成空）
+    if (has('showcase'))          row.showcase          = str(val(r,'showcase')).toLowerCase() === 'true';
+    if (has('showcase_category')) row.showcase_category = str(val(r,'showcase_category')) || null;
+    if (has('description'))       row.description       = str(val(r,'description')) || null;
+    if (has('sort_order'))      { const so = parseInt(val(r,'sort_order')); if (!isNaN(so)) row.sort_order = so; }
+    rows.push(row);
   }
 
-  if (!rows.length) { msg.style.color='#c0392b'; msg.textContent='没有解析到有效数据，请检查格式'; return; }
+  if (!rows.length) { msg.style.color='#c0392b'; msg.textContent='没有解析到有效数据（每行需有 sku、name_zh、base_price>0）'; return; }
 
   document.getElementById('importBtn').disabled = true;
   msg.style.color='#888'; msg.textContent=`正在导入 ${rows.length} 条…`;
