@@ -192,6 +192,33 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
+    // ── 官网展示管理（仅总店 default 可用）─────────────────────────
+    if (action === 'GET_SHOWCASE_PRODUCTS') {
+      if (storeId !== 'default')
+        return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: '仅总店可管理官网展示' }) };
+      const rows = await sb('GET', 'products',
+        `active=eq.true` +
+        `&select=sku,name_zh,name_en,spec,category,showcase,showcase_category,image_url` +
+        `&order=showcase.desc.nullslast,name_zh.asc`);
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ products: rows }) };
+    }
+
+    if (action === 'TOGGLE_SHOWCASE') {
+      if (storeId !== 'default')
+        return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: '仅总店可管理官网展示' }) };
+      const { sku, showcase, showcase_category } = body;
+      if (!sku)
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '缺少 sku' }) };
+      const patch = { showcase: !!showcase };
+      if (showcase_category !== undefined) patch.showcase_category = showcase_category || null;
+      await fetch(`${SUPA_URL}/rest/v1/products?sku=eq.${sku}`, {
+        method : 'PATCH',
+        headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
+        body   : JSON.stringify(patch),
+      });
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
+    }
+
     // ── 按域名查门店 ID（无需认证，公开接口）──────────────────────
     if (action === 'LOOKUP_DOMAIN') {
       const { domain } = body;
