@@ -111,6 +111,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div class="tab" onclick="showTab('zips')">📦 配送 Delivery</div>
     <div class="tab" onclick="showTab('drivers')">🛵 司机 Drivers</div>
     <div class="tab" onclick="showTab('orders')">📋 订单 Orders</div>
+    <div class="tab" id="tabShowcase" style="display:none;" onclick="showTab('showcase')">🌐 官网展示 Showcase</div>
   </div>
 
   <!-- ── 面板1：我的商品 ── -->
@@ -364,6 +365,23 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
         <div id="ordersList"><div class="empty">加载中… Loading…</div></div>
       </div>
     </div>
+
+    <!-- ── 面板8：官网展示（仅总店 default）── -->
+    <div id="panelShowcase" class="panel">
+      <div class="card">
+        <div class="card-header">
+          <span>🌐 官网产品展示 · sorghuman.com/products <span id="showcaseCount" style="color:#888;font-weight:400;"></span></span>
+          <button class="btn btn-add btn-sm" onclick="loadShowcase()">刷新 Refresh</button>
+        </div>
+        <div style="padding:10px 22px 0;font-size:13px;color:#888;">
+          打开开关＝该产品在官网 /products 页展示；分组决定它归到哪一栏。点一下即时生效。
+        </div>
+        <div class="search-bar">
+          <input id="showcaseSearch" placeholder="搜索产品 Search…" oninput="renderShowcase()">
+        </div>
+        <div id="showcaseList"><div class="empty">加载中… Loading…</div></div>
+      </div>
+    </div>
   </div><!-- main -->
 </div><!-- mainWrap -->
 
@@ -395,6 +413,7 @@ async function doLogin(){
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('mainWrap').style.display  = 'block';
   document.getElementById('headerStoreName').textContent = storeInfo.name_zh + (storeInfo.name_en?' / '+storeInfo.name_en:'');
+  if(storeId==='default'){ document.getElementById('tabShowcase').style.display=''; }
   renderMyProducts();
 }
 
@@ -651,7 +670,7 @@ var promoColor = '#1A4A28';
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['myProducts','addFromCatalog','addNew','promo','zips','drivers','orders'];
+    const names=['myProducts','addFromCatalog','addNew','promo','zips','drivers','orders','showcase'];
     t.classList.toggle('active',names[i]===name);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -663,6 +682,7 @@ function showTab(name){
   if(name==='zips') loadZips();
   if(name==='drivers') loadDrivers();
   if(name==='orders') loadOrders();
+  if(name==='showcase') loadShowcase();
 }
 
 async function loadPromo(){
@@ -969,6 +989,83 @@ async function changeOrderStatus(orderId, idShort){
   } else {
     alert('更新失败 Update failed：'+(res.error||'未知错误'));
   }
+}
+
+// ── 面板8：官网展示（仅总店 default）───────────────────────────
+var showcaseData = [];
+const SHOWCASE_CATS = {
+  buns:'包子系列', beverages:'饮品', rice:'优质大米',
+  dumplings:'水饺', frozen:'冷冻', grocery:'百货',
+};
+
+async function loadShowcase(){
+  const box = document.getElementById('showcaseList');
+  box.innerHTML = '<div class="empty">加载中… Loading…</div>';
+  const res = await api('GET_SHOWCASE_PRODUCTS');
+  if(res.error){ box.innerHTML = '<div class="empty">加载失败：'+res.error+'</div>'; return; }
+  showcaseData = res.products || [];
+  renderShowcase();
+}
+
+function showcaseRow(p){
+  const on = !!p.showcase;
+  const cat = p.showcase_category || '';
+  const opts = Object.keys(SHOWCASE_CATS).map(function(k){
+    return '<option value="'+k+'"'+(k===cat?' selected':'')+'>'+SHOWCASE_CATS[k]+'</option>';
+  }).join('');
+  const img = p.image_url
+    ? '<img src="'+p.image_url+'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#eee;">'
+    : '<div style="width:44px;height:44px;border-radius:6px;background:#eee;flex-shrink:0;"></div>';
+  return '<div class="prod-row" style="display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid #f0f0ea;">'
+    + img
+    + '<div style="flex:1;min-width:0;">'
+    +   '<div style="font-weight:600;">'+(p.name_zh||'')+'</div>'
+    +   '<div style="font-size:12px;color:#888;">'+(p.name_en||'')+' · '+(p.sku||'')+'</div>'
+    + '</div>'
+    + '<select onchange="setShowcaseCat(\''+p.sku+'\',this.value)" '+(on?'':'disabled')+' '
+    +   'style="padding:5px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;'+(on?'':'opacity:.4;')+'">'+opts+'</select>'
+    + '<label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;font-size:13px;">'
+    +   '<input type="checkbox" '+(on?'checked':'')+' onchange="toggleShowcase(\''+p.sku+'\',this.checked)" '
+    +   'style="width:20px;height:20px;accent-color:#1A4A28;cursor:pointer;">'
+    +   (on?'展示中':'不展示')
+    + '</label>'
+  + '</div>';
+}
+
+function renderShowcase(){
+  const q = (document.getElementById('showcaseSearch').value||'').trim().toLowerCase();
+  const list = q
+    ? showcaseData.filter(function(p){ return ((p.name_zh||'')+(p.name_en||'')+(p.sku||'')).toLowerCase().indexOf(q)>=0; })
+    : showcaseData;
+  const onCount = showcaseData.filter(function(p){return p.showcase;}).length;
+  document.getElementById('showcaseCount').textContent = '展示中 '+onCount+' / 共 '+showcaseData.length;
+  const box = document.getElementById('showcaseList');
+  box.innerHTML = list.length ? list.map(showcaseRow).join('') : '<div class="empty">无匹配产品</div>';
+}
+
+async function toggleShowcase(sku, on){
+  const p = showcaseData.find(function(x){return x.sku===sku;});
+  if(!p) return;
+  // 打开时若还没分组，默认给个分组，避免官网无处归类
+  let cat = p.showcase_category;
+  if(on && !cat) cat = 'grocery';
+  const res = await api('TOGGLE_SHOWCASE', null, null, { sku:sku, showcase:on, showcase_category: on?cat:null });
+  if(res.ok){
+    p.showcase = on;
+    p.showcase_category = on ? cat : null;
+    renderShowcase();
+  } else {
+    alert('操作失败：'+(res.error||'未知错误'));
+    renderShowcase();
+  }
+}
+
+async function setShowcaseCat(sku, cat){
+  const p = showcaseData.find(function(x){return x.sku===sku;});
+  if(!p || !p.showcase) return;
+  const res = await api('TOGGLE_SHOWCASE', null, null, { sku:sku, showcase:true, showcase_category:cat });
+  if(res.ok){ p.showcase_category = cat; }
+  else { alert('操作失败：'+(res.error||'未知错误')); }
 }
 </script>
 </body>
