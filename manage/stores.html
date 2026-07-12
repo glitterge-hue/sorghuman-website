@@ -150,6 +150,25 @@ td{padding:10px 14px;vertical-align:middle;}
       <textarea id="fZips" rows="3" placeholder="18052&#10;18067&#10;18103"></textarea>
     </div>
     <div class="form-group">
+      <label>门店照片 Hero Image（首页整屏展示）</label>
+      <input id="fHero" placeholder="/images/stores/fareast.png">
+    </div>
+
+    <details style="margin:4px 0 14px;border:1px solid #e2ddd4;border-radius:6px;padding:0 12px;">
+      <summary style="cursor:pointer;padding:10px 0;font-weight:600;color:#2A6B3A;">营业时间 · 节假日通知</summary>
+      <div style="padding-bottom:12px;">
+        <div id="hoursGrid" style="display:flex;flex-direction:column;gap:6px;margin-bottom:12px;"></div>
+        <div class="form-group">
+          <label>临时节假日通知（留空则不显示）</label>
+          <textarea id="fNotice" rows="2" placeholder="中秋节 9/17 当天营业至 17:00，9/18 正常营业。" style="width:100%;font-family:inherit;padding:8px;border:1px solid #e2ddd4;border-radius:4px;"></textarea>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="fNoticeOn" checked> 显示该通知（节后取消勾选即可隐藏，文字不用删）</label>
+        </div>
+      </div>
+    </details>
+
+    <div class="form-group">
       <label><input type="checkbox" id="fActive" checked> 启用 (Active)</label>
     </div>
     <div class="modal-footer">
@@ -241,6 +260,10 @@ function openAdd() {
   document.getElementById('fThreshold').value='30';
   document.getElementById('fFee').value='5';
   document.getElementById('fZips').value='';
+  document.getElementById('fHero').value='';
+  document.getElementById('fNotice').value='';
+  document.getElementById('fNoticeOn').checked=true;
+  buildHoursGrid(null);
   document.getElementById('fId').readOnly=false;
   document.getElementById('fActive').checked=true;
   document.getElementById('editMsg').textContent='';
@@ -263,6 +286,10 @@ function openEdit(id) {
   document.getElementById('fFee').value=s.delivery_fee||5;
   document.getElementById('fTagline').value=s.tagline||'';
   document.getElementById('fZips').value=(s.delivery_zips||[]).join('\n');
+  document.getElementById('fHero').value=s.hero_image||'';
+  document.getElementById('fNotice').value=s.holiday_notice||'';
+  document.getElementById('fNoticeOn').checked = s.holiday_notice_active !== false;
+  buildHoursGrid(s.hours);
   document.getElementById('fActive').checked=!!s.active;
   document.getElementById('editMsg').textContent='';
   document.getElementById('editOverlay').classList.add('show');
@@ -270,6 +297,49 @@ function openEdit(id) {
 
 function closeEdit(e){if(e.target.id==='editOverlay')closeEditDirect();}
 function closeEditDirect(){document.getElementById('editOverlay').classList.remove('show');}
+
+// ── 营业时间编辑 ────────────────────────────────────────────
+const DAYS = [['1','周一 Mon'],['2','周二 Tue'],['3','周三 Wed'],['4','周四 Thu'],
+              ['5','周五 Fri'],['6','周六 Sat'],['0','周日 Sun']];
+
+function buildHoursGrid(hours) {
+  hours = hours || {};
+  if (typeof hours === 'string') { try { hours = JSON.parse(hours); } catch(e) { hours = {}; } }
+  document.getElementById('hoursGrid').innerHTML = DAYS.map(([k,label]) => {
+    const d = hours[k] || {};
+    const closed = !!d.closed;
+    return `<div style="display:flex;align-items:center;gap:8px;font-size:13px;">
+      <span style="width:92px;">${label}</span>
+      <input id="h_o_${k}" type="time" value="${d.open||''}" ${closed?'disabled':''}
+             style="padding:5px;border:1px solid #e2ddd4;border-radius:4px;">
+      <span>–</span>
+      <input id="h_c_${k}" type="time" value="${d.close||''}" ${closed?'disabled':''}
+             style="padding:5px;border:1px solid #e2ddd4;border-radius:4px;">
+      <label style="margin-left:6px;color:#6B6B62;">
+        <input type="checkbox" id="h_x_${k}" ${closed?'checked':''}
+               onchange="toggleClosed('${k}')"> 休息
+      </label>
+    </div>`;
+  }).join('');
+}
+
+function toggleClosed(k) {
+  const off = document.getElementById('h_x_'+k).checked;
+  document.getElementById('h_o_'+k).disabled = off;
+  document.getElementById('h_c_'+k).disabled = off;
+}
+
+function readHoursGrid() {
+  const out = {};
+  let any = false;
+  DAYS.forEach(([k]) => {
+    if (document.getElementById('h_x_'+k).checked) { out[k] = { closed:true }; any = true; return; }
+    const o = document.getElementById('h_o_'+k).value;
+    const c = document.getElementById('h_c_'+k).value;
+    if (o && c) { out[k] = { open:o, close:c }; any = true; }
+  });
+  return any ? out : null;
+}
 
 async function saveStore() {
   const id  = document.getElementById('fId').value.trim();
@@ -290,6 +360,10 @@ async function saveStore() {
     free_delivery_threshold : parseFloat(document.getElementById('fThreshold').value)||30,
     delivery_fee            : parseFloat(document.getElementById('fFee').value)||5,
     delivery_zips           : zips,
+    hero_image              : document.getElementById('fHero').value.trim()||null,
+    hours                   : readHoursGrid(),
+    holiday_notice          : document.getElementById('fNotice').value.trim()||null,
+    holiday_notice_active   : document.getElementById('fNoticeOn').checked,
     active                  : document.getElementById('fActive').checked,
   };
 
