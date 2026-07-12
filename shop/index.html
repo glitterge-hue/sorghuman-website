@@ -108,6 +108,45 @@ footer #footStore:hover{color:var(--brand);}
 footer{padding:30px 5%;text-align:center;font-size:12px;color:var(--muted);border-top:1px solid var(--border);margin-top:30px;}
 footer a{color:var(--brand);}
 .demo-flag{background:#FFF8E8;border-bottom:1px solid #F0D890;font-size:12px;color:#8a6d1f;text-align:center;padding:7px 5%;}
+/* 商品行：可点区 + 分享按钮 */
+.prod-img,.prod-info{cursor:pointer;}
+.prod-info h3{cursor:pointer;}
+.prod-share{background:none;border:none;cursor:pointer;font-size:16px;color:var(--muted);padding:2px 6px;line-height:1;transition:color .15s;}
+.prod-share:hover{color:var(--brand);}
+/* 详情浮层 */
+.detail-mask{position:fixed;inset:0;z-index:200;background:rgba(20,20,18,.55);opacity:0;pointer-events:none;transition:opacity .2s;}
+.detail-mask.open{opacity:1;pointer-events:auto;}
+.detail-sheet{position:fixed;z-index:201;right:0;top:0;bottom:0;width:min(480px,100%);background:#fff;transform:translateX(100%);transition:transform .25s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:-8px 0 40px rgba(0,0,0,.18);}
+.detail-sheet.open{transform:translateX(0);}
+.detail-close{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;background:linear-gradient(#fff,rgba(255,255,255,.85));padding:10px 14px 4px;}
+.detail-close button{width:34px;height:34px;border:none;background:rgba(0,0,0,.06);border-radius:50%;font-size:20px;line-height:1;cursor:pointer;color:var(--dark);}
+.detail-close button:hover{background:rgba(0,0,0,.12);}
+.detail-body{padding:0 22px 40px;}
+.detail-hero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:#f5f5f0;display:block;}
+.detail-hero-ph{width:100%;aspect-ratio:4/3;border-radius:10px;background:#f0f0ea;display:flex;align-items:center;justify-content:center;font-size:60px;}
+.detail-thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.detail-thumb{width:56px;height:56px;object-fit:cover;border-radius:6px;cursor:pointer;border:2px solid transparent;background:#f5f5f0;}
+.detail-thumb.active{border-color:var(--brand);}
+.detail-name{font-size:20px;font-weight:600;margin-top:16px;}
+.detail-name-zh{font-size:15px;color:var(--muted);margin-top:2px;}
+.detail-spec{font-size:12.5px;color:var(--muted);margin-top:4px;}
+.detail-price{font-size:22px;font-weight:600;color:var(--brand);margin-top:10px;font-variant-numeric:tabular-nums;}
+.detail-actions{display:flex;align-items:center;gap:14px;margin:16px 0 6px;padding-bottom:16px;border-bottom:1px solid var(--border);}
+.detail-actions .qty-control{gap:14px;}
+.detail-actions .qty-btn{width:36px;height:36px;font-size:19px;}
+.detail-share-btn{margin-left:auto;background:#fff;border:1.5px solid var(--brand);color:var(--brand);border-radius:24px;padding:8px 16px;font-size:13px;font-family:inherit;font-weight:500;cursor:pointer;white-space:nowrap;transition:background .15s,color .15s;}
+.detail-share-btn:hover{background:var(--brand);color:#fff;}
+.detail-sec{margin-top:22px;}
+.detail-sec-title{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);font-weight:600;margin-bottom:8px;}
+.detail-sec p{font-size:13.5px;color:var(--dark);line-height:1.75;white-space:pre-line;}
+.detail-sec .en{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.7;white-space:pre-line;}
+/* 营养成分面板 */
+.nutri{border:2px solid var(--dark);border-radius:4px;padding:10px 12px;max-width:320px;font-family:'DM Sans',Arial,sans-serif;}
+.nutri-h{font-family:'DM Serif Display',serif;font-size:22px;border-bottom:8px solid var(--dark);padding-bottom:2px;margin-bottom:4px;}
+.nutri-serv{font-size:12px;display:flex;justify-content:space-between;border-bottom:1px solid var(--dark);padding:3px 0;}
+.nutri-row{font-size:12.5px;display:flex;justify-content:space-between;border-bottom:1px solid #ccc;padding:3px 0;}
+.nutri-row.bold{font-weight:700;}
+.nutri-row .dv{font-weight:700;}
 </style>
 </head>
 <body>
@@ -192,6 +231,13 @@ footer a{color:var(--brand);}
     </div>
   </div>
 </div>
+
+<!-- 商品详情浮层 -->
+<div class="detail-mask" id="detailMask"></div>
+<aside class="detail-sheet" id="detailSheet" aria-hidden="true">
+  <div class="detail-close"><button type="button" id="detailCloseBtn" aria-label="Close">&times;</button></div>
+  <div class="detail-body" id="detailBody"></div>
+</aside>
 
 <footer>
   <p><a id="footStore" href="https://sorghuman.com/">远东超市</a></p>
@@ -363,6 +409,10 @@ async function boot(){
   applyStore();
   loadPromo();
   renderProducts();
+
+  // 深链：?p=SKU 直接打开该商品详情（转发链接落地）
+  var pWanted = new URLSearchParams(location.search).get('p');
+  if(pWanted && findProduct(pWanted)) openDetail(pWanted);
 }
 
 function applyStore(){
@@ -458,24 +508,171 @@ function fuzzyMatch(text, q){
   matches.forEach(function(p){
     var row = document.createElement('div');
     row.className = 'product-row';
-    var imgHtml = p.image_url
-      ? '<img class="prod-img" src="'+p.image_url+'" alt="'+p.name_en+'" loading="lazy">'
-      : '<div class="prod-img-placeholder">🛍</div>';
-    row.innerHTML = imgHtml +
-      '<div class="prod-info">'+
-        '<h3>'+p.name_en+'</h3>'+
-        '<div class="zh">'+p.name_zh+'</div>'+
-        '<div class="spec">'+(p.spec||'')+'</div>'+
-        '<div class="price">'+fmt(priceOf(p))+'</div>'+
-      '</div>'+
-      '<div class="qty-control">'+
-        '<button onclick="adj(\''+p.sku+'\',-1)">−</button>'+
-        '<span id="q'+p.sku+'">'+(qty[p.sku]||0)+'</span>'+
-        '<button onclick="adj(\''+p.sku+'\',1)">+</button>'+
-      '</div>';
+    row.innerHTML = rowInnerHTML(p);
     col.appendChild(row);
   });
 }
+
+// ---- 公用商品行（列表 + 搜索共用），图片/名称可点开详情 ----
+function esc(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
+
+function imgTag(p, cls){
+  return p.image_url
+    ? '<img class="'+cls+'" src="'+esc(p.image_url)+'" alt="'+esc(p.name_en)+'" loading="lazy" data-detail="'+esc(p.sku)+'">'
+    : '<div class="prod-img-placeholder" data-detail="'+esc(p.sku)+'">🛍</div>';
+}
+
+function rowInnerHTML(p){
+  qty[p.sku] = qty[p.sku]||0;
+  return imgTag(p,'prod-img') +
+    '<div class="prod-info" data-detail="'+esc(p.sku)+'">' +
+      '<h3>'+p.name_en+'</h3>' +
+      '<div class="zh">'+p.name_zh+'</div>' +
+      '<div class="spec">'+(p.spec||'')+'</div>' +
+      '<div class="price">'+fmt(priceOf(p))+'</div>' +
+    '</div>' +
+    '<button class="prod-share" data-share="'+esc(p.sku)+'" title="复制商品链接 · Share" aria-label="Share">🔗</button>' +
+    '<div class="qty-control">' +
+      '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="-1">\u2212</button>' +
+      '<div class="qty-num" id="q-'+esc(p.sku)+'">'+qty[p.sku]+'</div>' +
+      '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="1">+</button>' +
+    '</div>';
+}
+
+// ---- 详情浮层 ----
+function findProduct(sku){
+  return ((catalog&&catalog.products)||[]).filter(function(x){ return x.sku===sku; })[0];
+}
+
+function setPParam(sku){
+  try{
+    var u = new URL(location.href);
+    if(sku) u.searchParams.set('p', sku); else u.searchParams.delete('p');
+    history.replaceState({}, '', u.pathname + (u.search||'') + (u.hash||''));
+  }catch(e){}
+}
+
+function detailImages(p){
+  var imgs = [];
+  if(Array.isArray(p.gallery)) imgs = p.gallery.filter(Boolean);
+  else if(typeof p.gallery === 'string' && p.gallery){ try{ imgs = JSON.parse(p.gallery); }catch(e){} }
+  if(p.image_url && imgs.indexOf(p.image_url)===-1) imgs.unshift(p.image_url);
+  return imgs;
+}
+
+function nutriPanel(n){
+  if(!n) return '';
+  if(typeof n === 'string'){ try{ n = JSON.parse(n); }catch(e){ return ''; } }
+  var rows = (n.rows||[]).map(function(r){
+    return '<div class="nutri-row'+(r.bold?' bold':'')+'">'+
+             '<span>'+(r.label_zh?r.label_zh+' ':'')+(r.label_en||'')+' '+(r.amount||'')+'</span>'+
+             '<span class="dv">'+(r.dv||'')+'</span>'+
+           '</div>';
+  }).join('');
+  var serv = (n.serving_size||n.servings_per)
+    ? '<div class="nutri-serv"><span>'+(n.serving_size?'每份 Serving '+n.serving_size:'')+'</span>'+
+      '<span>'+(n.servings_per?'每包 '+n.servings_per+' 份':'')+'</span></div>'
+    : '';
+  return '<div class="nutri"><div class="nutri-h">营养成分 Nutrition Facts</div>'+serv+rows+'</div>';
+}
+
+function biSec(title, zh, en){
+  if(!zh && !en) return '';
+  return '<div class="detail-sec"><div class="detail-sec-title">'+title+'</div>'+
+    (zh?'<p>'+zh+'</p>':'')+
+    (en?'<div class="en">'+en+'</div>':'')+'</div>';
+}
+
+function renderDetail(p){
+  var imgs = detailImages(p);
+  var hero = imgs.length
+    ? '<img class="detail-hero" id="detailHero" src="'+esc(imgs[0])+'" alt="'+esc(p.name_en)+'">'
+    : '<div class="detail-hero-ph">🛍</div>';
+  var thumbs = imgs.length>1
+    ? '<div class="detail-thumbs">'+imgs.map(function(u,i){
+        return '<img class="detail-thumb'+(i===0?' active':'')+'" src="'+esc(u)+'" data-swap="'+esc(u)+'">';
+      }).join('')+'</div>'
+    : '';
+  var html =
+    hero + thumbs +
+    '<div class="detail-name">'+p.name_en+'</div>'+
+    '<div class="detail-name-zh">'+p.name_zh+'</div>'+
+    (p.spec?'<div class="detail-spec">'+p.spec+'</div>':'')+
+    '<div class="detail-price">'+fmt(priceOf(p))+'</div>'+
+    '<div class="detail-actions">'+
+      '<div class="qty-control">'+
+        '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="-1">\u2212</button>'+
+        '<div class="qty-num" id="dq-'+esc(p.sku)+'">'+(qty[p.sku]||0)+'</div>'+
+        '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="1">+</button>'+
+      '</div>'+
+      '<button class="detail-share-btn" data-share="'+esc(p.sku)+'">🔗 复制链接 Share</button>'+
+    '</div>'+
+    biSec('商品介绍 · Description', p.description_zh, p.description_en)+
+    biSec('蒸制说明 · Cooking', p.cooking_zh, p.cooking_en)+
+    biSec('配料表 · Ingredients', p.ingredients_zh, p.ingredients_en)+
+    (p.nutrition ? '<div class="detail-sec"><div class="detail-sec-title">营养成分 · Nutrition</div>'+nutriPanel(p.nutrition)+'</div>' : '');
+  document.getElementById('detailBody').innerHTML = html;
+}
+
+function openDetail(sku){
+  var p = findProduct(sku);
+  if(!p) return;
+  renderDetail(p);
+  document.getElementById('detailMask').classList.add('open');
+  var sheet = document.getElementById('detailSheet');
+  sheet.classList.add('open'); sheet.setAttribute('aria-hidden','false');
+  sheet.scrollTop = 0;
+  document.body.style.overflow = 'hidden';
+  setPParam(sku);
+}
+
+function closeDetail(){
+  document.getElementById('detailMask').classList.remove('open');
+  var sheet = document.getElementById('detailSheet');
+  sheet.classList.remove('open'); sheet.setAttribute('aria-hidden','true');
+  document.body.style.overflow = '';
+  setPParam(null);
+}
+
+function shareProduct(sku){
+  var p = findProduct(sku);
+  var u = location.origin + location.pathname + '?p=' + encodeURIComponent(sku);
+  var label = p ? (p.name_zh+' '+p.name_en) : '';
+  if(navigator.share){
+    navigator.share({ title: label, url: u }).catch(function(){});
+    return;
+  }
+  var done = function(){ toast('链接已复制 · Link copied'); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(u).then(done, function(){ prompt('复制链接 Copy link:', u); });
+  } else { prompt('复制链接 Copy link:', u); }
+}
+
+var _toastT;
+function toast(msg){
+  var t = document.getElementById('_toast');
+  if(!t){
+    t = document.createElement('div'); t.id = '_toast';
+    t.style.cssText = 'position:fixed;left:50%;bottom:32px;transform:translateX(-50%);background:#1A1A18;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;z-index:300;opacity:0;transition:opacity .2s;pointer-events:none;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg; t.style.opacity = '1';
+  clearTimeout(_toastT); _toastT = setTimeout(function(){ t.style.opacity='0'; }, 1800);
+}
+
+// 详情浮层的全局事件：打开 / 分享 / 关闭 / 切图
+document.addEventListener('click', function(e){
+  var d = e.target.closest('[data-detail]'); if(d){ openDetail(d.getAttribute('data-detail')); return; }
+  var s = e.target.closest('[data-share]');  if(s){ shareProduct(s.getAttribute('data-share')); return; }
+  var sw = e.target.closest('[data-swap]');
+  if(sw){
+    var hero = document.getElementById('detailHero'); if(hero) hero.src = sw.getAttribute('data-swap');
+    document.querySelectorAll('.detail-thumb').forEach(function(t){ t.classList.remove('active'); });
+    sw.classList.add('active'); return;
+  }
+  if(e.target.id==='detailMask' || e.target.closest('#detailCloseBtn')) closeDetail();
+});
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeDetail(); });
 
 function renderProducts(){
   var col = document.getElementById('productsCol');
@@ -509,25 +706,9 @@ function renderProducts(){
     if(!carries(p)) return;
     if(activeCat === 'featured' ? !p.featured : p.category !== activeCat) return;
     count++;
-    qty[p.sku] = qty[p.sku]||0;
     var row = document.createElement('div');
     row.className = 'product-row';
-    const imgHtml = p.image_url
-      ? '<img class="prod-img" src="'+p.image_url+'" alt="'+p.name_en+'" loading="lazy">'
-      : '<div class="prod-img-placeholder">🛍</div>';
-    row.innerHTML =
-      imgHtml +
-      '<div class="prod-info">' +
-        '<h3>'+p.name_en+'</h3>' +
-        '<div class="zh">'+p.name_zh+'</div>' +
-        '<div class="spec">'+(p.spec||'')+'</div>' +
-        '<div class="price">'+fmt(priceOf(p))+'</div>' +
-      '</div>' +
-      '<div class="qty-control">' +
-        '<button class="qty-btn" data-sku="'+p.sku+'" data-d="-1">\u2212</button>' +
-        '<div class="qty-num" id="q-'+p.sku+'">'+qty[p.sku]+'</div>' +
-        '<button class="qty-btn" data-sku="'+p.sku+'" data-d="1">+</button>' +
-      '</div>';
+    row.innerHTML = rowInnerHTML(p);
     col.appendChild(row);
   });
 
@@ -548,6 +729,8 @@ document.addEventListener('click', function(e){
   qty[sku] = Math.max(0, (qty[sku]||0)+d);
   var el = document.getElementById('q-'+sku);
   if(el) el.textContent = qty[sku];
+  var dq = document.getElementById('dq-'+sku);
+  if(dq) dq.textContent = qty[sku];
   updateCart();
   zipConfirmed = false;
   document.getElementById('zipInline').style.display = 'none';
