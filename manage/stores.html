@@ -118,7 +118,23 @@ td{padding:10px 14px;vertical-align:middle;}
     <div class="form-row">
       <div class="form-group">
         <label>主题色 Theme Color</label>
-        <input id="fTheme" placeholder="#2A6B3A" value="#2A6B3A">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input id="fThemePick" type="color" value="#2A6B3A"
+                 oninput="document.getElementById('fTheme').value=this.value.toUpperCase();syncTheme();"
+                 style="width:44px;height:36px;padding:2px;border:1px solid #e0ddd5;border-radius:4px;cursor:pointer;">
+          <input id="fTheme" placeholder="#2A6B3A" value="#2A6B3A" oninput="syncTheme()" style="flex:1;">
+        </div>
+        <div style="display:flex;gap:6px;margin-top:7px;flex-wrap:wrap;">
+          <span onclick="setTheme('#2A6B3A')" title="远东绿" style="width:22px;height:22px;border-radius:50%;background:#2A6B3A;cursor:pointer;border:1px solid #ccc;"></span>
+          <span onclick="setTheme('#B03A2E')" title="中国红" style="width:22px;height:22px;border-radius:50%;background:#B03A2E;cursor:pointer;border:1px solid #ccc;"></span>
+          <span onclick="setTheme('#1F4E79')" title="靛蓝"   style="width:22px;height:22px;border-radius:50%;background:#1F4E79;cursor:pointer;border:1px solid #ccc;"></span>
+          <span onclick="setTheme('#7D3C98')" title="紫"     style="width:22px;height:22px;border-radius:50%;background:#7D3C98;cursor:pointer;border:1px solid #ccc;"></span>
+          <span onclick="setTheme('#8C5A0B')" title="金棕"   style="width:22px;height:22px;border-radius:50%;background:#8C5A0B;cursor:pointer;border:1px solid #ccc;"></span>
+          <span onclick="setTheme('#17635A')" title="墨绿"   style="width:22px;height:22px;border-radius:50%;background:#17635A;cursor:pointer;border:1px solid #ccc;"></span>
+        </div>
+        <div id="themePreview" style="margin-top:8px;border-radius:5px;padding:8px 12px;color:#fff;font-size:12px;background:#2A6B3A;">
+          效果预览 · 顾客看到的店招与按钮就是这个颜色
+        </div>
       </div>
       <div class="form-group">
         <label>联系电话</label>
@@ -255,7 +271,7 @@ function openAdd() {
   editingId = null;
   document.getElementById('modalTitle').textContent = '新增门店';
   ['fId','fDomain','fNameZh','fNameEn','fPhone','fTagline'].forEach(id => document.getElementById(id).value='');
-  document.getElementById('fTheme').value='#2A6B3A';
+  setTheme('#2A6B3A');
   document.getElementById('fMarkup').value='1.0';
   document.getElementById('fThreshold').value='30';
   document.getElementById('fFee').value='5';
@@ -280,7 +296,7 @@ function openEdit(id) {
   document.getElementById('fNameZh').value=s.name_zh;
   document.getElementById('fNameEn').value=s.name_en||'';
   document.getElementById('fPhone').value=s.contact_phone||'';
-  document.getElementById('fTheme').value=s.theme||'#2A6B3A';
+  setTheme(s.theme||'#2A6B3A');
   document.getElementById('fMarkup').value=s.markup||1;
   document.getElementById('fThreshold').value=s.free_delivery_threshold||30;
   document.getElementById('fFee').value=s.delivery_fee||5;
@@ -297,6 +313,43 @@ function openEdit(id) {
 
 function closeEdit(e){if(e.target.id==='editOverlay')closeEditDirect();}
 function closeEditDirect(){document.getElementById('editOverlay').classList.remove('show');}
+
+// ── 主题色 ────────────────────────────────────────────────────
+function themeLum(hex){
+  const h = hex.replace('#','');
+  const a = [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255)
+    .map(c => c<=.03928 ? c/12.92 : Math.pow((c+.055)/1.055, 2.4));
+  return .2126*a[0] + .7152*a[1] + .0722*a[2];
+}
+function whiteContrast(hex){ return 1.05 / (themeLum(hex) + 0.05); }
+
+function paintTheme(hex){
+  const prev = document.getElementById('themePreview');
+  prev.style.background = hex;
+  // 店招和按钮上是白字，主题色太浅会看不清
+  const c = whiteContrast(hex);
+  if(c < 4.5){
+    prev.innerHTML = '⚠️ 这个颜色太浅，白色文字看不清（对比度 ' + c.toFixed(1) +
+                     '，建议 ≥ 4.5）—— 换深一点的颜色';
+    prev.style.color = '#1A1A18';
+  } else {
+    prev.innerHTML = '效果预览 · 顾客看到的店招与按钮就是这个颜色';
+    prev.style.color = '#fff';
+  }
+}
+
+function syncTheme(){
+  const v = (document.getElementById('fTheme').value || '').trim();
+  if(/^#[0-9A-Fa-f]{6}$/.test(v)){
+    document.getElementById('fThemePick').value = v;
+    paintTheme(v);
+  }
+}
+function setTheme(hex){
+  document.getElementById('fTheme').value = hex;
+  document.getElementById('fThemePick').value = hex;
+  paintTheme(hex);
+}
 
 // ── 营业时间编辑 ────────────────────────────────────────────
 const DAYS = [['1','周一 Mon'],['2','周二 Tue'],['3','周三 Wed'],['4','周四 Thu'],
