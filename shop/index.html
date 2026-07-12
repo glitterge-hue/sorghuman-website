@@ -24,12 +24,27 @@ footer #footStore:hover{color:var(--brand);}
 /* Hero */
 .page-header{opacity:0;transition:opacity .3s;background:var(--brand);padding:90px 5% 42px;color:#fff;background-size:cover;background-position:center;background-repeat:no-repeat;}
 .page-header-inner{max-width:920px;margin:0 auto;width:100%;}
-/* 有门店照片时：给足高度，照片不压扁、不糊 */
-.page-header.has-photo{min-height:clamp(360px,54vh,540px);display:flex;align-items:flex-end;padding:120px 5% 46px;}
-.page-header.has-photo h1{font-size:clamp(34px,5vw,56px);text-shadow:0 2px 20px rgba(0,0,0,.55);}
-.page-header.has-photo .hero-en{font-size:20px;color:rgba(255,255,255,.92);text-shadow:0 2px 14px rgba(0,0,0,.5);}
-.page-header.has-photo p,.page-header.has-photo .eyebrow{text-shadow:0 1px 10px rgba(0,0,0,.5);}
-@media(max-width:820px){.page-header.has-photo{min-height:300px;padding:100px 5% 34px;}}
+/* 有门店照片时：整屏 + 照片完整显示（contain，不裁切） */
+.page-header.has-photo{min-height:100vh;padding:60px 0 0;display:flex;flex-direction:column;background-image:none!important;}
+.hero-photo-wrap{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:14px 4% 0;}
+.hero-photo{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.28);}
+.hero-caption{padding:22px 5% 30px;}
+.hero-caption-inner{max-width:920px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:26px;align-items:end;}
+@media(max-width:820px){.hero-caption-inner{grid-template-columns:1fr;align-items:start;}}
+.page-header.has-photo h1{font-size:clamp(32px,4.6vw,52px);}
+.page-header.has-photo .hero-en{font-size:19px;color:rgba(255,255,255,.88);}
+/* 营业时间 / 节假日通知（左侧信息区） */
+.hero-hours{background:rgba(0,0,0,.22);border:1px solid rgba(255,255,255,.20);border-radius:8px;padding:12px 16px;min-width:230px;}
+.hero-hours-h{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.62);margin-bottom:7px;display:flex;align-items:center;gap:8px;}
+.open-pill{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:10px;letter-spacing:0;text-transform:none;}
+.open-pill.open{background:#9FD4B2;color:#12401F;}
+.open-pill.shut{background:rgba(255,255,255,.22);color:#fff;}
+.hero-hours-row{display:flex;justify-content:space-between;gap:16px;font-size:12.5px;color:rgba(255,255,255,.80);padding:2px 0;font-variant-numeric:tabular-nums;}
+.hero-hours-row.today{color:#fff;font-weight:600;}
+.holiday-notice{margin-top:10px;background:rgba(200,146,42,.24);border:1px solid rgba(240,192,96,.55);color:#F7DFA6;border-radius:8px;padding:9px 13px;font-size:12.5px;line-height:1.6;display:flex;gap:8px;align-items:flex-start;}
+.hero-scroll-cue{text-align:center;font-size:13px;color:rgba(255,255,255,.72);cursor:pointer;padding:4px 0 14px;animation:cueBob 1.8s ease-in-out infinite;}
+.hero-scroll-cue:hover{color:#fff;}
+@media(max-width:820px){.page-header.has-photo{min-height:auto;}.hero-photo-wrap{padding-top:10px;}.hero-photo{max-height:46vh;}}
 .eyebrow{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:.6rem;}
 .page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(28px,4vw,42px);line-height:1.15;margin-bottom:.3rem;}
 .hero-en{font-family:'DM Serif Display',serif;font-size:18px;color:rgba(255,255,255,.80);margin-bottom:.5rem;}
@@ -183,12 +198,37 @@ footer a{color:var(--brand);}
 <div class="demo-flag" id="demoFlag" style="display:none;"></div>
 
 <header class="page-header">
-  <div class="page-header-inner">
-    <div class="eyebrow">Local Delivery · 本地配送</div>
-    <h1 id="heroTitle"></h1>
-    <p class="hero-en" id="heroEnName"></p>
-    <p id="heroSub">选择品类，开始购物。</p>
+  <!-- 门店照片：整屏完整显示（有照片时才出现） -->
+  <div class="hero-photo-wrap" id="heroPhotoWrap" style="display:none;">
+    <img class="hero-photo" id="heroPhoto" alt="">
   </div>
+
+  <div class="hero-caption">
+    <div class="hero-caption-inner">
+      <div class="page-header-inner">
+        <div class="eyebrow">Local Delivery · 本地配送</div>
+        <h1 id="heroTitle"></h1>
+        <p class="hero-en" id="heroEnName"></p>
+        <p id="heroSub">选择品类，开始购物。</p>
+      </div>
+
+      <!-- 营业时间 + 临时节假日通知（后台可编辑） -->
+      <div id="heroInfo" style="display:none;">
+        <div class="hero-hours" id="heroHours" style="display:none;">
+          <div class="hero-hours-h">
+            <span>营业时间 · Hours</span>
+            <span class="open-pill" id="openPill" style="display:none;"></span>
+          </div>
+          <div id="heroHoursRows"></div>
+        </div>
+        <div class="holiday-notice" id="holidayNotice" style="display:none;">
+          <span>📣</span><span id="holidayText"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="hero-scroll-cue" id="heroCue" style="display:none;" onclick="scrollToShop()">↓ 开始选购 Start Shopping</div>
 </header>
 
 <!-- 节日推广区 -->
@@ -483,18 +523,87 @@ function applyStore(){
   if(store.hero_image){
     var hdr = document.querySelector('.page-header');
     hdr.classList.add('has-photo');
-    // 只在底部压暗保证文字可读，照片主体保持清晰不发灰
-    hdr.style.backgroundImage =
-      'linear-gradient(to bottom,rgba(0,0,0,.30) 0%,rgba(0,0,0,.05) 38%,rgba(0,0,0,.55) 100%),url("'+store.hero_image+'")';
-    hdr.style.backgroundSize = 'cover';
-    hdr.style.backgroundPosition = 'center';
-    hdr.style.backgroundRepeat = 'no-repeat';
+    document.getElementById('heroPhoto').src = store.hero_image;
+    document.getElementById('heroPhotoWrap').style.display = 'flex';
+    document.getElementById('heroCue').style.display = 'block';
   }
+  renderHours();
   if(isDemo){
     var f = document.getElementById('demoFlag');
     f.style.display = 'block';
     f.textContent = '演示模式：正在用内嵌数据。部署后会自动读取线上配置。';
   }
+}
+
+// ---- 营业时间 / 节假日通知 ----
+var DAY_ZH = ['周日','周一','周二','周三','周四','周五','周六'];
+var DAY_EN = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+// 门店所在时区的"此刻"（东岸门店统一用纽约时间，避免顾客在外地时判断错）
+function storeNow(){
+  var tz = (store && store.timezone) || 'America/New_York';
+  try{
+    var s = new Date().toLocaleString('en-US', { timeZone: tz });
+    return new Date(s);
+  }catch(e){ return new Date(); }
+}
+
+function parseHM(s){
+  var m = String(s||'').match(/^(\d{1,2}):(\d{2})$/);
+  return m ? (parseInt(m[1],10)*60 + parseInt(m[2],10)) : null;
+}
+
+// hours 形如 {"1":{"open":"09:00","close":"20:00"}, "0":{"closed":true}, ...}  0=周日
+function getHours(){
+  var h = store && store.hours;
+  if(!h) return null;
+  if(typeof h === 'string'){ try{ h = JSON.parse(h); }catch(e){ return null; } }
+  return (h && typeof h === 'object') ? h : null;
+}
+
+function isOpenNow(hours, now){
+  var d = hours[String(now.getDay())];
+  if(!d || d.closed) return false;
+  var o = parseHM(d.open), c = parseHM(d.close);
+  if(o==null || c==null) return false;
+  var mins = now.getHours()*60 + now.getMinutes();
+  // 支持跨午夜（例如 10:00–次日 01:00）
+  return (c > o) ? (mins >= o && mins < c) : (mins >= o || mins < c);
+}
+
+function renderHours(){
+  var hours  = getHours();
+  var notice = store && store.holiday_notice;
+  var noticeOn = notice && (store.holiday_notice_active !== false);
+  if(!hours && !noticeOn) return;
+
+  document.getElementById('heroInfo').style.display = 'block';
+
+  if(noticeOn){
+    document.getElementById('holidayText').textContent = notice;
+    document.getElementById('holidayNotice').style.display = 'flex';
+  }
+  if(!hours) return;
+
+  var now = storeNow(), today = now.getDay();
+  var rows = '';
+  for(var i=0;i<7;i++){
+    var idx = (i+1) % 7;                 // 从周一排到周日
+    var d = hours[String(idx)];
+    var txt = (!d || d.closed) ? '休息 Closed'
+            : ((d.open||'') + ' – ' + (d.close||''));
+    rows += '<div class="hero-hours-row'+(idx===today?' today':'')+'">'+
+              '<span>'+DAY_ZH[idx]+' '+DAY_EN[idx]+'</span><span>'+txt+'</span>'+
+            '</div>';
+  }
+  document.getElementById('heroHoursRows').innerHTML = rows;
+  document.getElementById('heroHours').style.display = 'block';
+
+  var open = isOpenNow(hours, now);
+  var pill = document.getElementById('openPill');
+  pill.textContent = open ? '营业中 Open' : '已打烊 Closed';
+  pill.className = 'open-pill ' + (open ? 'open' : 'shut');
+  pill.style.display = 'inline-block';
 }
 
 function setCat(cat){
