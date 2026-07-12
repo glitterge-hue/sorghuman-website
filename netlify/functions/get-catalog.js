@@ -38,7 +38,7 @@ exports.handler = async (event) => {
       sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
       sb('store_products',
         `store_id=eq.${storeId}&active=eq.true` +
-        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order)` +
+        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order,description_zh,description_en,ingredients_zh,ingredients_en,cooking_zh,cooking_en,nutrition,gallery)` +
         `&order=sort_order.asc`),
     ]);
 
@@ -72,6 +72,15 @@ exports.handler = async (event) => {
         common    : true,
         image_url : sp.products.image_url,
         featured  : sp.featured || false,  // 门店级爆品
+        // 详情页字段
+        description_zh : sp.products.description_zh || '',
+        description_en : sp.products.description_en || '',
+        ingredients_zh : sp.products.ingredients_zh || '',
+        ingredients_en : sp.products.ingredients_en || '',
+        cooking_zh     : sp.products.cooking_zh || '',
+        cooking_en     : sp.products.cooking_en || '',
+        nutrition      : sp.products.nutrition || null,
+        gallery        : sp.products.gallery || null,
       }));
 
     const globalPromo = settingsRows[0]?.value || null;
