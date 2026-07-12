@@ -35,7 +35,7 @@ async function verifyToken(storeId, token, origin) {
   if (!storeId || !token) return null;
   const rows = await sb('GET', 'stores',
     `store_id=eq.${storeId}&admin_token=eq.${token}` +
-    `&select=store_id,name_zh,name_en,domain,markup,delivery_zips,drivers,promo,free_delivery_threshold,delivery_fee`);
+    `&select=store_id,name_zh,name_en,domain,markup,delivery_zips,drivers,promo,free_delivery_threshold,delivery_fee,hours,holiday_notice,holiday_notice_active`);
   const store = rows[0];
   if (!store) return null;
   // 域名校验：只允许自家域名或 sorghuman.com 访问
@@ -235,6 +235,28 @@ exports.handler = async (event) => {
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
         body   : JSON.stringify({ promo }),
       });
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
+    }
+
+    // ── 保存营业时间 + 节假日通知 ────────────────────────────────
+    if (action === 'SAVE_HOURS') {
+      const { hours, holiday_notice, holiday_notice_active } = body;
+      const r = await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+        method : 'PATCH',
+        headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
+        body   : JSON.stringify({
+          hours: hours || null,
+          holiday_notice: holiday_notice || null,
+          holiday_notice_active: !!holiday_notice_active,
+        }),
+      });
+      // 真实校验写入结果，不再吞掉数据库错误
+      if (!r.ok) {
+        const detail = await r.text();
+        console.error('SAVE_HOURS failed:', r.status, detail);
+        return { statusCode: 500, headers: CORS,
+                 body: JSON.stringify({ error: `数据库写入失败 (${r.status}): ${detail}` }) };
+      }
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
