@@ -8,9 +8,11 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',system-ui,sans-serif;background:#f0f4f0;color:#1a1a18;}
-.topbar{background:#1A4A28;color:#fff;padding:0 20px;height:54px;display:flex;align-items:center;justify-content:space-between;}
-.topbar .brand{font-size:15px;font-weight:700;}
-.topbar a{color:rgba(255,255,255,.8);font-size:13px;text-decoration:none;margin-left:16px;}
+.topbar{background:#1A4A28;color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:56px;position:sticky;top:0;z-index:100;}
+.topbar h1{font-size:16px;font-weight:700;}
+.topbar nav a{color:rgba(255,255,255,.75);text-decoration:none;font-size:13px;margin-left:20px;}
+.topbar nav a:hover,.topbar nav a.active{color:#fff;}
+.topbar .user{font-size:12px;color:rgba(255,255,255,.65);margin-left:20px;cursor:pointer;}
 .main{max-width:1000px;margin:0 auto;padding:20px;}
 .filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
 .f{padding:7px 16px;border-radius:20px;border:1px solid #ddd;background:#fff;font-size:13px;cursor:pointer;font-family:inherit;}
@@ -37,11 +39,16 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#f0f4f0;color:#1a1a18
 <body>
 
 <div class="topbar">
-  <div class="brand">🌾 Sorghuman Admin · 分销商审核</div>
-  <div>
-    <a href="stores.html">门店</a><a href="products.html">商品</a><a href="orders.html">订单</a>
-    <a href="javascript:void(0)" onclick="logout()" id="userEmail"></a>
-  </div>
+  <h1>🌾 Sorghuman Admin</h1>
+  <nav>
+    <a href="products.html">商品管理</a>
+    <a href="stores.html">门店管理</a>
+    <a href="store-products.html">门店商品</a>
+    <a href="orders.html">订单查询</a>
+    <a href="promo.html">活动管理</a>
+    <a href="distributors.html" class="active">分销商审核</a>
+  </nav>
+  <span class="user" id="userEmail" onclick="logout()">退出登录</span>
 </div>
 
 <div class="main">
