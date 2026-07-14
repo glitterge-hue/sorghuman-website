@@ -1,11 +1,11 @@
 // netlify/functions/restock.js  (v2)
-// 门店补货 API —— 门店(店主 token) 向【已开户】的供应商下补货单
+// 门店补货 API —— 门店(店主 token) 向【已开户】的分销商下补货单
 //
 // 核心规则：
-//  1. 供应商必须先审核通过（store_suppliers.status='approved'）门店才看得到价格、才能下单
-//  2. 前端只传 sku + 箱数，价格一律服务端从 supplier_products 现查重算
+//  1. 分销商必须先审核通过（store_distributors.status='approved'）门店才看得到价格、才能下单
+//  2. 前端只传 sku + 箱数，价格一律服务端从 distributor_products 现查重算
 //  3. 不显示毛利率，只显示箱价 / 单件成本
-//  4. 供应商可给单店设账期额度，超额自动拒单
+//  4. 分销商可给单店设账期额度，超额自动拒单
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -60,9 +60,9 @@ function inRange(sup, store) {
 }
 
 async function myAccounts(storeId) {
-  const rows = await sb('GET', 'store_suppliers',
-    `store_id=eq.${storeId}&select=supplier_id,status,payment_terms,credit_limit,applied_at,reviewed_at`);
-  return new Map(rows.map(r => [r.supplier_id, r]));
+  const rows = await sb('GET', 'store_distributors',
+    `store_id=eq.${storeId}&select=distributor_id,status,payment_terms,credit_limit,applied_at,reviewed_at`);
+  return new Map(rows.map(r => [r.distributor_id, r]));
 }
 
 const pub = ({ admin_token, ...safe }) => safe;   // 绝不外泄别家 token
@@ -89,16 +89,16 @@ exports.handler = async (event) => {
     if (!store)
       return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: '令牌无效 / Invalid token' }) };
 
-    // ═══ 1. 供应商名录：谁能送到我这儿 + 我的开户状态 ═══════════════
-    if (action === 'GET_SUPPLIER_DIRECTORY') {
-      const all  = await sb('GET', 'suppliers', `active=eq.true&select=*`);
+    // ═══ 1. 分销商名录：谁能送到我这儿 + 我的开户状态 ═══════════════
+    if (action === 'GET_DISTRIBUTOR_DIRECTORY') {
+      const all  = await sb('GET', 'distributors', `active=eq.true&status=eq.approved&select=*`);
       const acct = await myAccounts(storeId);
       const list = all.filter(s => inRange(s, store)).map(s => {
-        const a  = acct.get(s.supplier_id);
+        const a  = acct.get(s.distributor_id);
         const ok = a?.status === 'approved';
         const p  = pub(s);
         return {
-          supplier_id: p.supplier_id, name_zh: p.name_zh, name_en: p.name_en,
+          distributor_id: p.distributor_id, name_zh: p.name_zh, name_en: p.name_en,
           type: p.type, contact_name: p.contact_name, phone: p.phone, email: p.email,
           lead_time_days: p.lead_time_days, delivery_days: p.delivery_days,
           // 未开户只看得到"他送不送我这一片"，看不到价格条件
@@ -111,57 +111,57 @@ exports.handler = async (event) => {
           applied_at    : a?.applied_at || null,
         };
       });
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, store, suppliers: list }) };
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, store, distributors: list }) };
     }
 
     // ═══ 2. 申请开户 ═══════════════════════════════════════════════
-    if (action === 'APPLY_SUPPLIER') {
-      const { supplierId, note } = payload;
-      const supRows = await sb('GET', 'suppliers', `supplier_id=eq.${supplierId}&active=eq.true&select=*`);
+    if (action === 'APPLY_DISTRIBUTOR') {
+      const { distributorId, note } = payload;
+      const supRows = await sb('GET', 'distributors', `distributor_id=eq.${distributorId}&active=eq.true&status=eq.approved&select=*`);
       const sup = supRows[0];
       if (!sup || !inRange(sup, store))
-        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '该供应商不服务本店区域' }) };
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '该分销商不服务本店区域' }) };
 
-      const a = (await myAccounts(storeId)).get(supplierId);
+      const a = (await myAccounts(storeId)).get(distributorId);
       if (a?.status === 'approved')
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '已经开户了' }) };
       if (a?.status === 'pending')
-        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '申请审核中，请等待供应商联系' }) };
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '申请审核中，请等待分销商联系' }) };
       if (a?.status === 'suspended')
-        return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: '账户已被供应商停单，请电话联系' }) };
+        return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: '账户已被分销商停单，请电话联系' }) };
 
       // rejected 允许重新申请（upsert 重置为 pending）
-      await sb('POST', 'store_suppliers', null, [{
-        supplier_id: supplierId, store_id: storeId, status: 'pending',
+      await sb('POST', 'store_distributors', null, [{
+        distributor_id: distributorId, store_id: storeId, status: 'pending',
         apply_note : (note || '').slice(0, 500),
         applied_at : new Date().toISOString(), reviewed_at: null,
       }]);
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
-    // ═══ 3. 补货目录：只有已开户供应商的商品和价格 ═══════════════════
+    // ═══ 3. 补货目录：只有已开户分销商的商品和价格 ═══════════════════
     if (action === 'GET_RESTOCK_CATALOG') {
       const acct  = await myAccounts(storeId);
-      const okIds = [...acct.values()].filter(a => a.status === 'approved').map(a => a.supplier_id);
-      const empty = { ok: true, store, suppliers: [], items: [] };
+      const okIds = [...acct.values()].filter(a => a.status === 'approved').map(a => a.distributor_id);
+      const empty = { ok: true, store, distributors: [], items: [] };
       if (!okIds.length)
         return { statusCode: 200, headers: CORS, body: JSON.stringify(empty) };
 
-      const rowsSup = await sb('GET', 'suppliers',
-        `supplier_id=in.(${okIds.join(',')})&active=eq.true&select=*`);
-      const suppliers = rowsSup.filter(s => inRange(s, store)).map(s => {
-        const a = acct.get(s.supplier_id);
+      const rowsSup = await sb('GET', 'distributors',
+        `distributor_id=in.(${okIds.join(',')})&active=eq.true&status=eq.approved&select=*`);
+      const distributors = rowsSup.filter(s => inRange(s, store)).map(s => {
+        const a = acct.get(s.distributor_id);
         return { ...pub(s),
                  payment_terms: a.payment_terms || s.payment_terms,
                  credit_limit : a.credit_limit ?? null };
       });
-      if (!suppliers.length)
+      if (!distributors.length)
         return { statusCode: 200, headers: CORS, body: JSON.stringify(empty) };
 
-      const ids  = suppliers.map(s => s.supplier_id).join(',');
-      const rows = await sb('GET', 'supplier_products',
-        `supplier_id=in.(${ids})&active=eq.true` +
-        `&select=supplier_id,sku,case_price,units_per_case,moq,stock_status,note,` +
+      const ids  = distributors.map(s => s.distributor_id).join(',');
+      const rows = await sb('GET', 'distributor_products',
+        `distributor_id=in.(${ids})&active=eq.true` +
+        `&select=distributor_id,sku,case_price,units_per_case,moq,stock_status,note,` +
         `products(name_zh,name_en,spec,category,image_url)`);
 
       // 只用来标"这个我店里在不在卖"，不回传零售价、不算毛利
@@ -169,7 +169,7 @@ exports.handler = async (event) => {
       const shelf = new Set(mine.filter(m => m.active !== false).map(m => m.sku));
 
       const items = rows.filter(r => r.products).map(r => ({
-        supplier_id: r.supplier_id,
+        distributor_id: r.distributor_id,
         sku        : r.sku,
         name_zh    : r.products.name_zh,
         name_en    : r.products.name_en,
@@ -185,10 +185,10 @@ exports.handler = async (event) => {
         on_shelf   : shelf.has(r.sku),
       }));
 
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, store, suppliers, items }) };
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, store, distributors, items }) };
     }
 
-    // ═══ 4. 提交补货单（按供应商拆单）═══════════════════════════════
+    // ═══ 4. 提交补货单（按分销商拆单）═══════════════════════════════
     if (action === 'CREATE_POS') {
       const carts = payload.carts;
       if (!Array.isArray(carts) || !carts.length)
@@ -199,35 +199,35 @@ exports.handler = async (event) => {
 
       for (const cart of carts) {
         // ★ 开户校验：没批准 = 下不了单
-        const a = acct.get(cart.supplier_id);
+        const a = acct.get(cart.distributor_id);
         if (!a || a.status !== 'approved') {
-          rejected.push({ supplier_id: cart.supplier_id,
-            reason: a?.status === 'suspended' ? '账户已被停单，请联系供应商'
+          rejected.push({ distributor_id: cart.distributor_id,
+            reason: a?.status === 'suspended' ? '账户已被停单，请联系分销商'
                   : a?.status === 'pending'   ? '开户申请审核中'
-                  : '尚未在该供应商开户' });
+                  : '尚未在该分销商开户' });
           continue;
         }
 
-        const supRows = await sb('GET', 'suppliers',
-          `supplier_id=eq.${cart.supplier_id}&active=eq.true&select=*`);
+        const supRows = await sb('GET', 'distributors',
+          `distributor_id=eq.${cart.distributor_id}&active=eq.true&status=eq.approved&select=*`);
         const sup = supRows[0];
         if (!sup || !inRange(sup, store)) {
-          rejected.push({ supplier_id: cart.supplier_id, reason: '供应商暂停服务本区域' });
+          rejected.push({ distributor_id: cart.distributor_id, reason: '分销商暂停服务本区域' });
           continue;
         }
 
         const skus = (cart.items || []).map(i => i.sku).filter(Boolean);
         if (!skus.length) continue;
 
-        const priced = await sb('GET', 'supplier_products',
-          `supplier_id=eq.${cart.supplier_id}&sku=in.(${skus.join(',')})&active=eq.true` +
+        const priced = await sb('GET', 'distributor_products',
+          `distributor_id=eq.${cart.distributor_id}&sku=in.(${skus.join(',')})&active=eq.true` +
           `&select=sku,case_price,units_per_case,moq,stock_status,products(name_zh,spec)`);
         const pMap = new Map(priced.map(p => [p.sku, p]));
 
         const lines = [];
         for (const it of cart.items) {
           const p = pMap.get(it.sku);
-          if (!p) { rejected.push({ sku: it.sku, reason: '该供应商已下架此商品' }); continue; }
+          if (!p) { rejected.push({ sku: it.sku, reason: '该分销商已下架此商品' }); continue; }
           if (p.stock_status === 'out') { rejected.push({ sku: it.sku, reason: '缺货' }); continue; }
           let cases = Math.floor(Number(it.cases) || 0);
           if (cases <= 0) continue;
@@ -247,7 +247,7 @@ exports.handler = async (event) => {
         const subtotal = Number(lines.reduce((s, l) => s + l.line_total, 0).toFixed(2));
 
         if (Number(sup.min_order) > 0 && subtotal < Number(sup.min_order)) {
-          rejected.push({ supplier_id: sup.supplier_id,
+          rejected.push({ distributor_id: sup.distributor_id,
             reason: `未达起送金额 $${Number(sup.min_order).toFixed(2)}（当前 $${subtotal.toFixed(2)}）` });
           continue;
         }
@@ -255,11 +255,11 @@ exports.handler = async (event) => {
         // ★ 账期额度：未结清金额 + 本单 不得超限
         if (a.credit_limit != null) {
           const open = await sb('GET', 'purchase_orders',
-            `store_id=eq.${storeId}&supplier_id=eq.${sup.supplier_id}` +
+            `store_id=eq.${storeId}&distributor_id=eq.${sup.distributor_id}` +
             `&status=in.(submitted,confirmed,shipped,received)&select=total`);
           const owed = open.reduce((s, o) => s + Number(o.total || 0), 0);
           if (owed + subtotal > Number(a.credit_limit)) {
-            rejected.push({ supplier_id: sup.supplier_id,
+            rejected.push({ distributor_id: sup.distributor_id,
               reason: `超出账期额度 $${Number(a.credit_limit).toFixed(2)}（未结 $${owed.toFixed(2)}），请先结款` });
             continue;
           }
@@ -274,7 +274,7 @@ exports.handler = async (event) => {
         const rows = await sb('POST', 'purchase_orders', null, [{
           po_number    : poNumber(storeId),
           store_id     : storeId,
-          supplier_id  : sup.supplier_id,
+          distributor_id  : sup.distributor_id,
           status       : 'submitted',
           items        : lines,
           subtotal,
@@ -295,7 +295,7 @@ exports.handler = async (event) => {
     if (action === 'GET_MY_POS') {
       const pos = await sb('GET', 'purchase_orders',
         `store_id=eq.${storeId}&order=created_at.desc&limit=60` +
-        `&select=*,suppliers(name_zh,name_en,phone,contact_name)`);
+        `&select=*,distributors(name_zh,name_en,phone,contact_name)`);
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, pos }) };
     }
 
@@ -309,7 +309,7 @@ exports.handler = async (event) => {
         { status: want, updated_at: new Date().toISOString() });
       if (!upd.length)
         return { statusCode: 409, headers: CORS, body: JSON.stringify({
-          error: action === 'CANCEL_PO' ? '供应商已确认，无法取消，请电话联系' : '该单尚未发货' }) };
+          error: action === 'CANCEL_PO' ? '分销商已确认，无法取消，请电话联系' : '该单尚未发货' }) };
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, po: upd[0] }) };
     }
 
