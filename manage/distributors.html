@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>分销商审核 · Sorghuman Admin</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#f0f4f0;color:#1a1a18;}
+.topbar{background:#1A4A28;color:#fff;padding:0 20px;height:54px;display:flex;align-items:center;justify-content:space-between;}
+.topbar .brand{font-size:15px;font-weight:700;}
+.topbar a{color:rgba(255,255,255,.8);font-size:13px;text-decoration:none;margin-left:16px;}
+.main{max-width:1000px;margin:0 auto;padding:20px;}
+.filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.f{padding:7px 16px;border-radius:20px;border:1px solid #ddd;background:#fff;font-size:13px;cursor:pointer;font-family:inherit;}
+.f.on{background:#1A4A28;color:#fff;border-color:#1A4A28;}
+.sup{background:#fff;border:1px solid #e8e8e0;border-radius:8px;padding:16px 18px;margin-bottom:12px;}
+.sup h3{font-size:15px;margin-bottom:2px;}
+.sup .meta{font-size:12px;color:#888;line-height:1.7;}
+.sup .row{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;}
+.st{padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;white-space:nowrap;}
+.st-pending{background:#fff4e0;color:#b57500;}
+.st-approved{background:#eaf2ec;color:#2A6B3A;}
+.st-rejected{background:#fbe9e7;color:#c0392b;}
+.st-suspended{background:#f0f0ea;color:#666;}
+.tag{display:inline-block;padding:1px 7px;border-radius:9px;font-size:11px;background:#f0f0ea;color:#666;margin-right:3px;}
+.btn{padding:6px 14px;border-radius:6px;border:none;font-size:12px;font-family:inherit;font-weight:500;cursor:pointer;margin-left:6px;}
+.btn-primary{background:#2A6B3A;color:#fff;}
+.btn-danger{background:#fff;color:#c0392b;border:1px solid #e8a0a0;}
+.btn-grey{background:#f0f0ea;color:#555;}
+.empty{text-align:center;padding:50px;color:#aaa;}
+.tokenbox{background:#fdf8ec;border:1px solid #e8d9a8;border-radius:6px;padding:14px;margin-top:12px;font-size:13px;}
+.tokenbox code{display:block;background:#fff;border:1px solid #e0dcc8;border-radius:4px;padding:10px;margin:8px 0;font-family:ui-monospace,monospace;font-size:12px;word-break:break-all;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">🌾 Sorghuman Admin · 分销商审核</div>
+  <div>
+    <a href="stores.html">门店</a><a href="products.html">商品</a><a href="orders.html">订单</a>
+    <a href="javascript:void(0)" onclick="logout()" id="userEmail"></a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="filters">
+    <button class="f on" data-s="pending"   onclick="setF(this)">待审核 <span id="cPending"></span></button>
+    <button class="f"    data-s="approved"  onclick="setF(this)">已入驻</button>
+    <button class="f"    data-s="suspended" onclick="setF(this)">已停用</button>
+    <button class="f"    data-s="rejected"  onclick="setF(this)">已拒绝</button>
+    <button class="f"    data-s=""          onclick="setF(this)">全部</button>
+  </div>
+  <div id="list"><div class="empty">加载中…</div></div>
+</div>
+
+<script>
+let sb, all = [], filter = 'pending';
+
+async function init(){
+  const cfg = await fetch('/.netlify/functions/get-config').then(r=>r.json());
+  sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+  const { data:{ session } } = await sb.auth.getSession();
+  if(!session){ location.href = 'index.html'; return; }
+  document.getElementById('userEmail').textContent = session.user.email + ' · 退出';
+  load();
+}
+async function logout(){ await sb.auth.signOut(); location.href = 'index.html'; }
+window.addEventListener('load', init);
+
+async function load(){
+  const { data, error } = await sb.from('distributors').select('*').order('applied_at', { ascending:false, nullsFirst:false });
+  if(error){ document.getElementById('list').innerHTML = '<div class="empty">加载失败：'+error.message+'</div>'; return; }
+  all = data || [];
+  document.getElementById('cPending').textContent =
+    (all.filter(s=>s.status==='pending').length || '') && '('+all.filter(s=>s.status==='pending').length+')';
+  render();
+}
+
+function setF(el){
+  document.querySelectorAll('.f').forEach(f=>f.classList.remove('on'));
+  el.classList.add('on'); filter = el.dataset.s; render();
+}
+
+const CATS = { frozen:'冷冻',grains:'米面粮油',condiments:'调味',beverage:'饮料',snacks:'零食',
+               produce:'蔬果',seafood:'水产',meat:'肉类',dairy:'乳制品',grocery:'杂货' };
+const TYPE = { distributor:'分销商', importer:'进口商', manufacturer:'厂家' };
+
+function render(){
+  const list = all.filter(s=>!filter || s.status===filter);
+  const box  = document.getElementById('list');
+  if(!list.length){ box.innerHTML = '<div class="empty">没有记录</div>'; return; }
+
+  box.innerHTML = list.map(s=>{
+    const coiBad = s.coi_expiry && new Date(s.coi_expiry) < new Date();
+    let act = '';
+    if(s.status==='pending')
+      act = `<button class="btn btn-primary" onclick="approve('${s.distributor_id}')">✅ 批准并发 Token</button>
+             <button class="btn btn-danger"  onclick="setStatus('${s.distributor_id}','rejected')">拒绝</button>`;
+    else if(s.status==='approved')
+      act = `<button class="btn btn-grey"   onclick="resetToken('${s.distributor_id}')">重发 Token</button>
+             <button class="btn btn-danger" onclick="setStatus('${s.distributor_id}','suspended')">停用</button>`;
+    else
+      act = `<button class="btn btn-primary" onclick="approve('${s.distributor_id}')">恢复并发 Token</button>`;
+
+    return `<div class="sup" id="sup_${s.distributor_id}">
+      <div class="row">
+        <div>
+          <h3>${s.name_zh||s.legal_name} <span class="st st-${s.status}">${
+            {pending:'待审核',approved:'已入驻',rejected:'已拒绝',suspended:'已停用'}[s.status]||s.status}</span></h3>
+          <div class="meta">
+            <span class="tag">${TYPE[s.type]||s.type}</span>
+            <b>${s.legal_name||''}</b> · EIN ${s.ein||'—'} · ID <code>${s.distributor_id}</code><br>
+            📍 ${s.biz_address||'—'}<br>
+            👤 ${s.contact_name||'—'} · ${s.phone||'—'} · ${s.email||'—'}
+            ${s.website?' · <a href="'+s.website+'" target="_blank">网站</a>':''}<br>
+            🪪 食品许可 ${s.food_license||'<b style="color:#c0392b;">未填</b>'}
+            · 责任险到期 ${s.coi_expiry ? (coiBad?'<b style="color:#c0392b;">'+s.coi_expiry+' 已过期</b>':s.coi_expiry) : '<b style="color:#c0392b;">未填</b>'}<br>
+            📦 ${(s.categories||[]).map(c=>'<span class="tag">'+(CATS[c]||c)+'</span>').join('')||'—'}
+            · 覆盖 ${(s.service_states||[]).join('/')||'全境'}<br>
+            ${s.apply_note ? '💬 '+s.apply_note+'<br>' : ''}
+            ${s.review_note ? '📝 内部：'+s.review_note+'<br>' : ''}
+            <span style="color:#bbb;">申请 ${s.applied_at?new Date(s.applied_at).toLocaleDateString('zh-CN'):'—'}
+            ${s.reviewed_at?' · 审于 '+new Date(s.reviewed_at).toLocaleDateString('zh-CN'):''}</span>
+          </div>
+        </div>
+        <div style="white-space:nowrap;">${act}</div>
+      </div>
+      <div id="tok_${s.distributor_id}"></div>
+    </div>`;
+  }).join('');
+}
+
+// 生成一个长随机 token
+function newToken(){
+  return (crypto.randomUUID() + crypto.randomUUID()).replace(/-/g,'');
+}
+
+async function approve(id){
+  const s = all.find(x=>x.distributor_id===id);
+  if(!s.food_license || !s.coi_expiry){
+    if(!confirm('⚠️ 这家没填食品许可证或责任险到期日。\n\n批准后他就能对门店供货，出事你担责。\n\n确定跳过？')) return;
+  }
+  const note = prompt('内部备注（核验了哪些证件、备案在哪）', s.review_note || '已核验：营业执照、食品批发许可、COI');
+  if(note===null) return;
+
+  const token = newToken();
+  const { error } = await sb.from('distributors').update({
+    status:'approved', active:true, admin_token:token,
+    review_note:note, reviewed_at:new Date().toISOString(),
+  }).eq('distributor_id', id);
+  if(error){ alert('失败：'+error.message); return; }
+
+  await load();
+  showToken(id, token);
+}
+
+async function resetToken(id){
+  if(!confirm('重发 Token 会让旧的立刻失效，对方要用新链接重新登录。继续？')) return;
+  const token = newToken();
+  const { error } = await sb.from('distributors').update({ admin_token:token }).eq('distributor_id', id);
+  if(error){ alert('失败：'+error.message); return; }
+  await load();
+  showToken(id, token);
+}
+
+async function setStatus(id, status){
+  const note = prompt(status==='rejected' ? '拒绝原因（内部备注）' : '停用原因（内部备注）', '');
+  if(note===null) return;
+  // 停用/拒绝：清掉 token + active=false，他立刻登不进后台，门店也看不到他
+  const { error } = await sb.from('distributors').update({
+    status, active:false, admin_token:null,
+    review_note:note, reviewed_at:new Date().toISOString(),
+  }).eq('distributor_id', id);
+  if(error){ alert('失败：'+error.message); return; }
+  load();
+}
+
+function showToken(id, token){
+  const s = all.find(x=>x.distributor_id===id) || {};
+  const url = `${location.origin}/distributor-admin/?supplier=${id}&token=${token}`;
+  document.getElementById('tok_'+id).innerHTML = `
+    <div class="tokenbox">
+      <b>⚠️ 这个 Token 只显示这一次</b>（数据库里存着，但界面不会再展示）。
+      复制下面的登录链接发给 ${s.email || '对方'}：
+      <code id="url_${id}">${url}</code>
+      <button class="btn btn-primary" onclick="copyUrl('${id}')">复制链接</button>
+      <button class="btn btn-grey" onclick="mailIt('${id}')">用邮件发送</button>
+    </div>`;
+}
+function copyUrl(id){
+  navigator.clipboard.writeText(document.getElementById('url_'+id).textContent);
+  alert('已复制');
+}
+function mailIt(id){
+  const s = all.find(x=>x.distributor_id===id) || {};
+  const url = document.getElementById('url_'+id).textContent;
+  const body = `${s.name_zh} 您好，\n\n您的 Sorghuman 平台分销商入驻申请已通过审核。\n\n`
+    + `请通过以下专属链接登录后台（请妥善保管，勿转发）：\n${url}\n\n`
+    + `登录后请依次完成：\n`
+    + `1. 「交易条件」— 设置起送金额、送货费、付款条件、服务范围\n`
+    + `2. 「上架商品」— 从商品库选品并填写箱价，或上传新品\n`
+    + `3. 「门店开户」— 审核申请向您进货的门店，给每家定账期和额度\n\n`
+    + `Sorghuman Holding LLC\ninfo@sorghuman.com`;
+  location.href = `mailto:${s.email||''}?subject=${encodeURIComponent('分销商入驻审核通过 · Sorghuman')}&body=${encodeURIComponent(body)}`;
+}
+</script>
+</body>
+</html>
