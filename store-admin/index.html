@@ -64,6 +64,24 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#f0f4f0;color:#1a1a18
 .login-box h2{font-size:20px;color:#1A4A28;margin-bottom:6px;}
 .login-box p{font-size:13px;color:#888;margin-bottom:24px;}
 .err{color:#c0392b;font-size:13px;margin-top:10px;}
+/* 补货 Restock */
+.rs-sub{color:#888;text-decoration:none;font-weight:500;margin-right:16px;padding-bottom:2px;border-bottom:2px solid transparent;}
+.rs-sub.active{color:#1A4A28;border-bottom-color:#1A4A28;}
+.sup-tag{display:inline-block;padding:2px 7px;border-radius:10px;font-size:11px;background:#eaf2ec;color:#2A6B3A;font-weight:500;}
+.margin-good{color:#2A6B3A;font-weight:600;}
+.margin-warn{color:#c98a00;font-weight:600;}
+.margin-bad{color:#c0392b;font-weight:600;}
+.qty-box{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.qty-box button{width:26px;height:26px;border-radius:5px;border:1px solid #ddd;background:#fff;cursor:pointer;font-size:15px;line-height:1;}
+.qty-box input{width:44px;text-align:center;border:1px solid #ddd;border-radius:5px;padding:4px;font-family:inherit;font-size:13px;}
+.po-card{background:#fff;border:1px solid #e8e8e0;border-radius:8px;padding:14px 18px;margin-bottom:12px;}
+.po-status{padding:2px 9px;border-radius:10px;font-size:11px;font-weight:600;}
+.st-submitted{background:#fff4e0;color:#b57500;}
+.st-confirmed{background:#e6f0ff;color:#1a5fb4;}
+.st-shipped{background:#eaf2ec;color:#2A6B3A;}
+.st-received{background:#f0f0ea;color:#666;}
+.st-cancelled{background:#fbe9e7;color:#c0392b;}
+.oos{opacity:.45;}
 /* checkbox */
 input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;flex-shrink:0;}
 @media(max-width:600px){
@@ -109,9 +127,9 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div class="tab" onclick="showTab('addNew')">新增 New Item</div>
     <div class="tab" onclick="showTab('promo')">🎉 促销 Promo</div>
     <div class="tab" onclick="showTab('zips')">📦 配送 Delivery</div>
-    <div class="tab" onclick="showTab('hours')">🕒 营业时间 Hours</div>
     <div class="tab" onclick="showTab('drivers')">🛵 司机 Drivers</div>
     <div class="tab" onclick="showTab('orders')">📋 订单 Orders</div>
+    <div class="tab" onclick="showTab('restock')">🚚 补货 Restock</div>
     <div class="tab" id="tabShowcase" style="display:none;" onclick="showTab('showcase')">🌐 官网展示 Showcase</div>
   </div>
 
@@ -283,46 +301,6 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     </div>
   </div><!-- main -->
     <!-- ── 面板6：兼职司机管理 ── -->
-    <div id="panelHours" class="panel">
-      <div class="card">
-        <div class="card-header">🕒 营业时间 Business Hours</div>
-        <div style="padding:20px 22px;">
-          <p style="font-size:13px;color:#555;margin-bottom:16px;">
-            设置每天的营业时间，显示在店铺首页。顾客能看到「营业中 / 已打烊」的实时状态。<br>
-            当天休息请勾选「休息」。跨午夜（如 10:00 – 次日 01:00）直接填即可。
-          </p>
-          <div id="hoursGrid" style="display:flex;flex-direction:column;gap:8px;"></div>
-        </div>
-        <div style="padding:0 22px 18px;display:flex;align-items:center;justify-content:flex-end;gap:12px;">
-          <span id="hoursMsg" style="font-size:13px;"></span>
-          <button class="btn btn-primary" onclick="saveHours()">保存 Save Hours</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-header">📣 临时节假日通知 Holiday Notice</div>
-        <div style="padding:20px 22px;">
-          <p style="font-size:13px;color:#555;margin-bottom:14px;">
-            临时的营业变动（节日提前打烊、暂停配送等），显示在首页营业时间下方的醒目横幅里。<br>
-            <strong>节后不用删文字</strong> —— 取消勾选「显示」即可隐藏，明年再勾回来。
-          </p>
-          <div class="form-group full" style="margin-bottom:12px;">
-            <label>通知内容 Notice</label>
-            <textarea id="holidayNotice" rows="3" placeholder="中秋节 9/17 当天营业至 17:00，9/18 恢复正常营业。"
-              style="width:100%;padding:9px;border:1px solid #e0ddd5;border-radius:4px;font-family:inherit;font-size:14px;"></textarea>
-          </div>
-          <label style="display:flex;align-items:center;gap:8px;font-size:14px;cursor:pointer;">
-            <input type="checkbox" id="holidayActive" style="width:18px;height:18px;">
-            <span>在首页显示该通知</span>
-          </label>
-        </div>
-        <div style="padding:0 22px 18px;display:flex;align-items:center;justify-content:flex-end;gap:12px;">
-          <span id="noticeMsg" style="font-size:13px;"></span>
-          <button class="btn btn-primary" onclick="saveHours()">保存 Save Notice</button>
-        </div>
-      </div>
-    </div>
-
     <div id="panelDrivers" class="panel">
       <div class="card">
         <div class="card-header">🛵 兼职司机管理（最多5位）</div>
@@ -434,6 +412,67 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
         <div id="showcaseList"><div class="empty">加载中… Loading…</div></div>
       </div>
     </div>
+    <!-- ── 面板：补货 Restock ─────────────────────────────── -->
+    <div id="panelRestock" class="panel">
+
+      <!-- 子标签：订货 / 我的补货单 -->
+      <div class="card" style="padding:0;">
+        <div class="card-header" style="gap:16px;">
+          <span>
+            <a href="javascript:void(0)" id="rsTabOrder" class="rs-sub active" onclick="rsSub('order')">🛒 订货</a>
+            <a href="javascript:void(0)" id="rsTabPos"   class="rs-sub"        onclick="rsSub('pos')">📄 我的补货单</a>
+            <a href="javascript:void(0)" id="rsTabDir"   class="rs-sub"        onclick="rsSub('dir')">🏢 供应商开户</a>
+          </span>
+          <span id="rsCartBtn" style="cursor:pointer;font-weight:600;color:#2A6B3A;" onclick="rsSub('cart')">🛒 购物车 (<span id="rsCartCount">0</span>)</span>
+        </div>
+      </div>
+
+      <!-- ① 订货 -->
+      <div id="rsViewOrder">
+        <div class="card">
+          <div class="search-bar" style="display:flex;flex-wrap:wrap;gap:8px;">
+            <input id="rsSearch" placeholder="搜索商品 Search…" oninput="renderRestock()" style="flex:1;min-width:160px;">
+            <select id="rsSupplier" onchange="renderRestock()"><option value="">全部供应商</option></select>
+            <select id="rsScope" onchange="renderRestock()">
+              <option value="shelf">我在卖的（缺什么补什么）</option>
+              <option value="all">全部可订商品</option>
+              <option value="new">我还没卖的新品</option>
+            </select>
+          </div>
+          <div id="rsSupplierInfo" style="padding:10px 18px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ea;"></div>
+          <div id="rsList"><div class="empty">加载中…</div></div>
+        </div>
+      </div>
+
+      <!-- ② 购物车（按供应商拆单） -->
+      <div id="rsViewCart" style="display:none;">
+        <div id="rsCartBody"></div>
+        <div class="save-bar">
+          <span id="rsCartTotal">合计 $0.00</span>
+          <span>
+            <button class="btn btn-danger btn-sm" onclick="rsClearCart()">清空</button>
+            <button class="btn btn-primary" id="rsSubmitBtn" onclick="rsSubmit()">提交补货单 Submit</button>
+          </span>
+        </div>
+      </div>
+
+      <!-- ③ 我的补货单 -->
+      <div id="rsViewPos" style="display:none;">
+        <div id="rsPoList"><div class="empty">加载中…</div></div>
+      </div>
+
+      <!-- ④ 供应商开户 -->
+      <div id="rsViewDir" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <span>能送到本店的供应商</span>
+            <span style="font-weight:400;color:#888;font-size:12px;">需供应商审核通过后才能看到价格、下单</span>
+          </div>
+          <div id="rsDirList"><div class="empty">加载中…</div></div>
+        </div>
+      </div>
+    </div>
+
   </div><!-- main -->
 </div><!-- mainWrap -->
 
@@ -722,7 +761,7 @@ var promoColor = '#1A4A28';
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['myProducts','addFromCatalog','addNew','promo','zips','hours','drivers','orders','showcase'];
+    const names=['myProducts','addFromCatalog','addNew','promo','zips','drivers','orders','restock','showcase'];
     t.classList.toggle('active',names[i]===name);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -732,79 +771,10 @@ function showTab(name){
   if(name==='addFromCatalog'&&!allCatalog.length) loadCatalog();
   if(name==='promo') loadPromo();
   if(name==='zips') loadZips();
-  if(name==='hours') loadHours();
   if(name==='drivers') loadDrivers();
   if(name==='orders') loadOrders();
+  if(name==='restock' && !rsItems.length) loadRestock();
   if(name==='showcase') loadShowcase();
-}
-
-// ── 营业时间 / 节假日通知 ─────────────────────────────────────
-const HDAYS = [['1','周一 Mon'],['2','周二 Tue'],['3','周三 Wed'],['4','周四 Thu'],
-               ['5','周五 Fri'],['6','周六 Sat'],['0','周日 Sun']];
-
-function buildHoursGrid(hours){
-  hours = hours || {};
-  if(typeof hours === 'string'){ try{ hours = JSON.parse(hours); }catch(e){ hours = {}; } }
-  document.getElementById('hoursGrid').innerHTML = HDAYS.map(([k,label])=>{
-    const d = hours[k] || {};
-    const closed = !!d.closed;
-    return `<div style="display:flex;align-items:center;gap:10px;font-size:14px;flex-wrap:wrap;">
-      <span style="width:100px;">${label}</span>
-      <input id="h_o_${k}" type="time" value="${d.open||''}" ${closed?'disabled':''}
-             style="padding:6px;border:1px solid #e0ddd5;border-radius:4px;font-family:inherit;">
-      <span>–</span>
-      <input id="h_c_${k}" type="time" value="${d.close||''}" ${closed?'disabled':''}
-             style="padding:6px;border:1px solid #e0ddd5;border-radius:4px;font-family:inherit;">
-      <label style="margin-left:6px;color:#888;display:flex;align-items:center;gap:5px;cursor:pointer;">
-        <input type="checkbox" id="h_x_${k}" ${closed?'checked':''} onchange="toggleClosed('${k}')"> 休息
-      </label>
-    </div>`;
-  }).join('');
-}
-
-function toggleClosed(k){
-  const off = document.getElementById('h_x_'+k).checked;
-  document.getElementById('h_o_'+k).disabled = off;
-  document.getElementById('h_c_'+k).disabled = off;
-}
-
-function readHoursGrid(){
-  const out = {}; let any = false;
-  HDAYS.forEach(([k])=>{
-    if(document.getElementById('h_x_'+k).checked){ out[k] = {closed:true}; any = true; return; }
-    const o = document.getElementById('h_o_'+k).value;
-    const c = document.getElementById('h_c_'+k).value;
-    if(o && c){ out[k] = {open:o, close:c}; any = true; }
-  });
-  return any ? out : null;
-}
-
-async function loadHours(){
-  const res = await api('GET_STORE_PRODUCTS');
-  const s = res.store || {};
-  buildHoursGrid(s.hours);
-  document.getElementById('holidayNotice').value = s.holiday_notice || '';
-  document.getElementById('holidayActive').checked = s.holiday_notice_active !== false;
-}
-
-async function saveHours(){
-  const hm = document.getElementById('hoursMsg');
-  const nm = document.getElementById('noticeMsg');
-  hm.style.color = nm.style.color = '#888';
-  hm.textContent = nm.textContent = '保存中…';
-  const res = await api('SAVE_HOURS', null, null, {
-    hours                 : readHoursGrid(),
-    holiday_notice        : document.getElementById('holidayNotice').value.trim(),
-    holiday_notice_active : document.getElementById('holidayActive').checked,
-  });
-  if(res && res.ok){
-    hm.style.color = nm.style.color = '#1A4A28';
-    hm.textContent = nm.textContent = '✓ 已保存，首页立即生效';
-  } else {
-    hm.style.color = nm.style.color = '#c0392b';
-    hm.textContent = nm.textContent = '保存失败：' + ((res && res.error) || '请重试');
-  }
-  setTimeout(()=>{ hm.textContent = nm.textContent = ''; }, 2600);
 }
 
 async function loadPromo(){
@@ -1227,6 +1197,340 @@ async function setShowcaseCat(sku, cat){
   const res = await api('TOGGLE_SHOWCASE', null, null, { sku:sku, showcase:true, showcase_category:cat });
   if(res.ok){ p.showcase_category = cat; }
   else { alert('操作失败：'+(res.error||'未知错误')); }
+}
+
+// ══════════════════════════════════════════════════════════════
+// 补货 Restock
+// ══════════════════════════════════════════════════════════════
+const RESTOCK_API = '/.netlify/functions/restock';
+let rsItems = [], rsSuppliers = [], rsPos = [];
+let rsCart  = {};   // { supplier_id: { sku: cases } }
+
+async function rsApi(action, extra){
+  const res = await fetch(RESTOCK_API, {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ action, storeId, token, ...(extra||{}) })
+  });
+  return res.json();
+}
+
+function rsMoney(n){ return '$'+(Number(n)||0).toFixed(2); }
+function rsKey(sid,sku){ return sid+'||'+sku; }
+
+async function loadRestock(){
+  const res = await rsApi('GET_RESTOCK_CATALOG');
+  if(res.error){ document.getElementById('rsList').innerHTML='<div class="empty">'+res.error+'</div>'; return; }
+  rsItems     = res.items || [];
+  rsSuppliers = res.suppliers || [];
+
+  const sel = document.getElementById('rsSupplier');
+  sel.innerHTML = '<option value="">全部供应商</option>' +
+    rsSuppliers.map(s=>`<option value="${s.supplier_id}">${s.name_zh}</option>`).join('');
+
+  if(!rsSuppliers.length){
+    document.getElementById('rsList').innerHTML =
+      '<div class="empty">你还没有在任何供应商处开户<br>' +
+      '<button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="rsSub(\'dir\')">去申请开户 →</button></div>';
+    return;
+  }
+  renderRestock();
+}
+
+// 供应商条件提示条（起送额 / 运费 / 交期 / 送货日）
+function rsSupplierBar(){
+  const sid = document.getElementById('rsSupplier').value;
+  const list = sid ? rsSuppliers.filter(s=>s.supplier_id===sid) : rsSuppliers;
+  document.getElementById('rsSupplierInfo').innerHTML = list.map(s=>{
+    const bits = [];
+    if(Number(s.min_order)>0) bits.push('起送 '+rsMoney(s.min_order));
+    if(Number(s.delivery_fee)>0) bits.push('运费 '+rsMoney(s.delivery_fee));
+    if(s.free_delivery_threshold) bits.push('满 '+rsMoney(s.free_delivery_threshold)+' 免运费');
+    if(s.lead_time_days) bits.push(s.lead_time_days+' 天到货');
+    if(Array.isArray(s.delivery_days)&&s.delivery_days.length) bits.push('每周 '+s.delivery_days.join('/')+' 送货');
+    if(s.payment_terms) bits.push(s.payment_terms);
+    return `<span class="sup-tag">${s.name_zh}</span> ${bits.join(' · ')}`;
+  }).join('<br>');
+}
+
+function rsFiltered(){
+  const q     = document.getElementById('rsSearch').value.toLowerCase();
+  const sid   = document.getElementById('rsSupplier').value;
+  const scope = document.getElementById('rsScope').value;
+  return rsItems.filter(i=>{
+    if(sid && i.supplier_id!==sid) return false;
+    if(scope==='shelf' && !i.on_shelf) return false;
+    if(scope==='new'   &&  i.on_shelf) return false;
+    if(q && !((i.name_zh||'').toLowerCase().includes(q) ||
+              (i.name_en||'').toLowerCase().includes(q) ||
+              (i.sku||'').toLowerCase().includes(q))) return false;
+    return true;
+  });
+}
+
+function rsRow(i){
+  const sup   = rsSuppliers.find(s=>s.supplier_id===i.supplier_id);
+  const cases = (rsCart[i.supplier_id]||{})[i.sku] || 0;
+  const out   = i.stock_status==='out';
+  const stock = out ? '<span class="badge" style="background:#fbe9e7;color:#c0392b;">缺货</span>'
+              : i.stock_status==='low' ? '<span class="badge" style="background:#fff4e0;color:#b57500;">少量</span>' : '';
+  const img = i.image_url ? `<img class="prod-img" src="${i.image_url}">` : '<div class="prod-img-ph">📦</div>';
+  return `
+  <div class="prod-row ${out?'oos':''}">
+    ${img}
+    <div class="prod-info">
+      <div class="zh">${i.name_zh} ${stock} ${!i.on_shelf?'<span class="badge">未上架</span>':''}</div>
+      <div class="en">${i.name_en||''} <span class="spec">${i.spec||''}</span></div>
+      <div class="spec">
+        <span class="sup-tag">${sup?sup.name_zh:i.supplier_id}</span>
+        ${i.units_per_case} 件/箱 · 单件 ${rsMoney(i.unit_cost)}
+        ${i.moq>1?' · 起订 '+i.moq+' 箱':''}
+        ${i.note?' · <b style="color:#c98a00;">'+i.note+'</b>':''}
+      </div>
+    </div>
+    <div style="text-align:right;">
+      <div class="price-tag">${rsMoney(i.case_price)}</div>
+      <div class="spec">每箱</div>
+    </div>
+    <div class="qty-box">
+      <button ${out?'disabled':''} onclick="rsAdd('${i.supplier_id}','${i.sku}',-1)">−</button>
+      <input type="number" min="0" value="${cases}" ${out?'disabled':''}
+             onchange="rsSet('${i.supplier_id}','${i.sku}',this.value)">
+      <button ${out?'disabled':''} onclick="rsAdd('${i.supplier_id}','${i.sku}',1)">+</button>
+    </div>
+  </div>`;
+}
+
+function renderRestock(){
+  rsSupplierBar();
+  const list = rsFiltered();
+  document.getElementById('rsList').innerHTML =
+    list.length ? list.map(rsRow).join('') : '<div class="empty">没有匹配的商品</div>';
+  rsUpdateCount();
+}
+
+// ── 购物车 ────────────────────────────────────────────────────
+function rsSet(sid, sku, val){
+  const item = rsItems.find(i=>i.supplier_id===sid && i.sku===sku);
+  let n = Math.max(0, Math.floor(Number(val)||0));
+  if(n>0 && item && n < item.moq) n = item.moq;      // 自动补足起订量
+  rsCart[sid] = rsCart[sid] || {};
+  if(n>0) rsCart[sid][sku] = n; else delete rsCart[sid][sku];
+  if(!Object.keys(rsCart[sid]).length) delete rsCart[sid];
+  renderRestock();
+}
+function rsAdd(sid, sku, d){
+  const cur = (rsCart[sid]||{})[sku] || 0;
+  rsSet(sid, sku, cur + d);
+}
+function rsClearCart(){ rsCart = {}; renderRestock(); rsRenderCart(); }
+
+function rsCartLines(){
+  const out = [];
+  for(const sid in rsCart){
+    const sup   = rsSuppliers.find(s=>s.supplier_id===sid);
+    const lines = [];
+    for(const sku in rsCart[sid]){
+      const it = rsItems.find(i=>i.supplier_id===sid && i.sku===sku);
+      if(!it) continue;
+      lines.push({ ...it, cases: rsCart[sid][sku], line_total: rsCart[sid][sku]*it.case_price });
+    }
+    if(!lines.length) continue;
+    const subtotal = lines.reduce((s,l)=>s+l.line_total, 0);
+    const freeAt   = sup?.free_delivery_threshold;
+    const fee      = (freeAt!=null && subtotal>=Number(freeAt)) ? 0 : Number(sup?.delivery_fee||0);
+    const shortBy  = Math.max(0, Number(sup?.min_order||0) - subtotal);
+    out.push({ sup, sid, lines, subtotal, fee, shortBy, total: subtotal+fee });
+  }
+  return out;
+}
+
+function rsUpdateCount(){
+  const n = Object.values(rsCart).reduce((s,o)=>s+Object.keys(o).length, 0);
+  document.getElementById('rsCartCount').textContent = n;
+}
+
+function rsRenderCart(){
+  const groups = rsCartLines();
+  const box = document.getElementById('rsCartBody');
+  if(!groups.length){
+    box.innerHTML = '<div class="card"><div class="empty">购物车是空的</div></div>';
+    document.getElementById('rsCartTotal').textContent = '合计 $0.00';
+    document.getElementById('rsSubmitBtn').disabled = true;
+    return;
+  }
+  box.innerHTML = groups.map(g=>`
+    <div class="card">
+      <div class="card-header">
+        <span>${g.sup?.name_zh||g.sid} · 一张独立补货单</span>
+        <span style="font-weight:400;color:#888;">${g.sup?.payment_terms||''} · ${g.sup?.lead_time_days||3} 天到货</span>
+      </div>
+      ${g.lines.map(l=>`
+        <div class="prod-row">
+          <div class="prod-info">
+            <div class="zh">${l.name_zh}</div>
+            <div class="spec">${l.cases} 箱 × ${rsMoney(l.case_price)} · ${l.cases*l.units_per_case} 件</div>
+          </div>
+          <div class="price-tag">${rsMoney(l.line_total)}</div>
+          <button class="btn btn-danger btn-sm" onclick="rsSet('${g.sid}','${l.sku}',0); rsRenderCart();">移除</button>
+        </div>`).join('')}
+      <div style="padding:12px 18px;background:#faf9f6;font-size:13px;">
+        <div style="display:flex;justify-content:space-between;"><span>货款小计</span><b>${rsMoney(g.subtotal)}</b></div>
+        <div style="display:flex;justify-content:space-between;color:#888;"><span>运费</span><span>${g.fee===0?'免运费':rsMoney(g.fee)}</span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>本单合计</span><b class="price-tag">${rsMoney(g.total)}</b></div>
+        ${g.shortBy>0 ? `<div style="color:#c0392b;margin-top:6px;">⚠️ 还差 ${rsMoney(g.shortBy)} 才够起送金额，本单无法提交</div>` : ''}
+        <input class="price-input" style="width:100%;text-align:left;margin-top:8px;"
+               id="rsNote_${g.sid}" placeholder="给供应商的备注（送货时间、卸货口…）">
+      </div>
+    </div>`).join('');
+
+  const grand = groups.reduce((s,g)=>s+g.total, 0);
+  document.getElementById('rsCartTotal').textContent =
+    `${groups.length} 张单 · 合计 ${rsMoney(grand)}`;
+  document.getElementById('rsSubmitBtn').disabled = groups.some(g=>g.shortBy>0);
+}
+
+async function rsSubmit(){
+  const groups = rsCartLines().filter(g=>g.shortBy<=0);
+  if(!groups.length) return;
+  const btn = document.getElementById('rsSubmitBtn');
+  btn.disabled = true; btn.textContent = '提交中…';
+
+  const carts = groups.map(g=>({
+    supplier_id: g.sid,
+    items: g.lines.map(l=>({ sku: l.sku, cases: l.cases })),   // 只传数量，价格服务端重算
+    note : (document.getElementById('rsNote_'+g.sid)?.value || '').trim(),
+  }));
+
+  const res = await rsApi('CREATE_POS', { carts });
+  btn.disabled = false; btn.textContent = '提交补货单 Submit';
+
+  if(res.error){ alert('提交失败：'+res.error); return; }
+  let msg = `✅ 已提交 ${res.created.length} 张补货单：\n` +
+            res.created.map(p=>`${p.po_number}  ${rsMoney(p.total)}`).join('\n');
+  if(res.rejected?.length)
+    msg += '\n\n⚠️ 以下未提交：\n' + res.rejected.map(r=>`${r.sku||r.supplier_id}：${r.reason}`).join('\n');
+  alert(msg);
+  rsCart = {};
+  rsSub('pos');
+  loadRestockPos();
+}
+
+// ── 我的补货单 ────────────────────────────────────────────────
+const RS_STATUS = {
+  submitted:['已提交，等供应商确认','st-submitted'],
+  confirmed:['供应商已确认','st-confirmed'],
+  shipped  :['已发货','st-shipped'],
+  received :['已收货','st-received'],
+  cancelled:['已取消','st-cancelled'],
+};
+
+async function loadRestockPos(){
+  const res = await rsApi('GET_MY_POS');
+  rsPos = res.pos || [];
+  const box = document.getElementById('rsPoList');
+  if(!rsPos.length){ box.innerHTML = '<div class="empty">还没有补货单</div>'; return; }
+  box.innerHTML = rsPos.map(po=>{
+    const [label, cls] = RS_STATUS[po.status] || [po.status,'st-received'];
+    const items = (po.items||[]).map(l=>
+      `<div style="display:flex;justify-content:space-between;font-size:13px;padding:3px 0;">
+         <span>${l.name_zh} × ${l.cases} 箱</span><span>${rsMoney(l.line_total)}</span></div>`).join('');
+    const act = po.status==='submitted'
+      ? `<button class="btn btn-danger btn-sm" onclick="rsPoAction('${po.id}','CANCEL_PO')">取消</button>`
+      : po.status==='shipped'
+      ? `<button class="btn btn-primary btn-sm" onclick="rsPoAction('${po.id}','RECEIVE_PO')">✅ 确认收货</button>` : '';
+    return `
+    <div class="po-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div>
+          <b>${po.po_number}</b>
+          <span class="sup-tag" style="margin-left:6px;">${po.suppliers?.name_zh||po.supplier_id}</span>
+        </div>
+        <span class="po-status ${cls}">${label}</span>
+      </div>
+      ${items}
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid #f0f0ea;">
+        <span style="font-size:12px;color:#888;">
+          ${new Date(po.created_at).toLocaleDateString('zh-CN')}
+          ${po.expected_date?' · 预计 '+po.expected_date+' 到货':''}
+          ${po.supplier_note?'<br>供应商：'+po.supplier_note:''}
+        </span>
+        <span><b class="price-tag" style="margin-right:10px;">${rsMoney(po.total)}</b>${act}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function rsPoAction(poId, action){
+  if(action==='CANCEL_PO' && !confirm('确定取消这张补货单？')) return;
+  const res = await rsApi(action, { poId });
+  if(res.error){ alert(res.error); return; }
+  loadRestockPos();
+}
+
+// ── 供应商开户 ────────────────────────────────────────────────
+const ACCT = {
+  none     : ['未开户',   '#888',    '申请开户'],
+  pending  : ['审核中',   '#b57500', null],
+  approved : ['已开户',   '#2A6B3A', null],
+  rejected : ['已拒绝',   '#c0392b', '重新申请'],
+  suspended: ['已停单',   '#c0392b', null],
+};
+
+async function loadDirectory(){
+  const res = await rsApi('GET_SUPPLIER_DIRECTORY');
+  const box = document.getElementById('rsDirList');
+  const list = res.suppliers || [];
+  if(!list.length){
+    box.innerHTML = '<div class="empty">目前没有供应商覆盖本店所在区域<br>' +
+      '<span style="font-size:12px;">先确认后台「配送」里填了本店地址和邮编</span></div>';
+    return;
+  }
+  box.innerHTML = list.map(s=>{
+    const [label, color, btn] = ACCT[s.account_status] || ACCT.none;
+    const terms = s.account_status==='approved' ? [
+      Number(s.min_order)>0 ? '起送 '+rsMoney(s.min_order) : '不限起送',
+      s.free_delivery_threshold ? '满 '+rsMoney(s.free_delivery_threshold)+' 免运费'
+        : (Number(s.delivery_fee)>0 ? '运费 '+rsMoney(s.delivery_fee) : '免运费'),
+      s.payment_terms || '',
+      s.credit_limit!=null ? '额度 '+rsMoney(s.credit_limit) : '',
+      (s.lead_time_days||3)+' 天到货',
+    ].filter(Boolean).join(' · ') : '开户后可见价格与交易条件';
+    return `
+    <div class="prod-row">
+      <div class="prod-img-ph">🚚</div>
+      <div class="prod-info">
+        <div class="zh">${s.name_zh} <span class="badge">${s.type==='importer'?'进口商':s.type==='manufacturer'?'厂家':'分销商'}</span></div>
+        <div class="en">${s.name_en||''}</div>
+        <div class="spec">${terms}
+          ${s.contact_name||s.phone ? ' · ☎️ '+(s.contact_name||'')+' '+(s.phone||'') : ''}</div>
+      </div>
+      <span style="color:${color};font-weight:600;font-size:13px;white-space:nowrap;">${label}</span>
+      ${btn ? `<button class="btn btn-primary btn-sm" onclick="rsApply('${s.supplier_id}','${s.name_zh}')">${btn}</button>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function rsApply(supplierId, name){
+  const note = prompt(`向「${name}」申请开户\n\n留言给供应商（店名、联系人、每周大概订多少、希望的付款方式）：`, '');
+  if(note===null) return;
+  const res = await rsApi('APPLY_SUPPLIER', { supplierId, note });
+  if(res.error){ alert(res.error); return; }
+  alert('✅ 申请已提交，供应商审核通过后即可在「订货」看到价格并下单');
+  loadDirectory();
+}
+
+// ── 子页切换 ──────────────────────────────────────────────────
+function rsSub(v){
+  document.getElementById('rsViewOrder').style.display = v==='order'?'':'none';
+  document.getElementById('rsViewCart' ).style.display = v==='cart' ?'':'none';
+  document.getElementById('rsViewPos'  ).style.display = v==='pos'  ?'':'none';
+  document.getElementById('rsViewDir'  ).style.display = v==='dir'  ?'':'none';
+  document.getElementById('rsTabOrder').classList.toggle('active', v==='order');
+  document.getElementById('rsTabPos'  ).classList.toggle('active', v==='pos');
+  document.getElementById('rsTabDir'  ).classList.toggle('active', v==='dir');
+  if(v==='cart') rsRenderCart();
+  if(v==='pos')  loadRestockPos();
+  if(v==='dir')  loadDirectory();
 }
 </script>
 </body>
