@@ -421,7 +421,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
           <span>
             <a href="javascript:void(0)" id="rsTabOrder" class="rs-sub active" onclick="rsSub('order')">🛒 订货</a>
             <a href="javascript:void(0)" id="rsTabPos"   class="rs-sub"        onclick="rsSub('pos')">📄 我的补货单</a>
-            <a href="javascript:void(0)" id="rsTabDir"   class="rs-sub"        onclick="rsSub('dir')">🏢 供应商开户</a>
+            <a href="javascript:void(0)" id="rsTabDir"   class="rs-sub"        onclick="rsSub('dir')">🏢 分销商开户</a>
           </span>
           <span id="rsCartBtn" style="cursor:pointer;font-weight:600;color:#2A6B3A;" onclick="rsSub('cart')">🛒 购物车 (<span id="rsCartCount">0</span>)</span>
         </div>
@@ -432,19 +432,19 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
         <div class="card">
           <div class="search-bar" style="display:flex;flex-wrap:wrap;gap:8px;">
             <input id="rsSearch" placeholder="搜索商品 Search…" oninput="renderRestock()" style="flex:1;min-width:160px;">
-            <select id="rsSupplier" onchange="renderRestock()"><option value="">全部供应商</option></select>
+            <select id="rsDist" onchange="renderRestock()"><option value="">全部分销商</option></select>
             <select id="rsScope" onchange="renderRestock()">
               <option value="shelf">我在卖的（缺什么补什么）</option>
               <option value="all">全部可订商品</option>
               <option value="new">我还没卖的新品</option>
             </select>
           </div>
-          <div id="rsSupplierInfo" style="padding:10px 18px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ea;"></div>
+          <div id="rsDistInfo" style="padding:10px 18px;font-size:12px;color:#888;border-bottom:1px solid #f0f0ea;"></div>
           <div id="rsList"><div class="empty">加载中…</div></div>
         </div>
       </div>
 
-      <!-- ② 购物车（按供应商拆单） -->
+      <!-- ② 购物车（按分销商拆单） -->
       <div id="rsViewCart" style="display:none;">
         <div id="rsCartBody"></div>
         <div class="save-bar">
@@ -461,12 +461,12 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
         <div id="rsPoList"><div class="empty">加载中…</div></div>
       </div>
 
-      <!-- ④ 供应商开户 -->
+      <!-- ④ 分销商开户 -->
       <div id="rsViewDir" style="display:none;">
         <div class="card">
           <div class="card-header">
-            <span>能送到本店的供应商</span>
-            <span style="font-weight:400;color:#888;font-size:12px;">需供应商审核通过后才能看到价格、下单</span>
+            <span>能送到本店的分销商</span>
+            <span style="font-weight:400;color:#888;font-size:12px;">需分销商审核通过后才能看到价格、下单</span>
           </div>
           <div id="rsDirList"><div class="empty">加载中…</div></div>
         </div>
@@ -1203,8 +1203,8 @@ async function setShowcaseCat(sku, cat){
 // 补货 Restock
 // ══════════════════════════════════════════════════════════════
 const RESTOCK_API = '/.netlify/functions/restock';
-let rsItems = [], rsSuppliers = [], rsPos = [];
-let rsCart  = {};   // { supplier_id: { sku: cases } }
+let rsItems = [], rsDistributors = [], rsPos = [];
+let rsCart  = {};   // { distributor_id: { sku: cases } }
 
 async function rsApi(action, extra){
   const res = await fetch(RESTOCK_API, {
@@ -1221,26 +1221,26 @@ async function loadRestock(){
   const res = await rsApi('GET_RESTOCK_CATALOG');
   if(res.error){ document.getElementById('rsList').innerHTML='<div class="empty">'+res.error+'</div>'; return; }
   rsItems     = res.items || [];
-  rsSuppliers = res.suppliers || [];
+  rsDistributors = res.distributors || [];
 
-  const sel = document.getElementById('rsSupplier');
-  sel.innerHTML = '<option value="">全部供应商</option>' +
-    rsSuppliers.map(s=>`<option value="${s.supplier_id}">${s.name_zh}</option>`).join('');
+  const sel = document.getElementById('rsDist');
+  sel.innerHTML = '<option value="">全部分销商</option>' +
+    rsDistributors.map(s=>`<option value="${s.distributor_id}">${s.name_zh}</option>`).join('');
 
-  if(!rsSuppliers.length){
+  if(!rsDistributors.length){
     document.getElementById('rsList').innerHTML =
-      '<div class="empty">你还没有在任何供应商处开户<br>' +
+      '<div class="empty">你还没有在任何分销商处开户<br>' +
       '<button class="btn btn-primary btn-sm" style="margin-top:10px;" onclick="rsSub(\'dir\')">去申请开户 →</button></div>';
     return;
   }
   renderRestock();
 }
 
-// 供应商条件提示条（起送额 / 运费 / 交期 / 送货日）
-function rsSupplierBar(){
-  const sid = document.getElementById('rsSupplier').value;
-  const list = sid ? rsSuppliers.filter(s=>s.supplier_id===sid) : rsSuppliers;
-  document.getElementById('rsSupplierInfo').innerHTML = list.map(s=>{
+// 分销商条件提示条（起送额 / 运费 / 交期 / 送货日）
+function rsDistBar(){
+  const sid = document.getElementById('rsDist').value;
+  const list = sid ? rsDistributors.filter(s=>s.distributor_id===sid) : rsDistributors;
+  document.getElementById('rsDistInfo').innerHTML = list.map(s=>{
     const bits = [];
     if(Number(s.min_order)>0) bits.push('起送 '+rsMoney(s.min_order));
     if(Number(s.delivery_fee)>0) bits.push('运费 '+rsMoney(s.delivery_fee));
@@ -1254,10 +1254,10 @@ function rsSupplierBar(){
 
 function rsFiltered(){
   const q     = document.getElementById('rsSearch').value.toLowerCase();
-  const sid   = document.getElementById('rsSupplier').value;
+  const sid   = document.getElementById('rsDist').value;
   const scope = document.getElementById('rsScope').value;
   return rsItems.filter(i=>{
-    if(sid && i.supplier_id!==sid) return false;
+    if(sid && i.distributor_id!==sid) return false;
     if(scope==='shelf' && !i.on_shelf) return false;
     if(scope==='new'   &&  i.on_shelf) return false;
     if(q && !((i.name_zh||'').toLowerCase().includes(q) ||
@@ -1268,8 +1268,8 @@ function rsFiltered(){
 }
 
 function rsRow(i){
-  const sup   = rsSuppliers.find(s=>s.supplier_id===i.supplier_id);
-  const cases = (rsCart[i.supplier_id]||{})[i.sku] || 0;
+  const sup   = rsDistributors.find(s=>s.distributor_id===i.distributor_id);
+  const cases = (rsCart[i.distributor_id]||{})[i.sku] || 0;
   const out   = i.stock_status==='out';
   const stock = out ? '<span class="badge" style="background:#fbe9e7;color:#c0392b;">缺货</span>'
               : i.stock_status==='low' ? '<span class="badge" style="background:#fff4e0;color:#b57500;">少量</span>' : '';
@@ -1281,7 +1281,7 @@ function rsRow(i){
       <div class="zh">${i.name_zh} ${stock} ${!i.on_shelf?'<span class="badge">未上架</span>':''}</div>
       <div class="en">${i.name_en||''} <span class="spec">${i.spec||''}</span></div>
       <div class="spec">
-        <span class="sup-tag">${sup?sup.name_zh:i.supplier_id}</span>
+        <span class="sup-tag">${sup?sup.name_zh:i.distributor_id}</span>
         ${i.units_per_case} 件/箱 · 单件 ${rsMoney(i.unit_cost)}
         ${i.moq>1?' · 起订 '+i.moq+' 箱':''}
         ${i.note?' · <b style="color:#c98a00;">'+i.note+'</b>':''}
@@ -1292,16 +1292,16 @@ function rsRow(i){
       <div class="spec">每箱</div>
     </div>
     <div class="qty-box">
-      <button ${out?'disabled':''} onclick="rsAdd('${i.supplier_id}','${i.sku}',-1)">−</button>
+      <button ${out?'disabled':''} onclick="rsAdd('${i.distributor_id}','${i.sku}',-1)">−</button>
       <input type="number" min="0" value="${cases}" ${out?'disabled':''}
-             onchange="rsSet('${i.supplier_id}','${i.sku}',this.value)">
-      <button ${out?'disabled':''} onclick="rsAdd('${i.supplier_id}','${i.sku}',1)">+</button>
+             onchange="rsSet('${i.distributor_id}','${i.sku}',this.value)">
+      <button ${out?'disabled':''} onclick="rsAdd('${i.distributor_id}','${i.sku}',1)">+</button>
     </div>
   </div>`;
 }
 
 function renderRestock(){
-  rsSupplierBar();
+  rsDistBar();
   const list = rsFiltered();
   document.getElementById('rsList').innerHTML =
     list.length ? list.map(rsRow).join('') : '<div class="empty">没有匹配的商品</div>';
@@ -1310,7 +1310,7 @@ function renderRestock(){
 
 // ── 购物车 ────────────────────────────────────────────────────
 function rsSet(sid, sku, val){
-  const item = rsItems.find(i=>i.supplier_id===sid && i.sku===sku);
+  const item = rsItems.find(i=>i.distributor_id===sid && i.sku===sku);
   let n = Math.max(0, Math.floor(Number(val)||0));
   if(n>0 && item && n < item.moq) n = item.moq;      // 自动补足起订量
   rsCart[sid] = rsCart[sid] || {};
@@ -1327,10 +1327,10 @@ function rsClearCart(){ rsCart = {}; renderRestock(); rsRenderCart(); }
 function rsCartLines(){
   const out = [];
   for(const sid in rsCart){
-    const sup   = rsSuppliers.find(s=>s.supplier_id===sid);
+    const sup   = rsDistributors.find(s=>s.distributor_id===sid);
     const lines = [];
     for(const sku in rsCart[sid]){
-      const it = rsItems.find(i=>i.supplier_id===sid && i.sku===sku);
+      const it = rsItems.find(i=>i.distributor_id===sid && i.sku===sku);
       if(!it) continue;
       lines.push({ ...it, cases: rsCart[sid][sku], line_total: rsCart[sid][sku]*it.case_price });
     }
@@ -1379,7 +1379,7 @@ function rsRenderCart(){
         <div style="display:flex;justify-content:space-between;margin-top:4px;"><span>本单合计</span><b class="price-tag">${rsMoney(g.total)}</b></div>
         ${g.shortBy>0 ? `<div style="color:#c0392b;margin-top:6px;">⚠️ 还差 ${rsMoney(g.shortBy)} 才够起送金额，本单无法提交</div>` : ''}
         <input class="price-input" style="width:100%;text-align:left;margin-top:8px;"
-               id="rsNote_${g.sid}" placeholder="给供应商的备注（送货时间、卸货口…）">
+               id="rsNote_${g.sid}" placeholder="给分销商的备注（送货时间、卸货口…）">
       </div>
     </div>`).join('');
 
@@ -1396,7 +1396,7 @@ async function rsSubmit(){
   btn.disabled = true; btn.textContent = '提交中…';
 
   const carts = groups.map(g=>({
-    supplier_id: g.sid,
+    distributor_id: g.sid,
     items: g.lines.map(l=>({ sku: l.sku, cases: l.cases })),   // 只传数量，价格服务端重算
     note : (document.getElementById('rsNote_'+g.sid)?.value || '').trim(),
   }));
@@ -1408,7 +1408,7 @@ async function rsSubmit(){
   let msg = `✅ 已提交 ${res.created.length} 张补货单：\n` +
             res.created.map(p=>`${p.po_number}  ${rsMoney(p.total)}`).join('\n');
   if(res.rejected?.length)
-    msg += '\n\n⚠️ 以下未提交：\n' + res.rejected.map(r=>`${r.sku||r.supplier_id}：${r.reason}`).join('\n');
+    msg += '\n\n⚠️ 以下未提交：\n' + res.rejected.map(r=>`${r.sku||r.distributor_id}：${r.reason}`).join('\n');
   alert(msg);
   rsCart = {};
   rsSub('pos');
@@ -1417,8 +1417,8 @@ async function rsSubmit(){
 
 // ── 我的补货单 ────────────────────────────────────────────────
 const RS_STATUS = {
-  submitted:['已提交，等供应商确认','st-submitted'],
-  confirmed:['供应商已确认','st-confirmed'],
+  submitted:['已提交，等分销商确认','st-submitted'],
+  confirmed:['分销商已确认','st-confirmed'],
   shipped  :['已发货','st-shipped'],
   received :['已收货','st-received'],
   cancelled:['已取消','st-cancelled'],
@@ -1443,7 +1443,7 @@ async function loadRestockPos(){
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div>
           <b>${po.po_number}</b>
-          <span class="sup-tag" style="margin-left:6px;">${po.suppliers?.name_zh||po.supplier_id}</span>
+          <span class="sup-tag" style="margin-left:6px;">${po.distributors?.name_zh||po.distributor_id}</span>
         </div>
         <span class="po-status ${cls}">${label}</span>
       </div>
@@ -1452,7 +1452,7 @@ async function loadRestockPos(){
         <span style="font-size:12px;color:#888;">
           ${new Date(po.created_at).toLocaleDateString('zh-CN')}
           ${po.expected_date?' · 预计 '+po.expected_date+' 到货':''}
-          ${po.supplier_note?'<br>供应商：'+po.supplier_note:''}
+          ${po.distributor_note?'<br>分销商：'+po.distributor_note:''}
         </span>
         <span><b class="price-tag" style="margin-right:10px;">${rsMoney(po.total)}</b>${act}</span>
       </div>
@@ -1467,7 +1467,7 @@ async function rsPoAction(poId, action){
   loadRestockPos();
 }
 
-// ── 供应商开户 ────────────────────────────────────────────────
+// ── 分销商开户 ────────────────────────────────────────────────
 const ACCT = {
   none     : ['未开户',   '#888',    '申请开户'],
   pending  : ['审核中',   '#b57500', null],
@@ -1477,11 +1477,11 @@ const ACCT = {
 };
 
 async function loadDirectory(){
-  const res = await rsApi('GET_SUPPLIER_DIRECTORY');
+  const res = await rsApi('GET_DISTRIBUTOR_DIRECTORY');
   const box = document.getElementById('rsDirList');
-  const list = res.suppliers || [];
+  const list = res.distributors || [];
   if(!list.length){
-    box.innerHTML = '<div class="empty">目前没有供应商覆盖本店所在区域<br>' +
+    box.innerHTML = '<div class="empty">目前没有分销商覆盖本店所在区域<br>' +
       '<span style="font-size:12px;">先确认后台「配送」里填了本店地址和邮编</span></div>';
     return;
   }
@@ -1505,17 +1505,17 @@ async function loadDirectory(){
           ${s.contact_name||s.phone ? ' · ☎️ '+(s.contact_name||'')+' '+(s.phone||'') : ''}</div>
       </div>
       <span style="color:${color};font-weight:600;font-size:13px;white-space:nowrap;">${label}</span>
-      ${btn ? `<button class="btn btn-primary btn-sm" onclick="rsApply('${s.supplier_id}','${s.name_zh}')">${btn}</button>` : ''}
+      ${btn ? `<button class="btn btn-primary btn-sm" onclick="rsApply('${s.distributor_id}','${s.name_zh}')">${btn}</button>` : ''}
     </div>`;
   }).join('');
 }
 
-async function rsApply(supplierId, name){
-  const note = prompt(`向「${name}」申请开户\n\n留言给供应商（店名、联系人、每周大概订多少、希望的付款方式）：`, '');
+async function rsApply(distributorId, name){
+  const note = prompt(`向「${name}」申请开户\n\n留言给分销商（店名、联系人、每周大概订多少、希望的付款方式）：`, '');
   if(note===null) return;
-  const res = await rsApi('APPLY_SUPPLIER', { supplierId, note });
+  const res = await rsApi('APPLY_DISTRIBUTOR', { distributorId, note });
   if(res.error){ alert(res.error); return; }
-  alert('✅ 申请已提交，供应商审核通过后即可在「订货」看到价格并下单');
+  alert('✅ 申请已提交，分销商审核通过后即可在「订货」看到价格并下单');
   loadDirectory();
 }
 
