@@ -71,6 +71,25 @@ footer a{color:rgba(255,255,255,0.4);}
   gtag('js', new Date());
   gtag('config', 'G-Q99SSTBGE8');
 </script>
+
+<style>
+  /* --- unified bilingual nav (stacked EN over 中文) --- */
+  .nav-links { display: flex; align-items: center; gap: 1.25rem; }
+  .nav-links a {
+    text-decoration: none;
+    display: flex; flex-direction: column; align-items: center;
+    line-height: 1.18; white-space: nowrap; text-align: center;
+    padding: 4px 0; transition: color 0.2s;
+  }
+  .nav-links a .en { font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--dark); }
+  .nav-links a .zh { font-size: 10.5px; letter-spacing: 0.08em; color: var(--muted); margin-top: 2px; }
+  .nav-links a:hover .en, .nav-links a:hover .zh,
+  .nav-links a.active .en, .nav-links a.active .zh { color: var(--green); }
+  @media (max-width: 1024px) {
+    .nav-links { display: none !important; }
+    .hamburger { display: flex !important; }
+  }
+</style>
 </head>
 <body>
 
@@ -80,29 +99,32 @@ footer a{color:rgba(255,255,255,0.4);}
     <span>SORGHUMAN</span>
   </a>
   <div class="nav-links">
-    <a href="index.html#about">About</a>
-    <a href="products.html">Products 产品</a>
-    <a href="clients.html">Clients 客户</a>
-    <a href="local.html">Local delivery 本地配送</a>
-    <a href="order.html">Wholesale 商业批发</a>
-    <a href="supplier.html">Factories 工厂供货</a>
-    <a href="distributor-apply.html">Distributors 分销商入驻</a>
-    <a href="index.html#contact">Contact</a>
-  </div>
+    <a href="index.html#about"><span class="en">About</span><span class="zh">关于</span></a>
+    <a href="products.html" class="active"><span class="en">Products</span><span class="zh">产品</span></a>
+    <a href="clients.html"><span class="en">Clients</span><span class="zh">客户</span></a>
+    <a href="local.html"><span class="en">Local delivery</span><span class="zh">本地配送</span></a>
+    <a href="order.html"><span class="en">Wholesale</span><span class="zh">商业批发</span></a>
+    <a href="supplier.html"><span class="en">Factories</span><span class="zh">工厂供货</span></a>
+    <a href="distributor-apply.html"><span class="en">Distributors</span><span class="zh">分销商入驻</span></a>
+    <a href="careers.html"><span class="en">Careers</span><span class="zh">招聘</span></a>
+    <a href="index.html#contact"><span class="en">Contact</span><span class="zh">联系</span></a>
+    </div>
   <button class="hamburger" onclick="toggleMenu()" id="hamburger">
     <span></span><span></span><span></span>
   </button>
 </nav>
 
 <div class="mobile-menu" id="mobileMenu">
-  <a href="index.html#about" onclick="closeMenu()">About us</a>
-  <a href="products.html" onclick="closeMenu()">Products 产品 →</a>
-  <a href="clients.html" onclick="closeMenu()">Clients 客户 →</a>
-  <a href="local.html">Local delivery · 本地配送 →</a>
-  <a href="order.html">Wholesale 商业批发 · Wholesale →</a>
-  <a href="supplier.html">Factory supply 工厂供货 →</a>
-  <a href="index.html#contact" onclick="closeMenu()">Contact</a>
-</div>
+    <a href="index.html#about" onclick="if(typeof closeMenu==='function')closeMenu()">About 关于 &rarr;</a>
+    <a href="products.html" onclick="if(typeof closeMenu==='function')closeMenu()">Products 产品 &rarr;</a>
+    <a href="clients.html" onclick="if(typeof closeMenu==='function')closeMenu()">Clients 客户 &rarr;</a>
+    <a href="local.html" onclick="if(typeof closeMenu==='function')closeMenu()">Local delivery 本地配送 &rarr;</a>
+    <a href="order.html" onclick="if(typeof closeMenu==='function')closeMenu()">Wholesale 商业批发 &rarr;</a>
+    <a href="supplier.html" onclick="if(typeof closeMenu==='function')closeMenu()">Factories 工厂供货 &rarr;</a>
+    <a href="distributor-apply.html" onclick="if(typeof closeMenu==='function')closeMenu()">Distributors 分销商入驻 &rarr;</a>
+    <a href="careers.html" onclick="if(typeof closeMenu==='function')closeMenu()">Careers 招聘 &rarr;</a>
+    <a href="index.html#contact" onclick="if(typeof closeMenu==='function')closeMenu()">Contact 联系 &rarr;</a>
+    </div>
 
 <div class="page-header">
   <div class="page-header-inner">
