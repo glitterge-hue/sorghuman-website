@@ -76,11 +76,13 @@ footer #footStore:hover{color:var(--brand);}
 .promo-photo-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,3.4vw,38px);color:#F0C060;line-height:1.15;}
 .promo-photo-sub{font-size:14px;color:rgba(255,255,255,.82);margin-top:6px;}
 .promo-photo{margin-top:18px;max-width:min(1100px,94vw);max-height:70vh;width:auto;height:auto;object-fit:contain;border-radius:8px;cursor:zoom-in;box-shadow:0 12px 40px rgba(0,0,0,.35);background:#fff;}
+.promo-video{margin-top:18px;width:min(1100px,94vw,124vh);aspect-ratio:16/9;border-radius:8px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.35);background:#000;}
+.promo-video iframe{width:100%;height:100%;border:0;display:block;}
 .promo-photo-cta{margin-top:18px;padding:11px 28px;background:var(--gold);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
 .scroll-cue{margin-top:16px;font-size:13px;color:rgba(255,255,255,.72);cursor:pointer;padding:8px 16px;animation:cueBob 1.8s ease-in-out infinite;}
 .scroll-cue:hover{color:#fff;}
 @keyframes cueBob{0%,100%{transform:translateY(0);}50%{transform:translateY(5px);}}
-@media(max-width:820px){.promo-photo{max-height:60vh;}.promo-photo-block{padding-top:64px;}}
+@media(max-width:820px){.promo-photo{max-height:60vh;}.promo-photo-block{padding-top:64px;}.promo-video{width:min(96vw,124vh);}}
 /* 品类导航 */
 .search-section{background:#fff;padding:12px 5% 0;border-bottom:none;}
 .search-section input{width:100%;max-width:560px;display:block;margin:0 auto;border:1.5px solid var(--border);border-radius:24px;padding:10px 20px;font-size:14px;font-family:inherit;outline:none;background:#faf9f7;}
@@ -253,6 +255,9 @@ footer a{color:var(--brand);}
     <div class="promo-photo-title" id="promoPhotoTitle"></div>
     <div class="promo-photo-sub" id="promoPhotoSub"></div>
     <img class="promo-photo" id="promoPhotoImg" alt="" title="点击查看大图 · Click to enlarge">
+    <div class="promo-video" id="promoVideoWrap" style="display:none;">
+      <iframe id="promoVideoFrame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Promo video"></iframe>
+    </div>
     <button class="promo-photo-cta" id="promoPhotoCta" onclick="goFeatured()">立即选购 Shop Now</button>
     <div class="scroll-cue" onclick="scrollToShop()">↓ 继续选购 Keep Shopping</div>
   </div>
@@ -389,12 +394,36 @@ async function tryFetch(url){
   } catch(e){ return null; }
 }
 
-// 活动区：有图 → 整屏展示；无图 → 原图文排版
+// 从各种 YouTube 链接里提取视频 ID，生成自动静音循环的嵌入地址
+function ytEmbed(url){
+  if(!url) return null;
+  var m = String(url).match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  if(!m) return null;
+  var id = m[1];
+  return 'https://www.youtube.com/embed/' + id +
+         '?autoplay=1&mute=1&loop=1&playlist=' + id +
+         '&rel=0&modestbranding=1&playsinline=1';
+}
+
+// 活动区：有视频 → 整屏播放；有图 → 整屏展示；都没有 → 原图文排版
 function applyPromoPhoto(pr, sec){
   sec.classList.add('photo');
   sec.style.background = '';           // 清掉可能的内联背景，交给 .photo 类
-  document.getElementById('promoPhotoImg').src = pr.image;
-  document.getElementById('promoPhotoImg').onclick = function(){ window.open(pr.image, '_blank'); };
+  var img   = document.getElementById('promoPhotoImg');
+  var vwrap = document.getElementById('promoVideoWrap');
+  var vframe= document.getElementById('promoVideoFrame');
+  var embed = ytEmbed(pr.video);
+  if(embed){                           // 视频优先
+    vframe.src = embed;
+    vwrap.style.display = 'block';
+    img.style.display   = 'none';
+  } else {
+    if(vframe) vframe.src = 'about:blank';  // 彻底停止，避免后台播放
+    vwrap.style.display = 'none';
+    img.style.display   = '';
+    img.src = pr.image;
+    img.onclick = function(){ window.open(pr.image, '_blank'); };
+  }
   document.getElementById('promoPhotoTitle').textContent =
     (pr.title_zh||'') + (pr.title_en ? ' · '+pr.title_en : '');
   document.getElementById('promoPhotoSub').textContent = pr.subtitle || '';
@@ -412,7 +441,7 @@ async function loadPromo(){
   if(sp && sp.active && (sp.title_zh || sp.title_en)){
     var sec = document.getElementById('promoSection');
     sec.style.display = 'block';
-    if(sp.image){ applyPromoPhoto(sp, sec); return; }   // 整屏图模式
+    if(sp.video || sp.image){ applyPromoPhoto(sp, sec); return; }   // 整屏视频 / 图片模式
     sec.style.background = sp.color || 'var(--brand-dark)';
     document.getElementById('promoDeco').textContent    = '🎉';
     document.getElementById('promoBadge').textContent   = (sp.title_zh||'') + (sp.title_en?' · '+sp.title_en:'');
@@ -432,7 +461,7 @@ async function loadPromo(){
   if(!gp || !gp.active || (!gp.title_zh && !gp.title_en)) return;
   var sec = document.getElementById('promoSection');
   sec.style.display = 'block';
-  if(gp.image){ applyPromoPhoto(gp, sec); return; }     // 整屏图模式
+  if(gp.video || gp.image){ applyPromoPhoto(gp, sec); return; }     // 整屏视频 / 图片模式
   sec.style.background = gp.color || 'var(--brand-dark)';
   document.getElementById('promoDeco').textContent    = '🎉';
   document.getElementById('promoBadge').textContent   = (gp.title_zh||'') + (gp.title_en?' · '+gp.title_en:'');
