@@ -9,15 +9,23 @@ public_folder: "/images"
 
 locale: 'zh_Hans'
 
+# 生成文件名(slug)时：只保留 ASCII，中文/空格等转成连字符，
+# 避免非法文件名（如 #U9178…）导致 Netlify 部署失败。
+slug:
+  encoding: "ascii"
+  clean_accents: true
+  sanitize_replacement: "-"
+
 collections:
   - name: "products"
     label: "产品图片"
     folder: "_products"
     create: true
-    slug: "{{slug}}"
+    identifier_field: "name_en"          # 用英文名做文件名标识，保证是 ASCII
+    slug: "{{fields.name_en}}"           # 文件名基于英文名，例如 sour-plum-juice
     fields:
       - {label: "产品名称（中文）", name: "name_zh", widget: "string", hint: "例如：荠菜包"}
-      - {label: "产品名称（英文）", name: "name_en", widget: "string", hint: "例如：Shepherd's Purse Bun"}
+      - {label: "产品名称（英文）", name: "name_en", widget: "string", hint: "必填，用于生成文件名。例如：Shepherd's Purse Bun"}
       - {label: "产品图片", name: "image", widget: "image"}
       - {label: "供应商名称", name: "supplier", widget: "string"}
       - {label: "联系邮箱", name: "email", widget: "string"}
