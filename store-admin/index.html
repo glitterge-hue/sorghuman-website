@@ -50,8 +50,9 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#f0f4f0;color:#1a1a18
 .form-group{display:flex;flex-direction:column;gap:5px;}
 .form-group.full{grid-column:1/-1;}
 .form-group label{font-size:12px;font-weight:600;color:#555;}
-.form-group input,.form-group select{border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;}
-.form-group input:focus,.form-group select:focus{border-color:#2A6B3A;}
+.form-group input,.form-group select,.form-group textarea{border:1px solid #ddd;border-radius:6px;padding:8px 12px;font-size:13px;font-family:inherit;outline:none;}
+.form-group textarea{min-height:64px;resize:vertical;}
+.form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:#2A6B3A;}
 .form-footer{padding:0 18px 18px;display:flex;justify-content:flex-end;}
 /* 底部保存栏 */
 .save-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid #e0ddd5;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -2px 8px rgba(0,0,0,.06);}
@@ -230,6 +231,11 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
           <div class="form-group">
             <label>图片链接</label>
             <input id="newImageUrl" placeholder="https://imagedelivery.net/...">
+          </div>
+          <div class="form-group full">
+            <label>更多图片（每行一个链接，可选）</label>
+            <textarea id="newGallery" placeholder="https://.../1.jpg&#10;https://.../2.jpg&#10;https://.../3.jpg"></textarea>
+            <div style="font-size:11px;color:#aaa;">上面的「图片链接」作为主图（第一张）。这里每行填一个附加图链接，顾客端产品详情页会显示为可左右切换的多图。</div>
           </div>
         </div>
         <div class="form-footer">
@@ -989,6 +995,12 @@ async function saveCatalogSelection(){
 }
 
 // ── 面板3：新增商品 ───────────────────────────────────────────
+// 把多图输入归一化成字符串数组（兼容 换行 / 逗号 / 已是数组）
+function galleryToArr(g){
+  if(!g) return [];
+  if(Array.isArray(g)) return g.filter(Boolean);
+  return String(g).split(/[\r\n,]+/).map(function(x){return x.trim();}).filter(Boolean);
+}
 async function submitNewProduct(){
   const sku        = document.getElementById('newSku').value.trim();
   const name_zh    = document.getElementById('newNameZh').value.trim();
@@ -998,18 +1010,20 @@ async function submitNewProduct(){
   const base_price = document.getElementById('newBasePrice').value;
   const store_price= document.getElementById('newStorePrice').value;
   const image_url  = document.getElementById('newImageUrl').value.trim();
+  const galleryArr = galleryToArr(document.getElementById('newGallery').value);
+  const gallery    = galleryArr.length ? galleryArr : null;
   const msg        = document.getElementById('newProductMsg');
 
   if(!sku||!name_zh||!base_price){ msg.style.color='#c0392b'; msg.textContent='请填写 SKU、中文名和价格'; return; }
 
   msg.style.color='#888'; msg.textContent='提交中…';
   const res = await api('ADD_NEW_PRODUCT', null, null,
-    { sku, name_zh, name_en, spec, category, base_price, store_price, image_url });
+    { sku, name_zh, name_en, spec, category, base_price, store_price, image_url, gallery });
 
   if(res.ok){
     msg.style.color='#2A6B3A';
     msg.textContent='✓ 已添加到商品库并加入本店！';
-    ['newSku','newNameZh','newNameEn','newSpec','newBasePrice','newStorePrice','newImageUrl']
+    ['newSku','newNameZh','newNameEn','newSpec','newBasePrice','newStorePrice','newImageUrl','newGallery']
       .forEach(id=>document.getElementById(id).value='');
     const r2 = await api('GET_STORE_PRODUCTS');
     myProducts = r2.products||[];

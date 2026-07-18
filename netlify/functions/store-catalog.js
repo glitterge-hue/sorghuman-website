@@ -100,7 +100,7 @@ exports.handler = async (event) => {
 
     // ── 新增商品到总商品库（同时加入本店）─────────────────────
     if (action === 'ADD_NEW_PRODUCT') {
-      const { sku, name_zh, name_en, spec, category, base_price, image_url, store_price } = body;
+      const { sku, name_zh, name_en, spec, category, base_price, image_url, store_price, gallery } = body;
       if (!sku || !name_zh || !base_price)
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '缺少必填字段' }) };
 
@@ -110,6 +110,7 @@ exports.handler = async (event) => {
         category: category||'grocery',
         base_price: parseFloat(base_price),
         image_url: image_url || null,
+        gallery: (Array.isArray(gallery) && gallery.length) ? gallery : null,
         common: false, active: true,
       }]);
 

@@ -191,6 +191,13 @@ td{padding:10px 14px;vertical-align:middle;}
         <input id="fImg" placeholder="https://...">
       </div>
     </div>
+    <div class="form-row" style="grid-template-columns:1fr;">
+      <div class="form-group">
+        <label>更多图片 More Images（每行一个链接，可选）</label>
+        <textarea id="fGallery" placeholder="https://.../1.jpg&#10;https://.../2.jpg&#10;https://.../3.jpg"></textarea>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">上面的「图片链接」作为主图（第一张）。这里每行填一个附加图链接，顾客端产品详情页会显示为可左右切换的多图。</div>
+      </div>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label><input type="checkbox" id="fCommon" checked> 通用（所有店默认上架）</label>
@@ -213,7 +220,8 @@ td{padding:10px 14px;vertical-align:middle;}
     <h2>批量导入商品 Excel</h2>
     <div class="csv-hint">
       上传 <code>.xlsx</code> Excel 文件（也支持 .csv）。第一行必须是表头。<br>
-      必需列：<code>sku, name_zh, base_price</code>；可选列：<code>name_en, spec, category, common, image_url, showcase, showcase_category, description, sort_order</code><br>
+      必需列：<code>sku, name_zh, base_price</code>；可选列：<code>name_en, spec, category, common, image_url, gallery, showcase, showcase_category, description, sort_order</code><br>
+      <code>gallery</code> 多图：一个单元格内每行一个链接（单元格内换行用 Alt+Enter），或用逗号分隔多个链接。<br>
       品类可选值：<code>frozen</code> / <code>grains</code> / <code>condiments</code> / <code>snacks</code> / <code>beverages</code> / <code>fresh</code> / <code>grocery</code><br>
       已存在的 SKU 会自动更新（upsert）。<br>
       💡 最省事：先点「一键导出 Excel」下载现有产品，在 Excel 里改完再传回来。
@@ -322,6 +330,18 @@ async function toggleFeatured(sku, current) {
   loadProducts();
 }
 
+// 把 gallery 归一化成字符串数组（兼容 数组 / JSON字符串 / 换行或逗号分隔）
+function galleryToArr(g){
+  if(!g) return [];
+  if(Array.isArray(g)) return g.filter(Boolean);
+  if(typeof g==='string'){
+    var s=g.trim(); if(!s) return [];
+    if(s[0]==='['){ try{ var a=JSON.parse(s); if(Array.isArray(a)) return a.filter(Boolean); }catch(e){} }
+    return s.split(/[\r\n,]+/).map(function(x){return x.trim();}).filter(Boolean);
+  }
+  return [];
+}
+
 // ── 新增/编辑 ─────────────────────────────────────────────────
 function openAdd() {
   editingSku = null;
@@ -331,6 +351,7 @@ function openAdd() {
   document.getElementById('fSpec').value=''; document.getElementById('fPrice').value='';
   document.getElementById('fCat').value='frozen'; document.getElementById('fSort').value='';
   document.getElementById('fImg').value='';
+  document.getElementById('fGallery').value='';
   document.getElementById('fCommon').checked=true; document.getElementById('fActive').checked=true;
   document.getElementById('editMsg').textContent='';
   document.getElementById('editOverlay').classList.add('show');
@@ -346,6 +367,7 @@ function openEdit(sku) {
   document.getElementById('fSpec').value=p.spec||''; document.getElementById('fPrice').value=p.base_price;
   document.getElementById('fCat').value=p.category; document.getElementById('fSort').value=p.sort_order||'';
   document.getElementById('fImg').value=p.image_url||'';
+  document.getElementById('fGallery').value=galleryToArr(p.gallery).join('\n');
   document.getElementById('fCommon').checked=!!p.common; document.getElementById('fActive').checked=!!p.active;
   document.getElementById('editMsg').textContent='';
   document.getElementById('editOverlay').classList.add('show');
@@ -370,6 +392,7 @@ async function saveProduct() {
     base_price  : price,
     sort_order  : parseInt(document.getElementById('fSort').value)||0,
     image_url   : document.getElementById('fImg').value.trim()||null,
+    gallery     : (function(){ var g=galleryToArr(document.getElementById('fGallery').value); return g.length?g:null; })(),
     common      : document.getElementById('fCommon').checked,
     active      : document.getElementById('fActive').checked,
   };
@@ -399,7 +422,7 @@ function exportXlsx() {
   if (!allProducts || !allProducts.length) { alert('暂无产品可导出'); return; }
 
   const COLS = ['sku','name_zh','name_en','spec','category','base_price','common',
-                'image_url','showcase','showcase_category','description','featured','sort_order','active'];
+                'image_url','gallery','showcase','showcase_category','description','featured','sort_order','active'];
 
   const rows = [...allProducts].sort((a,b)=>{
     const so = (a.sort_order||0)-(b.sort_order||0);
@@ -407,7 +430,10 @@ function exportXlsx() {
   });
 
   const aoa = [COLS];
-  rows.forEach(p => aoa.push(COLS.map(c => (p[c] === null || p[c] === undefined) ? '' : p[c])));
+  rows.forEach(p => aoa.push(COLS.map(c => {
+    if (c === 'gallery') return galleryToArr(p.gallery).join('\n');
+    return (p[c] === null || p[c] === undefined) ? '' : p[c];
+  })));
 
   const ws = XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols'] = COLS.map(c => ({ wch: c==='name_zh'||c==='name_en'||c==='description'||c==='image_url' ? 24 : 12 }));
@@ -473,6 +499,7 @@ async function importXlsx() {
     if (has('showcase_category')) row.showcase_category = str(val(r,'showcase_category')) || null;
     if (has('description'))       row.description       = str(val(r,'description')) || null;
     if (has('sort_order'))      { const so = parseInt(val(r,'sort_order')); if (!isNaN(so)) row.sort_order = so; }
+    if (has('gallery'))         { const g = galleryToArr(str(val(r,'gallery'))); row.gallery = g.length ? g : null; }
     rows.push(row);
   }
 
