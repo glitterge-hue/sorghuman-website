@@ -64,24 +64,53 @@ small{color:#888;font-size:12px;}
 let sb;
 async function initSupabase(){
   const cfg = await fetch('/.netlify/functions/get-config').then(r=>r.json());
-  sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
+  sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey, {
+    auth: { flowType: 'pkce', detectSessionInUrl: false, persistSession: true, autoRefreshToken: true }
+  });
 }
 
-// 检查 URL hash 里有没有 access_token（密码重置链接）
+// 显示「设置新密码」界面
+function showResetBox(){
+  document.getElementById('loginBox').style.display = 'none';
+  document.getElementById('resetBox').style.display = 'block';
+}
+
+// 处理密码重置链接回跳：兼容新版 PKCE(?code=)、旧版(#access_token)，并友好提示链接过期
 window.addEventListener('load', async () => {
   await initSupabase();
-  const hash = window.location.hash;
-  if (hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.replace('#', ''));
-    const token  = params.get('access_token');
-    if (token) {
-      await sb.auth.setSession({ access_token: token, refresh_token: params.get('refresh_token') || '' });
-      document.getElementById('loginBox').style.display = 'none';
-      document.getElementById('resetBox').style.display = 'block';
-      return;
-    }
+
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+  const query      = new URLSearchParams(window.location.search);
+  const loginMsg   = document.getElementById('loginMsg');
+
+  // 1) 链接里带错误（过期/失效等）→ 友好提示，不再静默失败
+  if (hashParams.get('error_code') || hashParams.get('error') || query.get('error_code')) {
+    showMsg(loginMsg, '重置链接无效或已过期，请重新点「忘记密码」获取新链接。', 'err');
+    history.replaceState(null, '', location.pathname);
+    return;
   }
-  // 已登录直接跳产品页
+
+  // 2) 新版 PKCE 流程：URL 带 ?code=，兑换成会话
+  if (query.get('code')) {
+    const { error } = await sb.auth.exchangeCodeForSession(window.location.href);
+    history.replaceState(null, '', location.pathname);
+    if (error) { showMsg(loginMsg, '重置链接无效或已过期，请重新获取。', 'err'); return; }
+    showResetBox();   // 带 code 进到本页的只可能是密码重置
+    return;
+  }
+
+  // 3) 旧版 implicit 流程：hash 里带 access_token
+  if (hashParams.get('access_token')) {
+    await sb.auth.setSession({
+      access_token : hashParams.get('access_token'),
+      refresh_token: hashParams.get('refresh_token') || ''
+    });
+    history.replaceState(null, '', location.pathname);
+    showResetBox();
+    return;
+  }
+
+  // 4) 已登录直接进产品页
   const { data: { session } } = await sb.auth.getSession();
   if (session) location.href = 'products.html';
 });
@@ -114,22 +143,10 @@ async function sendReset() {
   const msg   = document.getElementById('resetSentMsg');
   if (!email) { showMsg(msg,'请先填写邮箱','err'); return; }
   const { error } = await sb.auth.resetPasswordForEmail(email, {
-    redirectTo: 'https://sorghuman.com/admin/'
+    redirectTo: 'https://sorghuman.com/manage/'
   });
   if (error) showMsg(msg, error.message, 'err');
   else showMsg(msg,'重置邮件已发送，请检查邮箱','ok');
-}
-
-async function login() {
-  const email = document.getElementById('email').value.trim();
-  const pwd   = document.getElementById('password').value;
-  const btn   = document.getElementById('loginBtn');
-  const msg   = document.getElementById('loginMsg');
-  if (!email || !pwd) { showMsg(msg,'请填写邮箱和密码','err'); return; }
-  btn.disabled = true; btn.textContent = '登录中…';
-  const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
-  if (error) { showMsg(msg, error.message, 'err'); btn.disabled=false; btn.textContent='登录 Sign In'; }
-  else location.href = 'products.html';
 }
 
 document.addEventListener('keydown', e => {
