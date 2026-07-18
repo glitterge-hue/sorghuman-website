@@ -247,6 +247,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
         <!-- 预览区 -->
         <div id="promoPreview" style="margin:16px 18px;border-radius:8px;overflow:hidden;display:none;">
           <div id="previewBanner" style="padding:28px 32px;position:relative;background:#1A4A28;">
+            <div id="previewVideoBadge" style="display:none;position:absolute;top:12px;right:14px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:4px 10px;border-radius:14px;">🎬 视频模式 · 顾客端整屏播放</div>
             <div id="previewTitle" style="font-size:22px;font-weight:700;color:#fff;"></div>
             <div id="previewSubtitle" style="font-size:14px;color:rgba(255,255,255,.8);margin-top:6px;"></div>
             <button id="previewCta" style="margin-top:14px;padding:8px 20px;background:#fff;border:none;border-radius:20px;font-weight:600;cursor:pointer;font-size:13px;"></button>
@@ -291,6 +292,11 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
           <div class="form-group full">
             <label>背景图片链接（可选，留空用纯色）</label>
             <input id="promoImage" placeholder="https://imagedelivery.net/..." oninput="previewPromo()">
+          </div>
+          <div class="form-group full">
+            <label>推广视频链接（YouTube，可选）</label>
+            <input id="promoVideo" placeholder="https://youtu.be/…  或  https://www.youtube.com/watch?v=…" oninput="previewPromo()">
+            <div style="font-size:11px;color:#aaa;margin-top:3px;">填了视频，顾客端首屏会整屏播放（自动静音循环，顾客可点开声音）。视频优先于背景图。支持 youtu.be、youtube.com/watch、/embed、/shorts 链接。</div>
           </div>
         </div>
         <div class="form-footer">
@@ -787,6 +793,7 @@ async function loadPromo(){
     document.getElementById('promoSubtitle').value  = promo.subtitle||'';
     document.getElementById('promoCta').value       = promo.cta||'立即选购';
     document.getElementById('promoImage').value     = promo.image||'';
+    document.getElementById('promoVideo').value     = promo.video||'';
     promoColor = promo.color||'#1A4A28';
     document.getElementById('customColor').value    = promoColor;
   }
@@ -808,12 +815,16 @@ function previewPromo(){
   const sub = document.getElementById('promoSubtitle').value;
   const cta = document.getElementById('promoCta').value;
   const img = document.getElementById('promoImage').value;
+  const vid = document.getElementById('promoVideo').value.trim();
   const active = document.getElementById('promoActive').checked;
   const preview = document.getElementById('promoPreview');
   if(!zh && !en){ preview.style.display='none'; return; }
   preview.style.display='block';
   const banner = document.getElementById('previewBanner');
-  if(img){
+  document.getElementById('previewVideoBadge').style.display = vid ? 'block' : 'none';
+  if(vid){
+    banner.style.background = 'linear-gradient(135deg,#111,#333)';
+  } else if(img){
     banner.style.background=`linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url(${img}) center/cover`;
   } else {
     banner.style.background = promoColor;
@@ -833,6 +844,7 @@ async function savePromo(){
     cta     : document.getElementById('promoCta').value.trim()||'立即选购',
     color   : promoColor,
     image   : document.getElementById('promoImage').value.trim(),
+    video   : document.getElementById('promoVideo').value.trim(),
   };
   const msg = document.getElementById('promoMsg');
   msg.style.color='#888'; msg.textContent='保存中…';
