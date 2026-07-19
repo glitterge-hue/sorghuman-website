@@ -75,14 +75,23 @@ footer #footStore:hover{color:var(--brand);}
 .promo-section.photo .promo-photo-block{display:flex;}
 .promo-photo-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,3.4vw,38px);color:#F0C060;line-height:1.15;}
 .promo-photo-sub{font-size:14px;color:rgba(255,255,255,.82);margin-top:6px;}
-.promo-photo{margin-top:18px;max-width:min(1100px,94vw);max-height:70vh;width:auto;height:auto;object-fit:contain;border-radius:8px;cursor:zoom-in;box-shadow:0 12px 40px rgba(0,0,0,.35);background:#fff;}
-.promo-video{margin-top:18px;width:min(1100px,94vw,124vh);aspect-ratio:16/9;border-radius:8px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.35);background:#000;}
+.promo-media{margin-top:18px;display:flex;gap:22px;justify-content:center;align-items:center;flex-wrap:wrap;width:100%;}
+.promo-photo{max-width:min(1100px,94vw);max-height:70vh;width:auto;height:auto;object-fit:contain;border-radius:8px;cursor:zoom-in;box-shadow:0 12px 40px rgba(0,0,0,.35);background:#fff;}
+.promo-video{width:min(1100px,94vw,124vh);aspect-ratio:16/9;border-radius:8px;overflow:hidden;box-shadow:0 12px 40px rgba(0,0,0,.35);background:#000;}
 .promo-video iframe{width:100%;height:100%;border:0;display:block;}
+.promo-figure{margin:0;display:flex;flex-direction:column;align-items:center;gap:10px;max-width:min(1100px,94vw);}
+.promo-dl{padding:9px 20px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.42);border-radius:22px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:background .2s,transform .1s;}
+.promo-dl:hover{background:rgba(255,255,255,.26);}
+.promo-dl:active{transform:scale(.96);}
+/* 视频(制作方法)+配方图同时存在时并排，各自收窄 */
+.promo-media.both .promo-video{width:auto;flex:1 1 460px;max-width:660px;}
+.promo-media.both .promo-figure{flex:0 1 360px;}
+.promo-media.both .promo-photo{max-height:58vh;}
 .promo-photo-cta{margin-top:18px;padding:11px 28px;background:var(--gold);color:#fff;border:none;border-radius:24px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;}
 .scroll-cue{margin-top:16px;font-size:13px;color:rgba(255,255,255,.72);cursor:pointer;padding:8px 16px;animation:cueBob 1.8s ease-in-out infinite;}
 .scroll-cue:hover{color:#fff;}
 @keyframes cueBob{0%,100%{transform:translateY(0);}50%{transform:translateY(5px);}}
-@media(max-width:820px){.promo-photo{max-height:60vh;}.promo-photo-block{padding-top:64px;}.promo-video{width:min(96vw,124vh);}}
+@media(max-width:820px){.promo-photo{max-height:60vh;}.promo-photo-block{padding-top:64px;}.promo-video{width:min(96vw,124vh);}.promo-media.both .promo-video{width:min(96vw,124vh);max-width:96vw;flex-basis:96vw;}.promo-media.both .promo-figure{flex-basis:96vw;}.promo-media.both .promo-photo{max-height:60vh;}}
 /* 品类导航 */
 .search-section{background:#fff;padding:12px 5% 0;border-bottom:none;}
 .search-section input{width:100%;max-width:560px;display:block;margin:0 auto;border:1.5px solid var(--border);border-radius:24px;padding:10px 20px;font-size:14px;font-family:inherit;outline:none;background:#faf9f7;}
@@ -254,9 +263,14 @@ footer a{color:var(--brand);}
   <div class="promo-photo-block" id="promoPhotoBlock">
     <div class="promo-photo-title" id="promoPhotoTitle"></div>
     <div class="promo-photo-sub" id="promoPhotoSub"></div>
-    <img class="promo-photo" id="promoPhotoImg" alt="" title="点击查看大图 · Click to enlarge">
-    <div class="promo-video" id="promoVideoWrap" style="display:none;">
-      <iframe id="promoVideoFrame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Promo video"></iframe>
+    <div class="promo-media" id="promoMedia">
+      <div class="promo-video" id="promoVideoWrap" style="display:none;">
+        <iframe id="promoVideoFrame" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Promo video"></iframe>
+      </div>
+      <figure class="promo-figure" id="promoFigure" style="display:none;">
+        <img class="promo-photo" id="promoPhotoImg" alt="" title="点击查看大图 · Click to enlarge">
+        <button class="promo-dl" id="promoDlBtn" onclick="downloadPromoImage()">⬇ 下载图片 · Download</button>
+      </figure>
     </div>
     <button class="promo-photo-cta" id="promoPhotoCta" onclick="goFeatured()">立即选购 Shop Now</button>
     <div class="scroll-cue" onclick="scrollToShop()">↓ 继续选购 Keep Shopping</div>
@@ -405,29 +419,60 @@ function ytEmbed(url){
          '&rel=0&modestbranding=1&playsinline=1';
 }
 
-// 活动区：有视频 → 整屏播放；有图 → 整屏展示；都没有 → 原图文排版
+// 活动区：视频=制作方法，图片=可下载的配方卡，两者可同时展示
 function applyPromoPhoto(pr, sec){
   sec.classList.add('photo');
   sec.style.background = '';           // 清掉可能的内联背景，交给 .photo 类
-  var img   = document.getElementById('promoPhotoImg');
+  var media = document.getElementById('promoMedia');
   var vwrap = document.getElementById('promoVideoWrap');
   var vframe= document.getElementById('promoVideoFrame');
+  var fig   = document.getElementById('promoFigure');
+  var img   = document.getElementById('promoPhotoImg');
+  var dlBtn = document.getElementById('promoDlBtn');
   var embed = ytEmbed(pr.video);
-  if(embed){                           // 视频优先
-    vframe.src = embed;
-    vwrap.style.display = 'block';
-    img.style.display   = 'none';
-  } else {
-    if(vframe) vframe.src = 'about:blank';  // 彻底停止，避免后台播放
-    vwrap.style.display = 'none';
-    img.style.display   = '';
+  var hasImg= !!pr.image;
+
+  // 视频（制作方法）
+  if(embed){ vframe.src = embed; vwrap.style.display = 'block'; }
+  else { if(vframe) vframe.src = 'about:blank'; vwrap.style.display = 'none'; }  // 停止，避免后台播放
+
+  // 图片（配方卡，可下载）
+  if(hasImg){
     img.src = pr.image;
     img.onclick = function(){ window.open(pr.image, '_blank'); };
+    window.__promoImgUrl = pr.image;
+    dlBtn.textContent = embed ? '⬇ 下载配方 · Download recipe' : '⬇ 下载图片 · Download';
+    fig.style.display = 'flex';
+  } else {
+    fig.style.display = 'none';
+    window.__promoImgUrl = null;
   }
+
+  // 视频与配方图同时存在 → 并排布局
+  media.classList.toggle('both', !!(embed && hasImg));
+
   document.getElementById('promoPhotoTitle').textContent =
     (pr.title_zh||'') + (pr.title_en ? ' · '+pr.title_en : '');
   document.getElementById('promoPhotoSub').textContent = pr.subtitle || '';
   document.getElementById('promoPhotoCta').textContent = (pr.cta || '立即选购') + ' Shop Now';
+}
+
+// 下载配方/图片：优先取 blob 下载；跨域被拦则新窗口打开，用户可右键保存
+async function downloadPromoImage(){
+  var url = window.__promoImgUrl;
+  if(!url) return;
+  try{
+    var r = await fetch(url, { mode:'cors' });
+    if(!r.ok) throw 0;
+    var blob = await r.blob();
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (url.split('/').pop().split('?')[0]) || 'sorghuman-recipe.jpg';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); }, 5000);
+  }catch(e){
+    window.open(url, '_blank');
+  }
 }
 
 function scrollToShop(){
