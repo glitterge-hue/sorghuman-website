@@ -75,6 +75,7 @@ input[type=checkbox]{width:18px;height:18px;accent-color:#2A6B3A;cursor:pointer;
     </div>
     <div class="preview-wrap" id="previewWrap">
       <div class="preview-banner" id="previewBanner">
+        <div id="previewVideoBadge" style="display:none;position:absolute;top:12px;right:14px;background:rgba(0,0,0,.45);color:#fff;font-size:11px;padding:4px 10px;border-radius:14px;">🎬 视频模式 · 顾客端整屏播放</div>
         <div class="preview-badge">🎉 活动预览</div>
         <div class="preview-title" id="previewTitle">在下方填写活动内容</div>
         <div class="preview-subtitle" id="previewSubtitle"></div>
@@ -132,6 +133,11 @@ input[type=checkbox]{width:18px;height:18px;accent-color:#2A6B3A;cursor:pointer;
         <input id="bgImage" placeholder="https://imagedelivery.net/... 或其他公开图片链接" oninput="updatePreview()">
         <div class="hint">建议使用 Cloudflare Images 链接，Facebook 图片链接可能过期</div>
       </div>
+      <div class="form-group full">
+        <label>活动视频链接（YouTube，可选）</label>
+        <input id="bgVideo" placeholder="https://youtu.be/…  或  https://www.youtube.com/watch?v=…" oninput="updatePreview()">
+        <div class="hint">填了视频，顾客端首屏会整屏播放（自动静音循环，顾客可点开声音）。视频优先于背景图。支持 youtu.be、youtube.com/watch、/embed、/shorts 链接。</div>
+      </div>
     </div>
 
     <div class="form-footer">
@@ -168,6 +174,7 @@ async function loadPromo(){
   document.getElementById('subtitle').value = p.subtitle||'';
   document.getElementById('cta').value      = p.cta||'立即选购';
   document.getElementById('bgImage').value  = p.image||'';
+  document.getElementById('bgVideo').value  = p.video||'';
   promoColor = p.color||'#1A4A28';
   document.getElementById('customColor').value = promoColor;
   document.querySelectorAll('.color-dot').forEach(d=>{
@@ -191,9 +198,13 @@ function updatePreview(){
   const subtitle = document.getElementById('subtitle').value;
   const cta      = document.getElementById('cta').value||'立即选购';
   const image    = document.getElementById('bgImage').value;
+  const video    = document.getElementById('bgVideo').value.trim();
 
   const banner = document.getElementById('previewBanner');
-  if(image){
+  document.getElementById('previewVideoBadge').style.display = video ? 'block' : 'none';
+  if(video){
+    banner.style.background = 'linear-gradient(135deg,#111,#333)';
+  } else if(image){
     banner.style.background = `linear-gradient(rgba(0,0,0,.45),rgba(0,0,0,.45)),url(${image}) center/cover`;
   } else {
     banner.style.background = promoColor;
@@ -220,6 +231,7 @@ async function savePromo(){
     cta     : document.getElementById('cta').value.trim()||'立即选购',
     color   : promoColor,
     image   : document.getElementById('bgImage').value.trim(),
+    video   : document.getElementById('bgVideo').value.trim(),
   };
 
   const { error } = await sb.from('settings')
