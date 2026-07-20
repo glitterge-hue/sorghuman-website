@@ -132,6 +132,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
     <div class="tab" onclick="showTab('orders')">📋 订单 Orders</div>
     <div class="tab" onclick="showTab('restock')">🚚 补货 Restock</div>
     <div class="tab" id="tabShowcase" style="display:none;" onclick="showTab('showcase')">🌐 官网展示 Showcase</div>
+    <div class="tab" onclick="showTab('hours')">🕐 营业时间 Hours</div>
   </div>
 
   <!-- ── 面板1：我的商品 ── -->
@@ -383,6 +384,38 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
         </div>
         <div style="padding:0 22px 20px;display:flex;justify-content:flex-end;">
           <button class="btn btn-primary" onclick="saveZips()">保存 Save Zones</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── 面板：营业时间 ── -->
+    <div id="panelHours" class="panel">
+      <div class="card">
+        <div class="card-header">🕐 营业时间 Business Hours</div>
+        <div style="padding:20px 22px;">
+          <p style="font-size:13px;color:#555;margin-bottom:16px;">
+            设置每天的营业时间，顾客端首页会显示，并自动判断「营业中 / 已打烊」。勾选「休息」表示当天不营业。<br>
+            <span style="color:#888;">按纽约时间（美东）判断。保存后顾客端立即生效。</span>
+          </p>
+          <div id="hoursGrid" style="display:flex;flex-direction:column;gap:8px;"></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">📢 临时/节假日通知 Holiday Notice</div>
+        <div style="padding:18px 22px;">
+          <div class="form-group full" style="margin-bottom:12px;">
+            <label>通知内容（可选）</label>
+            <input id="hoursNotice" placeholder="例如：端午节 6/10 全天休息，6/11 恢复营业">
+            <div style="font-size:11px;color:#aaa;margin-top:3px;">填写后会在顾客端营业时间上方高亮显示，用于临时闭店、节假日调整等。</div>
+          </div>
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="hoursNoticeOn"> 显示该通知
+          </label>
+        </div>
+        <div style="padding:0 22px 20px;display:flex;align-items:center;justify-content:flex-end;gap:12px;">
+          <span id="hoursMsg" style="font-size:13px;"></span>
+          <button class="btn btn-primary" onclick="saveHours()">保存 Save Hours</button>
         </div>
       </div>
     </div>
@@ -773,7 +806,7 @@ var promoColor = '#1A4A28';
 
 function showTab(name){
   document.querySelectorAll('.tab').forEach((t,i)=>{
-    const names=['myProducts','addFromCatalog','addNew','promo','zips','drivers','orders','restock','showcase'];
+    const names=['myProducts','addFromCatalog','addNew','promo','zips','drivers','orders','restock','showcase','hours'];
     t.classList.toggle('active',names[i]===name);
   });
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
@@ -787,6 +820,66 @@ function showTab(name){
   if(name==='orders') loadOrders();
   if(name==='restock' && !rsItems.length) loadRestock();
   if(name==='showcase') loadShowcase();
+  if(name==='hours') loadHours();
+}
+
+// ── 面板：营业时间 ───────────────────────────────────────────
+const HOURS_DAYS = [['1','周一 Mon'],['2','周二 Tue'],['3','周三 Wed'],['4','周四 Thu'],
+                    ['5','周五 Fri'],['6','周六 Sat'],['0','周日 Sun']];
+
+function buildHoursGrid(hours){
+  hours = hours || {};
+  if(typeof hours === 'string'){ try{ hours = JSON.parse(hours); }catch(e){ hours = {}; } }
+  document.getElementById('hoursGrid').innerHTML = HOURS_DAYS.map(function(pair){
+    var k = pair[0], label = pair[1];
+    var d = hours[k] || {};
+    var closed = !!d.closed;
+    return '<div style="display:flex;align-items:center;gap:8px;font-size:13px;flex-wrap:wrap;">' +
+      '<span style="width:92px;">'+label+'</span>' +
+      '<input id="h_o_'+k+'" type="time" value="'+(d.open||'')+'" '+(closed?'disabled':'')+
+        ' style="padding:6px;border:1px solid #ddd;border-radius:5px;font-family:inherit;">' +
+      '<span>–</span>' +
+      '<input id="h_c_'+k+'" type="time" value="'+(d.close||'')+'" '+(closed?'disabled':'')+
+        ' style="padding:6px;border:1px solid #ddd;border-radius:5px;font-family:inherit;">' +
+      '<label style="margin-left:6px;color:#888;cursor:pointer;">' +
+        '<input type="checkbox" id="h_x_'+k+'" '+(closed?'checked':'')+
+        ' onchange="toggleHoursClosed(\''+k+'\')"> 休息</label>' +
+    '</div>';
+  }).join('');
+}
+function toggleHoursClosed(k){
+  var off = document.getElementById('h_x_'+k).checked;
+  document.getElementById('h_o_'+k).disabled = off;
+  document.getElementById('h_c_'+k).disabled = off;
+}
+function readHoursGrid(){
+  var out = {}, any = false;
+  HOURS_DAYS.forEach(function(pair){
+    var k = pair[0];
+    if(document.getElementById('h_x_'+k).checked){ out[k] = { closed:true }; any = true; return; }
+    var o = document.getElementById('h_o_'+k).value;
+    var c = document.getElementById('h_c_'+k).value;
+    if(o && c){ out[k] = { open:o, close:c }; any = true; }
+  });
+  return any ? out : null;
+}
+async function loadHours(){
+  const res = await api('GET_STORE_PRODUCTS');
+  const s = res.store || {};
+  buildHoursGrid(s.hours);
+  document.getElementById('hoursNotice').value = s.holiday_notice || '';
+  document.getElementById('hoursNoticeOn').checked = !!s.holiday_notice_active;
+}
+async function saveHours(){
+  const msg = document.getElementById('hoursMsg');
+  msg.style.color = '#888'; msg.textContent = '保存中…';
+  const res = await api('SAVE_HOURS', null, null, {
+    hours                 : readHoursGrid(),
+    holiday_notice        : document.getElementById('hoursNotice').value.trim() || null,
+    holiday_notice_active : document.getElementById('hoursNoticeOn').checked,
+  });
+  if(res && res.ok){ msg.style.color = '#2A6B3A'; msg.textContent = '✓ 已保存，顾客端已更新'; }
+  else { msg.style.color = '#c0392b'; msg.textContent = (res && res.error) || '保存失败'; }
 }
 
 async function loadPromo(){
