@@ -206,6 +206,23 @@
   .pillar-feats { list-style:none; margin: 0 0 1.6rem; padding:0; display:flex; flex-direction:column; gap: 9px; }
   .pillar-feats li { font-size: 13.5px; color: var(--dark); display:flex; gap:10px; align-items:flex-start; line-height:1.5; }
   .pillar-feats li::before { content:''; flex:0 0 auto; width:6px; height:6px; margin-top:7px; border-radius:50%; background: var(--green); }
+
+  /* 副标题（说明性 tagline） */
+  .pillar-subtitle { font-size: 14px; color: var(--green); font-weight:500; line-height:1.55; margin: 2px 0 1rem; }
+  /* 流程式业务要点：工厂 → 分销 → 批发 → 商品 */
+  .pillar-flow { list-style:none; margin: 0 0 1.6rem; padding:0; display:flex; flex-direction:column; gap: 0; }
+  .pillar-flow li { position:relative; display:flex; gap:12px; align-items:flex-start; font-size:13.5px; color:var(--dark); line-height:1.55; padding: 7px 0; }
+  .pillar-flow li:not(:last-child)::after {
+    content:''; position:absolute; left:23px; top:30px; bottom:-3px; width:2px;
+    background: linear-gradient(var(--border), var(--border)); opacity:.8;
+  }
+  .flow-step {
+    flex:0 0 auto; width:48px; text-align:center; z-index:1;
+    font-size:12px; font-weight:600; letter-spacing:0.02em; color:#fff; background:var(--green);
+    border-radius:20px; padding:5px 0; margin-top:1px;
+  }
+  .pillar.gold-accent .flow-step { background: var(--gold); }
+  .flow-text { padding-top:4px; }
   .pillar-links { margin-top:auto; display:flex; flex-wrap:wrap; gap: 8px; }
   .pillar-link {
     text-decoration:none; font-size: 13px; font-weight:500; letter-spacing:0.02em;
@@ -288,11 +305,7 @@
       <p class="hero-eyebrow">Import &middot; Supply Chain &middot; E-Commerce</p>
       <h1>Safer, healthier food &mdash; and clients who <em>grow with us</em></h1>
       <p class="hero-zh">推广更安全、更健康的食品，助力客户共同成长</p>
-      <p>Sorghuman Holding LLC &middot; 高仁控股国际有限公司 is a New York-registered company built on two connected pillars &mdash; a <strong style="color:var(--dark);font-weight:600;">supply chain</strong> that brings safer, healthier food to the table, and a platform that brings traditional Asian supermarkets <strong style="color:var(--dark);font-weight:600;">online to grow together</strong>. 高仁由两大彼此支撑的业务构成：把更安全、更健康的食品送上餐桌的「供应链」，以及让传统亚洲超市上网、与我们共同成长的「门店上网」平台。</p>
-      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:0.5rem;">
-        <a href="#supply-chain" class="hero-cta">&#128666; 供应链 &middot; Supply Chain</a>
-        <a href="#stores-online" class="hero-cta" style="background:#fff;color:var(--green);border:1px solid var(--green);">&#127970; 门店上网 &middot; Stores Online</a>
-      </div>
+      <p>Sorghuman Holding LLC &middot; 高仁控股国际有限公司 is a New York-registered company built on two connected pillars &mdash; a <strong style="color:var(--dark);font-weight:600;">supply chain</strong> that brings safer, healthier food to the table, and <strong style="color:var(--dark);font-weight:600;">digital storefronts</strong> that put traditional Asian supermarkets online to grow together. 高仁由两大彼此支撑的业务构成：把更安全、更健康的食品送上餐桌的「供应链」，以及帮助传统亚洲超市建站上网、与我们共同成长的「数字化门店」。</p>
     </div>
     <a class="hero-shop-link" href="/shop/" title="网上商城 · Enter shop" aria-label="进入网上商城 Enter online shop">
       <img src="images/logo.jpg" alt="Sorghuman — 点击进入网上商城 · Click to enter shop">
@@ -327,38 +340,41 @@
 
     <div class="pillar-grid">
 
-      <!-- 板块一：供应链（食品销售 + 批发 + 分销商 + 工厂）→ 更安全、更健康的食品 -->
-      <div class="pillar" id="supply-chain">
+      <!-- 板块一：供应链 → 更安全、更健康的食品（流程：工厂→分销→批发→商品） -->
+      <div class="pillar gold-accent" id="supply-chain">
         <div class="pillar-num">01 &middot; 更安全、更健康的食品</div>
-        <h3 class="pillar-title">供应链</h3>
+        <h3 class="pillar-title">&#128666; 供应链</h3>
         <p class="pillar-title-en">Supply Chain &middot; Safer, Healthier Food</p>
-        <p class="pillar-body">An end-to-end supply chain from Chinese factories to East Coast supermarket shelves: we import authentic frozen Chinese food and our own Catton brand, sell online and wholesale, and deliver through our distributor network &mdash; all on a fully FDA/CBP-compliant cold chain that brings safer, healthier food to the table.</p>
-        <ul class="pillar-feats">
-          <li>进口食品销售 &middot; 自有 Catton 品牌（包子 / 饺子 / 点心 / 酸梅汤）</li>
-          <li>批发采购 &middot; 分销商配送 &middot; 直供美东亚洲超市</li>
-          <li>工厂供货 &middot; FDA 注册 &middot; CBP 进口商备案 &middot; 全程冷链温控</li>
+        <p class="pillar-body">An end-to-end supply chain from Chinese factories to East Coast supermarket shelves &mdash; sourcing, distribution, wholesale and retail on a fully FDA/CBP-compliant cold chain that brings safer, healthier food to the table.</p>
+        <ul class="pillar-flow">
+          <li><span class="flow-step">工厂</span><span class="flow-text">精选中国工厂供货 &middot; FDA 注册 &middot; CBP 进口商备案</span></li>
+          <li><span class="flow-step">分销</span><span class="flow-text">全程冷链温控 &middot; 分销网络配送美东各州</span></li>
+          <li><span class="flow-step">批发</span><span class="flow-text">直供亚洲超市 &middot; 超市 / 餐厅 / 批发商采购</span></li>
+          <li><span class="flow-step">商品</span><span class="flow-text">网上商城下单 &middot; 送货到家</span></li>
         </ul>
         <div class="pillar-links">
-          <a class="pillar-link solid" href="products.html">产品目录 Products</a>
-          <a class="pillar-link ghost" href="order.html">批发采购 Wholesale</a>
+          <a class="pillar-link solid gold" href="supplier.html">工厂供货 Factories</a>
           <a class="pillar-link ghost" href="distributor-apply.html">分销商入驻 Distributors</a>
-          <a class="pillar-link ghost" href="supplier.html">工厂供货 Factories</a>
+          <a class="pillar-link ghost" href="order.html">批发采购 Wholesale</a>
+          <a class="pillar-link ghost" href="products.html">产品目录 Products</a>
         </div>
       </div>
 
-      <!-- 板块二：门店上网（传统店网上业务）→ 助力客户共同成长 -->
+      <!-- 板块二：数字化门店 → 助力客户共同成长（流程：建站→上架→接单→增长） -->
       <div class="pillar" id="stores-online">
         <div class="pillar-num">02 &middot; 助力客户共同成长</div>
-        <h3 class="pillar-title">门店上网</h3>
-        <p class="pillar-title-en">Stores Online &middot; E-Commerce for Traditional Supermarkets</p>
-        <p class="pillar-body">We bring traditional Asian supermarkets online so they can grow together with us. Each store gets its own white-label storefront &mdash; a fixed monthly fee, no commission, and full ownership of its brand and customers. As a supermarket-data and e-commerce service provider, we give mom-and-pop stores the tools to compete online.</p>
-        <ul class="pillar-feats">
-          <li>传统门店上网：超市独立站建站 &middot; 固定月费 &middot; 永不抽佣</li>
-          <li>门店保留自己的品牌、顾客与数据</li>
-          <li>超市数据与电商服务商 &middot; 助力门店共同成长</li>
+        <h3 class="pillar-title">&#127970; 数字化门店</h3>
+        <p class="pillar-title-en">Digital Storefronts &middot; E-Commerce for Traditional Supermarkets</p>
+        <p class="pillar-subtitle">帮助超市客户建设自己的官网 &middot; We help supermarket clients build their own website</p>
+        <p class="pillar-body">We turn traditional Asian supermarkets into digital storefronts &mdash; each store gets its own branded website, with a fixed monthly fee and no commission, so it keeps its own brand and customers while it grows online with us.</p>
+        <ul class="pillar-flow">
+          <li><span class="flow-step">建站</span><span class="flow-text">白标独立官网 &middot; 门店自有品牌与域名 &middot; 固定月费、永不抽佣</span></li>
+          <li><span class="flow-step">上架</span><span class="flow-text">商品、营业时间、主题配色，一站式管理</span></li>
+          <li><span class="flow-step">接单</span><span class="flow-text">顾客在线下单 &middot; 配送 &middot; 短信通知</span></li>
+          <li><span class="flow-step">增长</span><span class="flow-text">超市数据与电商服务 &middot; 助力门店持续增长</span></li>
         </ul>
         <div class="pillar-links">
-          <a class="pillar-link solid" href="pricing.html">超市独立站建站 &middot; Build your store</a>
+          <a class="pillar-link solid" href="pricing.html">数字化门店建站 &middot; Build your store</a>
           <a class="pillar-link ghost" href="clients.html">合作客户 Clients</a>
         </div>
       </div>
