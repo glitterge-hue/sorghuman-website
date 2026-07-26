@@ -71,6 +71,20 @@
   .hero-img { animation: fadeUp 0.9s 0.2s ease both; display: flex; justify-content: center; }
   .hero-img img { width: 100%; max-width: 380px; object-fit: contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.08)); }
 
+  /* 可点击的巨型 logo = 网上商城入口 */
+  .hero-shop-link { position: relative; display: block; text-decoration: none; border-radius: 8px; transition: transform .28s ease, box-shadow .28s ease; }
+  .hero-shop-link:hover { transform: translateY(-6px) scale(1.015); }
+  .hero-shop-link img { display:block; width:100%; max-width:380px; object-fit:contain; filter: drop-shadow(0 20px 40px rgba(0,0,0,0.08)); transition: filter .28s ease; }
+  .hero-shop-link:hover img { filter: drop-shadow(0 28px 52px rgba(42,107,58,0.22)); }
+  .hero-shop-cue {
+    position:absolute; left:50%; bottom:-10px; transform: translateX(-50%);
+    display:inline-flex; align-items:center; gap:7px; white-space:nowrap;
+    background: var(--gold); color:#fff; font-size:14px; font-weight:600; letter-spacing:0.02em;
+    padding:11px 22px; border-radius:40px; box-shadow:0 8px 22px rgba(200,146,42,0.38);
+    transition: background .2s ease, transform .28s ease;
+  }
+  .hero-shop-link:hover .hero-shop-cue { background:#b8831e; transform: translateX(-50%) translateY(3px); }
+
   /* SECTION COMMONS */
   section { padding: 80px 5%; }
   .section-inner { max-width: 1100px; margin: 0 auto; }
@@ -136,7 +150,7 @@
     .products-grid { grid-template-columns: repeat(2, 1fr); }
     .nav-links { display: none; }
     .hamburger { display: flex; }
-    .hero-img { order: -1; }
+    .hero-shop-link { margin: 26px auto 12px; max-width: 300px; }
   }
   @media (max-width: 480px) {
     .products-grid { grid-template-columns: 1fr; }
@@ -157,7 +171,7 @@
     .hamburger{display:flex;}
     .hero-inner,.about-grid,.contact-grid,.clients-intro{grid-template-columns:1fr;gap:40px;}
     .products-grid{grid-template-columns:repeat(2,1fr);}
-    .hero-img{order:-1;}
+    .hero-shop-link{margin:26px auto 12px;max-width:300px;}
   }
   @media(max-width:480px){.products-grid{grid-template-columns:1fr;}}
   @media(max-width:600px){.cta-grid{grid-template-columns:1fr!important;}}
@@ -180,6 +194,7 @@
   .pillar-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 2.75rem; }
   .pillar {
     background:#fff; border:1px solid var(--border); border-radius:4px;
+    scroll-margin-top: 84px;
     padding: 2.25rem 2.25rem 2rem; display:flex; flex-direction:column;
     transition: box-shadow .25s, transform .25s, border-color .25s;
   }
@@ -273,26 +288,25 @@
       <p class="hero-eyebrow">Import &middot; Supply Chain &middot; E-Commerce</p>
       <h1>Safer, healthier food &mdash; and clients who <em>grow with us</em></h1>
       <p class="hero-zh">推广更安全、更健康的食品，助力客户共同成长</p>
-      <p>Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &mdash; we import authentic frozen Chinese food, and we build the supply chain and online storefronts that help independent Asian supermarkets grow.</p>
+      <p>Sorghuman Holding LLC &middot; 高仁控股国际有限公司 is a New York-registered company built on two connected pillars &mdash; a <strong style="color:var(--dark);font-weight:600;">supply chain</strong> that brings safer, healthier food to the table, and a platform that brings traditional Asian supermarkets <strong style="color:var(--dark);font-weight:600;">online to grow together</strong>. 高仁由两大彼此支撑的业务构成：把更安全、更健康的食品送上餐桌的「供应链」，以及让传统亚洲超市上网、与我们共同成长的「门店上网」平台。</p>
       <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:0.5rem;">
-        <a href="/shop/" class="hero-cta" style="background:var(--gold);">&#128722; 网上商城 &middot; Shop now</a>
-        <a href="#business" style="display:inline-block;border:1px solid var(--green);color:var(--green);text-decoration:none;padding:13px 28px;border-radius:2px;font-size:14px;font-weight:500;letter-spacing:0.05em;">两大业务 &middot; Our business</a>
+        <a href="#supply-chain" class="hero-cta">&#128666; 供应链 &middot; Supply Chain</a>
+        <a href="#stores-online" class="hero-cta" style="background:#fff;color:var(--green);border:1px solid var(--green);">&#127970; 门店上网 &middot; Stores Online</a>
       </div>
     </div>
-    <div class="hero-img">
-      <img src="images/logo.jpg" alt="Sorghuman">
-    </div>
+    <a class="hero-shop-link" href="/shop/" title="网上商城 · Enter shop" aria-label="进入网上商城 Enter online shop">
+      <img src="images/logo.jpg" alt="Sorghuman — 点击进入网上商城 · Click to enter shop">
+      <span class="hero-shop-cue">&#128722; 网上商城 &middot; Enter shop &rarr;</span>
+    </a>
   </div>
 </section>
 
-<!-- ABOUT -->
+<!-- ABOUT (stats band) -->
 <section class="about" id="about">
   <div class="section-inner">
-    <p class="section-label">Who we are &middot; 关于高仁</p>
+    <p class="section-label">By the numbers &middot; 关于高仁</p>
     <div class="divider"></div>
-    <h2 class="section-title">A trusted bridge between China and America</h2>
-    <p style="color:var(--muted);font-size:15px;line-height:1.9;max-width:720px;">Sorghuman Holding LLC &middot; 高仁控股国际有限公司 is a New York-registered company built on two connected pillars: a <strong style="color:var(--dark);font-weight:600;">supply chain</strong> that brings safer, healthier food to the table, and an e-commerce platform that helps independent Asian supermarkets <strong style="color:var(--dark);font-weight:600;">grow together</strong>. 高仁由两大彼此支撑的业务构成：把更安全、更健康的食品送上餐桌的「供应链」，以及助力独立亚洲超市共同成长的「电商平台」。</p>
-    <div class="about-stats" style="max-width:720px;grid-template-columns:repeat(4,1fr);">
+    <div class="about-stats" style="max-width:940px;grid-template-columns:repeat(4,1fr);margin-top:0.5rem;">
       <div class="stat-box"><div class="stat-num">6+</div><div class="stat-label">Product lines &middot; 产品线</div></div>
       <div class="stat-box"><div class="stat-num">37+</div><div class="stat-label">Storefronts &middot; 独立站门店</div></div>
       <div class="stat-box"><div class="stat-num">25+</div><div class="stat-label">Retail partners &middot; 零售客户</div></div>
@@ -314,7 +328,7 @@
     <div class="pillar-grid">
 
       <!-- 板块一：供应链（食品销售 + 批发 + 分销商 + 工厂）→ 更安全、更健康的食品 -->
-      <div class="pillar">
+      <div class="pillar" id="supply-chain">
         <div class="pillar-num">01 &middot; 更安全、更健康的食品</div>
         <h3 class="pillar-title">供应链</h3>
         <p class="pillar-title-en">Supply Chain &middot; Safer, Healthier Food</p>
@@ -325,24 +339,23 @@
           <li>工厂供货 &middot; FDA 注册 &middot; CBP 进口商备案 &middot; 全程冷链温控</li>
         </ul>
         <div class="pillar-links">
-          <a class="pillar-link solid gold" href="/shop/">网上商城 &middot; Shop</a>
-          <a class="pillar-link ghost" href="products.html">产品目录 Products</a>
+          <a class="pillar-link solid" href="products.html">产品目录 Products</a>
           <a class="pillar-link ghost" href="order.html">批发采购 Wholesale</a>
           <a class="pillar-link ghost" href="distributor-apply.html">分销商入驻 Distributors</a>
           <a class="pillar-link ghost" href="supplier.html">工厂供货 Factories</a>
         </div>
       </div>
 
-      <!-- 板块二：共同成长（独立站电商服务）→ 助力客户共同成长 -->
-      <div class="pillar">
+      <!-- 板块二：门店上网（传统店网上业务）→ 助力客户共同成长 -->
+      <div class="pillar" id="stores-online">
         <div class="pillar-num">02 &middot; 助力客户共同成长</div>
-        <h3 class="pillar-title">共同成长</h3>
-        <p class="pillar-title-en">Growing Together &middot; E-Commerce for Independent Stores</p>
-        <p class="pillar-body">We help independent Asian supermarkets grow online, together. Each store gets its own white-label storefront &mdash; a fixed monthly fee, no commission, and full ownership of its brand and customers. As a supermarket-data and e-commerce service provider, we give mom-and-pop stores the tools to compete online.</p>
+        <h3 class="pillar-title">门店上网</h3>
+        <p class="pillar-title-en">Stores Online &middot; E-Commerce for Traditional Supermarkets</p>
+        <p class="pillar-body">We bring traditional Asian supermarkets online so they can grow together with us. Each store gets its own white-label storefront &mdash; a fixed monthly fee, no commission, and full ownership of its brand and customers. As a supermarket-data and e-commerce service provider, we give mom-and-pop stores the tools to compete online.</p>
         <ul class="pillar-feats">
-          <li>超市独立站建站：固定月费 &middot; 永不抽佣</li>
+          <li>传统门店上网：超市独立站建站 &middot; 固定月费 &middot; 永不抽佣</li>
           <li>门店保留自己的品牌、顾客与数据</li>
-          <li>超市数据与电商服务商 &middot; 助力独立超市线上增长</li>
+          <li>超市数据与电商服务商 &middot; 助力门店共同成长</li>
         </ul>
         <div class="pillar-links">
           <a class="pillar-link solid" href="pricing.html">超市独立站建站 &middot; Build your store</a>
