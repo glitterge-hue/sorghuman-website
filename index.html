@@ -216,18 +216,18 @@
   .pillar-flow { list-style:none; margin: 0 0 1.6rem; padding:0; display:flex; flex-direction:column; gap: 0; }
   .pillar-flow li { position:relative; display:flex; gap:13px; align-items:flex-start; padding: 8px 0; }
   .pillar-flow li:not(:last-child)::after {
-    content:''; position:absolute; left:23px; top:32px; bottom:-6px; width:2px;
+    content:''; position:absolute; left:38px; top:32px; bottom:-6px; width:2px;
     background: var(--border);
   }
   .flow-step {
-    flex:0 0 auto; width:48px; text-align:center; z-index:1;
-    font-size:12px; font-weight:600; letter-spacing:0.02em; color:#fff; background:var(--green);
+    flex:0 0 auto; width:78px; text-align:center; z-index:1;
+    font-size:11px; font-weight:600; letter-spacing:0.01em; color:#fff; background:var(--green);
     border-radius:20px; padding:5px 0; margin-top:1px;
   }
   .pillar.gold-accent .flow-step { background: var(--gold); }
   .flow-text { display:flex; flex-direction:column; gap:2px; padding-top:2px; }
-  .flow-zh { font-size:13.5px; color:var(--dark); line-height:1.5; }
-  .flow-en { font-size:11.5px; color:var(--muted); line-height:1.45; letter-spacing:0.01em; }
+  .flow-en { font-size:13.5px; color:var(--dark); line-height:1.5; }
+  .flow-zh { font-size:11.5px; color:var(--muted); line-height:1.45; }
   .pillar-links { margin-top:auto; display:flex; flex-wrap:wrap; gap: 8px; }
   .pillar-link {
     text-decoration:none; font-size: 13px; font-weight:500; letter-spacing:0.02em;
@@ -297,7 +297,7 @@
     <a href="order.html" onclick="if(typeof closeMenu==='function')closeMenu()">Wholesale 批发采购 &rarr;</a>
     <a href="pricing.html" onclick="if(typeof closeMenu==='function')closeMenu()">Platform 超市电商 &rarr;</a>
     <a href="clients.html" onclick="if(typeof closeMenu==='function')closeMenu()">Clients 合作客户 &rarr;</a>
-    <a href="supplier.html" onclick="if(typeof closeMenu==='function')closeMenu()">Factories 工厂供货 &rarr;</a>
+    <a href="https://sorghuman-erp.onrender.com/register/supplier" target="_blank" rel="noopener" onclick="if(typeof closeMenu==='function')closeMenu()">Factories 工厂供货 &rarr;</a>
     <a href="distributor-apply.html" onclick="if(typeof closeMenu==='function')closeMenu()">Distributors 分销商入驻 &rarr;</a>
     <a href="careers.html" onclick="if(typeof closeMenu==='function')closeMenu()">Careers 招聘 &rarr;</a>
     <a href="index.html#contact" onclick="if(typeof closeMenu==='function')closeMenu()">Contact 联系 &rarr;</a>
@@ -310,11 +310,11 @@
       <p class="hero-eyebrow">Import &middot; Supply Chain &middot; E-Commerce</p>
       <h1>Safer, healthier food &mdash; and clients who <em>grow with us</em></h1>
       <p class="hero-zh">推广更安全、更健康的食品，助力客户共同成长</p>
-      <p>Sorghuman Holding LLC &middot; 高仁控股国际有限公司 is a New York-registered company built on two connected pillars &mdash; a <strong style="color:var(--dark);font-weight:600;">supply chain</strong> that brings safer, healthier food to the table, and <strong style="color:var(--dark);font-weight:600;">digital storefronts</strong> that put traditional Asian supermarkets online to grow together. 高仁由两大彼此支撑的业务构成：把更安全、更健康的食品送上餐桌的「供应链」，以及帮助传统亚洲超市建站上网、与我们共同成长的「数字化门店」。</p>
+      <p>Sorghuman Holding LLC is a New York-registered company built on two connected pillars &mdash; a <strong style="color:var(--dark);font-weight:600;">supply chain</strong> that brings safer, healthier food to the table, and <strong style="color:var(--dark);font-weight:600;">digital storefronts</strong> that put traditional Asian supermarkets online to grow together.<br><span style="color:var(--muted);font-size:13.5px;">高仁控股国际有限公司 · 由两大彼此支撑的业务构成：把更安全、更健康的食品送上餐桌的「供应链」，以及帮助传统亚洲超市建站上网、共同成长的「数字化门店」。</span></p>
     </div>
     <a class="hero-shop-link" href="/shop/" title="在线购买 · Shop online" aria-label="在线购买 Shop online">
       <img src="images/logo.jpg" alt="Sorghuman — 点击进入商城在线购买 · Click to shop online">
-      <span class="hero-shop-cue"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>在线购买 &middot; Shop online <span class="arrow">&rarr;</span></span>
+      <span class="hero-shop-cue"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>Shop online &middot; 在线购买 <span class="arrow">&rarr;</span></span>
     </a>
   </div>
 </section>
@@ -333,52 +333,51 @@
   </div>
 </section>
 
-<!-- TWO PILLARS 两大业务 -->
+<!-- TWO PILLARS -->
 <section class="pillars" id="business">
   <div class="section-inner">
     <div class="pillars-head">
-      <p class="section-label">Two businesses, one mission &middot; 两大业务</p>
       <div class="divider"></div>
-      <p class="pillar-slogan">推广更安全、更健康的食品，助力客户共同成长</p>
-      <p class="pillar-slogan-en">We promote safer, healthier food &mdash; and we help our clients grow together.</p>
+      <p class="pillar-slogan">We promote safer, healthier food &mdash; and we help our clients grow together.</p>
+      <p class="pillar-slogan-en">推广更安全、更健康的食品，助力客户共同成长</p>
     </div>
 
     <div class="pillar-grid">
 
-      <!-- 板块一：供应链（流程：工厂→分销→批发→商品） -->
+      <!-- 板块一：供应链（流程：Factory→Delivery→Wholesale→Retail） -->
       <div class="pillar gold-accent" id="supply-chain">
-        <h3 class="pillar-title">&#128666; 供应链</h3>
-        <p class="pillar-title-en">Supply Chain &middot; Safer, Healthier Food</p>
-        <p class="pillar-body">从中国工厂到美东超市货架的一体化供应链：采购、分销、批发到零售，全程 FDA / CBP 合规冷链，把更安全、更健康的食品送上餐桌。<br><span style="color:var(--muted);">An end-to-end supply chain from Chinese factories to East Coast shelves &mdash; sourcing, distribution, wholesale and retail on a fully FDA/CBP-compliant cold chain.</span></p>
+        <h3 class="pillar-title">&#128666; Supply Chain</h3>
+        <p class="pillar-title-en">供应链 &middot; Safer, healthier food</p>
+        <p class="pillar-body">An end-to-end supply chain from Chinese factories to East Coast supermarket shelves &mdash; sourcing, distribution, wholesale and retail on a fully FDA/CBP-compliant cold chain that brings safer, healthier food to the table.<br><span style="color:var(--muted);font-size:12.5px;">从中国工厂到美东超市货架的一体化供应链：采购、分销、批发到零售，全程 FDA / CBP 合规冷链。</span></p>
         <ul class="pillar-flow">
-          <li><span class="flow-step">工厂</span><span class="flow-text"><span class="flow-zh">精选中国工厂供货 · FDA 注册 · CBP 进口商备案</span><span class="flow-en">Vetted Chinese factories · FDA-registered · CBP importer of record</span></span></li>
-          <li><span class="flow-step">分销</span><span class="flow-text"><span class="flow-zh">全程冷链温控 · 分销网络配送美东各州</span><span class="flow-en">Temperature-controlled cold chain across the Northeast</span></span></li>
-          <li><span class="flow-step">批发</span><span class="flow-text"><span class="flow-zh">直供亚洲超市 · 超市 / 餐厅 / 批发商采购</span><span class="flow-en">Direct to Asian supermarkets, restaurants &amp; wholesalers</span></span></li>
-          <li><span class="flow-step">商品</span><span class="flow-text"><span class="flow-zh">网上商城下单 · 送货到家</span><span class="flow-en">Order online · home delivery</span></span></li>
+          <li><span class="flow-step">Factory</span><span class="flow-text"><span class="flow-en">Vetted Chinese factories &middot; FDA-registered &middot; CBP importer of record</span><span class="flow-zh">精选中国工厂供货 · FDA 注册 · CBP 进口商备案</span></span></li>
+          <li><span class="flow-step">Delivery</span><span class="flow-text"><span class="flow-en">Temperature-controlled cold chain across the Northeast</span><span class="flow-zh">全程冷链温控 · 分销网络配送美东各州</span></span></li>
+          <li><span class="flow-step">Wholesale</span><span class="flow-text"><span class="flow-en">Direct to Asian supermarkets, restaurants &amp; wholesalers</span><span class="flow-zh">直供亚洲超市 · 超市 / 餐厅 / 批发商采购</span></span></li>
+          <li><span class="flow-step">Retail</span><span class="flow-text"><span class="flow-en">Order online &middot; home delivery</span><span class="flow-zh">网上商城下单 · 送货到家</span></span></li>
         </ul>
         <div class="pillar-links">
-          <a class="pillar-link solid gold" href="supplier.html">工厂供货 Factories</a>
-          <a class="pillar-link ghost" href="distributor-apply.html">分销商入驻 Distributors</a>
-          <a class="pillar-link ghost" href="order.html">批发采购 Wholesale</a>
-          <a class="pillar-link ghost" href="products.html">产品目录 Products</a>
+          <a class="pillar-link solid gold" href="https://sorghuman-erp.onrender.com/register/supplier" target="_blank" rel="noopener">Factory supply 工厂供货 &rarr;</a>
+          <a class="pillar-link ghost" href="distributor-apply.html">Distributors 分销商入驻</a>
+          <a class="pillar-link ghost" href="order.html">Wholesale 批发采购</a>
+          <a class="pillar-link ghost" href="products.html">Products 产品目录</a>
         </div>
       </div>
 
-      <!-- 板块二：数字化门店（流程：建站→上架→接单→增长） -->
+      <!-- 板块二：数字化门店（流程：Build→Setup→Orders→Grow） -->
       <div class="pillar" id="stores-online">
-        <h3 class="pillar-title">&#127970; 数字化门店</h3>
-        <p class="pillar-title-en">Digital Storefronts &middot; E-Commerce for Traditional Supermarkets</p>
-        <p class="pillar-subtitle">帮助超市客户建设自己的官网 &middot; We help supermarket clients build their own website</p>
-        <p class="pillar-body">我们帮传统亚洲超市开一家属于自己的网上商店：用超市自己的名字做一个官方网站，固定月费、无佣金，品牌和顾客都是门店自己的，和我们一起把生意做到线上。<br><span style="color:var(--muted);">We help traditional Asian supermarkets open their own online store &mdash; a website under the shop&rsquo;s own name, a fixed monthly fee with no commission, and its brand and customers stay its own.</span></p>
+        <h3 class="pillar-title">&#127970; Digital Storefronts</h3>
+        <p class="pillar-title-en">数字化门店 &middot; E-commerce for traditional supermarkets</p>
+        <p class="pillar-subtitle">We help supermarket clients build their own website &middot; 帮助超市客户建设自己的官网</p>
+        <p class="pillar-body">We help traditional Asian supermarkets open their own online store &mdash; a website under the shop&rsquo;s own name, a fixed monthly fee with no commission, and its brand and customers stay its own.<br><span style="color:var(--muted);font-size:12.5px;">帮传统亚洲超市开一家属于自己的网上商店：用超市自己的名字做官网，固定月费、无佣金，品牌和顾客都归门店自己。</span></p>
         <ul class="pillar-flow">
-          <li><span class="flow-step">建站</span><span class="flow-text"><span class="flow-zh">用超市自己的名字和域名，做一个官方网站 · 固定月费、无佣金</span><span class="flow-en">A website under the store&rsquo;s own name &amp; domain · fixed monthly fee, no commission</span></span></li>
-          <li><span class="flow-step">上架</span><span class="flow-text"><span class="flow-zh">商品、营业时间、页面配色，后台一站管理</span><span class="flow-en">Manage products, hours and store look in one place</span></span></li>
-          <li><span class="flow-step">接单</span><span class="flow-text"><span class="flow-zh">顾客在线下单 · 配送 · 短信通知</span><span class="flow-en">Customers order online · delivery · SMS updates</span></span></li>
-          <li><span class="flow-step">增长</span><span class="flow-text"><span class="flow-zh">经营数据与电商服务 · 助力门店持续增长</span><span class="flow-en">Sales data &amp; e-commerce support to keep the store growing</span></span></li>
+          <li><span class="flow-step">Build</span><span class="flow-text"><span class="flow-en">A website under the store&rsquo;s own name &amp; domain &middot; fixed monthly fee, no commission</span><span class="flow-zh">用超市自己的名字和域名做官网 · 固定月费、无佣金</span></span></li>
+          <li><span class="flow-step">Setup</span><span class="flow-text"><span class="flow-en">Manage products, hours and store look in one place</span><span class="flow-zh">商品、营业时间、页面配色，后台一站管理</span></span></li>
+          <li><span class="flow-step">Orders</span><span class="flow-text"><span class="flow-en">Customers order online &middot; delivery &middot; SMS updates</span><span class="flow-zh">顾客在线下单 · 配送 · 短信通知</span></span></li>
+          <li><span class="flow-step">Grow</span><span class="flow-text"><span class="flow-en">Sales data &amp; e-commerce support to keep the store growing</span><span class="flow-zh">经营数据与电商服务 · 助力门店持续增长</span></span></li>
         </ul>
         <div class="pillar-links">
-          <a class="pillar-link solid" href="pricing.html">数字化门店建站 &middot; Build your store</a>
-          <a class="pillar-link ghost" href="clients.html">合作客户 Clients</a>
+          <a class="pillar-link solid" href="pricing.html">Build your store 数字化门店建站</a>
+          <a class="pillar-link ghost" href="clients.html">Clients 合作客户</a>
         </div>
       </div>
 
