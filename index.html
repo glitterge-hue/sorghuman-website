@@ -171,6 +171,38 @@
   .nav-back{font-size:13px;color:var(--muted);text-decoration:none;display:flex;align-items:center;gap:6px;}
   .nav-back:hover{color:var(--green);}
   .nav-back::before{content:'←';font-size:16px;}
+
+  /* ===== 两大业务板块 Two Pillars ===== */
+  .pillars { background: var(--cream); }
+  .pillars-head { max-width: 720px; }
+  .pillar-slogan { font-family:'DM Serif Display',serif; font-size: clamp(22px,2.6vw,30px); color: var(--green); line-height:1.35; margin: 0.5rem 0 0.4rem; }
+  .pillar-slogan-en { font-size: 15px; color: var(--muted); line-height:1.7; }
+  .pillar-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 2.75rem; }
+  .pillar {
+    background:#fff; border:1px solid var(--border); border-radius:4px;
+    padding: 2.25rem 2.25rem 2rem; display:flex; flex-direction:column;
+    transition: box-shadow .25s, transform .25s, border-color .25s;
+  }
+  .pillar:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,0.07); border-color: var(--green); }
+  .pillar-num { font-family:'DM Serif Display',serif; font-size: 15px; color: var(--gold); letter-spacing:0.1em; margin-bottom: 0.9rem; }
+  .pillar-title { font-family:'DM Serif Display',serif; font-size: 25px; color: var(--dark); line-height:1.2; }
+  .pillar-title-en { font-size: 13.5px; letter-spacing:0.03em; color: var(--muted); margin: 6px 0 1rem; }
+  .pillar-body { font-size: 14.5px; color: var(--muted); line-height: 1.85; margin-bottom: 1.5rem; }
+  .pillar-feats { list-style:none; margin: 0 0 1.6rem; padding:0; display:flex; flex-direction:column; gap: 9px; }
+  .pillar-feats li { font-size: 13.5px; color: var(--dark); display:flex; gap:10px; align-items:flex-start; line-height:1.5; }
+  .pillar-feats li::before { content:''; flex:0 0 auto; width:6px; height:6px; margin-top:7px; border-radius:50%; background: var(--green); }
+  .pillar-links { margin-top:auto; display:flex; flex-wrap:wrap; gap: 8px; }
+  .pillar-link {
+    text-decoration:none; font-size: 13px; font-weight:500; letter-spacing:0.02em;
+    padding: 9px 15px; border-radius: 2px; transition: background .2s, color .2s, border-color .2s;
+  }
+  .pillar-link.solid { background: var(--green); color:#fff; }
+  .pillar-link.solid:hover { background: var(--green-light); }
+  .pillar-link.solid.gold { background: var(--gold); }
+  .pillar-link.solid.gold:hover { background:#b8831e; }
+  .pillar-link.ghost { border:1px solid var(--border); color: var(--dark); }
+  .pillar-link.ghost:hover { border-color: var(--green); color: var(--green); }
+  @media (max-width: 820px){ .pillar-grid { grid-template-columns:1fr; } }
 </style>
   <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
 <!-- Google Analytics -->
@@ -211,12 +243,10 @@
   <div class="nav-links">
     <a href="index.html#about"><span class="en">About</span><span class="zh">关于</span></a>
     <a href="products.html"><span class="en">Products</span><span class="zh">产品</span></a>
-    <a href="clients.html"><span class="en">Clients</span><span class="zh">客户</span></a>
-    <a href="local.html"><span class="en">Local delivery</span><span class="zh">本地配送</span></a>
-    <a href="order.html"><span class="en">Wholesale</span><span class="zh">商业批发</span></a>
-    <a href="supplier.html"><span class="en">Factories</span><span class="zh">工厂供货</span></a>
-    <a href="distributor-apply.html"><span class="en">Distributors</span><span class="zh">分销商入驻</span></a>
-    <a href="careers.html"><span class="en">Careers</span><span class="zh">招聘</span></a>
+    <a href="/shop/"><span class="en">Shop</span><span class="zh">网上商城</span></a>
+    <a href="order.html"><span class="en">Wholesale</span><span class="zh">批发采购</span></a>
+    <a href="pricing.html"><span class="en">Platform</span><span class="zh">超市电商</span></a>
+    <a href="clients.html"><span class="en">Clients</span><span class="zh">合作客户</span></a>
     <a href="index.html#contact"><span class="en">Contact</span><span class="zh">联系</span></a>
     </div>
   <button class="hamburger" onclick="toggleMenu()" id="hamburger" aria-label="Menu">
@@ -226,9 +256,10 @@
 <div class="mobile-menu" id="mobileMenu">
     <a href="index.html#about" onclick="if(typeof closeMenu==='function')closeMenu()">About 关于 &rarr;</a>
     <a href="products.html" onclick="if(typeof closeMenu==='function')closeMenu()">Products 产品 &rarr;</a>
-    <a href="clients.html" onclick="if(typeof closeMenu==='function')closeMenu()">Clients 客户 &rarr;</a>
-    <a href="local.html" onclick="if(typeof closeMenu==='function')closeMenu()">Local delivery 本地配送 &rarr;</a>
-    <a href="order.html" onclick="if(typeof closeMenu==='function')closeMenu()">Wholesale 商业批发 &rarr;</a>
+    <a href="/shop/" onclick="if(typeof closeMenu==='function')closeMenu()">Shop 网上商城 &rarr;</a>
+    <a href="order.html" onclick="if(typeof closeMenu==='function')closeMenu()">Wholesale 批发采购 &rarr;</a>
+    <a href="pricing.html" onclick="if(typeof closeMenu==='function')closeMenu()">Platform 超市电商 &rarr;</a>
+    <a href="clients.html" onclick="if(typeof closeMenu==='function')closeMenu()">Clients 合作客户 &rarr;</a>
     <a href="supplier.html" onclick="if(typeof closeMenu==='function')closeMenu()">Factories 工厂供货 &rarr;</a>
     <a href="distributor-apply.html" onclick="if(typeof closeMenu==='function')closeMenu()">Distributors 分销商入驻 &rarr;</a>
     <a href="careers.html" onclick="if(typeof closeMenu==='function')closeMenu()">Careers 招聘 &rarr;</a>
@@ -239,17 +270,14 @@
 <section class="hero" id="top">
   <div class="hero-inner">
     <div class="hero-text">
-      <p class="hero-eyebrow">Authentic &middot; Frozen &middot; Chinese Food</p>
-      <h1>Bringing <em>authentic</em> flavors to your table</h1>
-      <p class="hero-zh">Sorghuman Holding LLC &middot; 高仁控股国际有限公司</p>
-      <p>Sorghuman Holding LLC imports and distributes premium frozen Chinese food products &mdash; steamed buns, dumplings, dim sum, and rice cakes &mdash; to Asian supermarkets across the northeastern United States.</p>
-      <a href="pricing.html" style="display:block;max-width:430px;text-decoration:none;background:var(--green);color:#fff;border-radius:2px;padding:18px 24px;margin-bottom:16px;transition:background 0.2s;" onmouseover="this.style.background='var(--green-light)'" onmouseout="this.style.background='var(--green)'">
-        <div style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.75);margin-bottom:5px;">For store owners &middot; 门店主</div>
-        <div style="font-family:'DM Serif Display',serif;font-size:21px;line-height:1.2;">超市独立站建站 &rarr;</div>
-        <div style="font-size:12.5px;color:rgba(255,255,255,0.85);margin-top:5px;">固定月费 &middot; 永不收佣金 &middot; 门店保留品牌与顾客</div>
-      </a>
-      <a href="local.html" class="hero-cta" style="background:var(--gold);">&#128722; 立即购买 &middot; Shop now</a>
-      <a href="order.html" style="display:inline-block;margin-left:12px;border:1px solid var(--green);color:var(--green);text-decoration:none;padding:13px 28px;border-radius:2px;font-size:14px;font-weight:500;letter-spacing:0.05em;">Wholesale 商业批发 &middot; Wholesale</a>
+      <p class="hero-eyebrow">Import &middot; Supply Chain &middot; E-Commerce</p>
+      <h1>Safer, healthier food &mdash; and clients who <em>grow with us</em></h1>
+      <p class="hero-zh">推广更安全、更健康的食品，助力客户共同成长</p>
+      <p>Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &mdash; we import authentic frozen Chinese food, and we build the supply chain and online storefronts that help independent Asian supermarkets grow.</p>
+      <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:0.5rem;">
+        <a href="/shop/" class="hero-cta" style="background:var(--gold);">&#128722; 网上商城 &middot; Shop now</a>
+        <a href="#business" style="display:inline-block;border:1px solid var(--green);color:var(--green);text-decoration:none;padding:13px 28px;border-radius:2px;font-size:14px;font-weight:500;letter-spacing:0.05em;">两大业务 &middot; Our business</a>
+      </div>
     </div>
     <div class="hero-img">
       <img src="images/logo.jpg" alt="Sorghuman">
@@ -260,81 +288,68 @@
 <!-- ABOUT -->
 <section class="about" id="about">
   <div class="section-inner">
-    <div class="about-grid">
-      <div>
-        <p class="section-label">Who we are</p>
-        <div class="divider"></div>
-        <h2 class="section-title">A trusted bridge between China and America</h2>
-        <p style="color:var(--muted);font-size:15px;line-height:1.9;margin-bottom:1rem;">Sorghuman Holding LLC is a New York-registered company specializing in the import and distribution of authentic frozen Chinese food products. We work directly with established manufacturers in China to deliver high-quality, ready-to-cook products to retailers across the northeastern U.S.</p>
-        <p style="color:var(--muted);font-size:15px;line-height:1.9;">We bring premium frozen Chinese foods to the North American market, so everyone can enjoy authentic Chinese cuisine at home. 我们致力于将来自中国的优质冷冻食品引入北美市场，让消费者在家就能品尝到地道的中国美食。</p>
-        <div class="about-stats">
-          <div class="stat-box"><div class="stat-num">6+</div><div class="stat-label">Product lines</div></div>
-          <div class="stat-box"><div class="stat-num">5</div><div class="stat-label">States covered</div></div>
-          <div class="stat-box"><div class="stat-num">25+</div><div class="stat-label">Retail partners</div></div>
-          <div class="stat-box"><div class="stat-num">NY</div><div class="stat-label">Registered in New York</div></div>
-        </div>
-      </div>
-      <div class="about-img">
-        <img src="images/bun-bokchoy.jpg" alt="Sorghuman Products" style="width:100%;border-radius:2px;object-fit:cover;height:360px;">
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- PAGES CTA -->
-<section style="background:white;padding:60px 5%;">
-  <div style="max-width:1100px;margin:0 auto;">
+    <p class="section-label">Who we are &middot; 关于高仁</p>
     <div class="divider"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;" class="cta-grid">
-      <a href="products.html" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:1.5rem 2rem;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div>
-          <p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Browse our range</p>
-          <h3 style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--dark);">Our Products 产品目录</h3>
-          <p style="font-size:13px;color:var(--muted);margin-top:4px;">Steamed buns, sour plum soup &amp; more</p>
-        </div>
-        <span style="font-size:28px;color:var(--green);">→</span>
-      </a>
-      <a href="clients.html" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:1.5rem 2rem;transition:border-color 0.2s;" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div>
-          <p style="font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Our retail partners</p>
-          <h3 style="font-family:'DM Serif Display',serif;font-size:22px;color:var(--dark);">Our Clients 合作客户</h3>
-          <p style="font-size:13px;color:var(--muted);margin-top:4px;">25+ Asian supermarkets across the Northeast</p>
-        </div>
-        <span style="font-size:28px;color:var(--green);">→</span>
-      </a>
+    <h2 class="section-title">A trusted bridge between China and America</h2>
+    <p style="color:var(--muted);font-size:15px;line-height:1.9;max-width:720px;">Sorghuman Holding LLC &middot; 高仁控股国际有限公司 is a New York-registered company built on two connected pillars: a <strong style="color:var(--dark);font-weight:600;">supply chain</strong> that brings safer, healthier food to the table, and an e-commerce platform that helps independent Asian supermarkets <strong style="color:var(--dark);font-weight:600;">grow together</strong>. 高仁由两大彼此支撑的业务构成：把更安全、更健康的食品送上餐桌的「供应链」，以及助力独立亚洲超市共同成长的「电商平台」。</p>
+    <div class="about-stats" style="max-width:720px;grid-template-columns:repeat(4,1fr);">
+      <div class="stat-box"><div class="stat-num">6+</div><div class="stat-label">Product lines &middot; 产品线</div></div>
+      <div class="stat-box"><div class="stat-num">37+</div><div class="stat-label">Storefronts &middot; 独立站门店</div></div>
+      <div class="stat-box"><div class="stat-num">25+</div><div class="stat-label">Retail partners &middot; 零售客户</div></div>
+      <div class="stat-box"><div class="stat-num">5</div><div class="stat-label">States covered &middot; 覆盖州</div></div>
     </div>
   </div>
 </section>
 
-<!-- SHOP CTA -->
-<section style="background:white;padding:0 5% 60px;">
-  <div style="max-width:1100px;margin:0 auto;">
-    <a href="local.html" style="display:block;text-decoration:none;background:var(--gold);border-radius:2px;padding:2.5rem;color:white;margin-bottom:16px;position:relative;overflow:hidden;">
-      <div style="position:absolute;top:0;right:0;background:rgba(0,0,0,0.15);padding:7px 18px;font-size:11px;font-weight:500;letter-spacing:0.05em;">Lehigh Valley &amp; Philadelphia area</div>
-      <p style="font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.8);margin-bottom:0.75rem;">&#128722; Shop online &middot; 在线购买</p>
-      <h3 style="font-family:'DM Serif Display',serif;font-size:30px;margin-bottom:0.75rem;color:white;">Order fresh buns &amp; beverages for home delivery</h3>
-      <p style="font-size:14px;color:rgba(255,255,255,0.9);line-height:1.8;margin-bottom:1.5rem;max-width:540px;">&#127873; Buy 10 packs, get 1 free &nbsp;&middot;&nbsp; Free delivery on orders $30+</p>
-      <span style="display:inline-block;background:white;color:#b8831e;padding:12px 28px;border-radius:2px;font-size:14px;font-weight:500;">立即购买 &middot; Shop now &rarr;</span>
-    </a>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px;" class="cta-grid">
-      <a href="order.html" style="display:block;text-decoration:none;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:1.25rem;">
-        <p style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">For retailers &amp; wholesalers</p>
-        <h4 style="font-size:16px;font-weight:500;color:var(--dark);margin-bottom:4px;">Bulk order inquiry</h4>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">For supermarkets, restaurants &amp; wholesalers 超市、餐厅及批发商请询价</p>
-        <span style="font-size:12px;font-weight:500;color:var(--gold);">批量询价 &rarr;</span>
-      </a>
-      <a href="supplier.html" style="display:block;text-decoration:none;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:1.25rem;">
-        <p style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">For manufacturers in China</p>
-        <h4 style="font-size:16px;font-weight:500;color:var(--dark);margin-bottom:4px;">Factory supply</h4>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">For food manufacturers in China 中国食品生产企业入驻申请</p>
-        <span style="font-size:12px;font-weight:500;color:var(--green);">工厂入驻 &rarr;</span>
-      </a>
-      <a href="distributor-apply.html" style="display:block;text-decoration:none;background:var(--cream);border:1px solid var(--border);border-radius:2px;padding:1.25rem;">
-        <p style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">For U.S. distributors</p>
-        <h4 style="font-size:16px;font-weight:500;color:var(--dark);margin-bottom:4px;">Become a distributor</h4>
-        <p style="font-size:12px;color:var(--muted);margin-bottom:8px;">For U.S. distributors — connect directly to store restocking 美国分销商入驻</p>
-        <span style="font-size:12px;font-weight:500;color:var(--green);">分销商入驻 &rarr;</span>
-      </a>
+<!-- TWO PILLARS 两大业务 -->
+<section class="pillars" id="business">
+  <div class="section-inner">
+    <div class="pillars-head">
+      <p class="section-label">Two businesses, one mission &middot; 两大业务</p>
+      <div class="divider"></div>
+      <p class="pillar-slogan">推广更安全、更健康的食品，助力客户共同成长</p>
+      <p class="pillar-slogan-en">We promote safer, healthier food &mdash; and we help our clients grow together.</p>
+    </div>
+
+    <div class="pillar-grid">
+
+      <!-- 板块一：供应链（食品销售 + 批发 + 分销商 + 工厂）→ 更安全、更健康的食品 -->
+      <div class="pillar">
+        <div class="pillar-num">01 &middot; 更安全、更健康的食品</div>
+        <h3 class="pillar-title">供应链</h3>
+        <p class="pillar-title-en">Supply Chain &middot; Safer, Healthier Food</p>
+        <p class="pillar-body">An end-to-end supply chain from Chinese factories to East Coast supermarket shelves: we import authentic frozen Chinese food and our own Catton brand, sell online and wholesale, and deliver through our distributor network &mdash; all on a fully FDA/CBP-compliant cold chain that brings safer, healthier food to the table.</p>
+        <ul class="pillar-feats">
+          <li>进口食品销售 &middot; 自有 Catton 品牌（包子 / 饺子 / 点心 / 酸梅汤）</li>
+          <li>批发采购 &middot; 分销商配送 &middot; 直供美东亚洲超市</li>
+          <li>工厂供货 &middot; FDA 注册 &middot; CBP 进口商备案 &middot; 全程冷链温控</li>
+        </ul>
+        <div class="pillar-links">
+          <a class="pillar-link solid gold" href="/shop/">网上商城 &middot; Shop</a>
+          <a class="pillar-link ghost" href="products.html">产品目录 Products</a>
+          <a class="pillar-link ghost" href="order.html">批发采购 Wholesale</a>
+          <a class="pillar-link ghost" href="distributor-apply.html">分销商入驻 Distributors</a>
+          <a class="pillar-link ghost" href="supplier.html">工厂供货 Factories</a>
+        </div>
+      </div>
+
+      <!-- 板块二：共同成长（独立站电商服务）→ 助力客户共同成长 -->
+      <div class="pillar">
+        <div class="pillar-num">02 &middot; 助力客户共同成长</div>
+        <h3 class="pillar-title">共同成长</h3>
+        <p class="pillar-title-en">Growing Together &middot; E-Commerce for Independent Stores</p>
+        <p class="pillar-body">We help independent Asian supermarkets grow online, together. Each store gets its own white-label storefront &mdash; a fixed monthly fee, no commission, and full ownership of its brand and customers. As a supermarket-data and e-commerce service provider, we give mom-and-pop stores the tools to compete online.</p>
+        <ul class="pillar-feats">
+          <li>超市独立站建站：固定月费 &middot; 永不抽佣</li>
+          <li>门店保留自己的品牌、顾客与数据</li>
+          <li>超市数据与电商服务商 &middot; 助力独立超市线上增长</li>
+        </ul>
+        <div class="pillar-links">
+          <a class="pillar-link solid" href="pricing.html">超市独立站建站 &middot; Build your store</a>
+          <a class="pillar-link ghost" href="clients.html">合作客户 Clients</a>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
