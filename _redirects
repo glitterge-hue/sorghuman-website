@@ -15,3 +15,10 @@ https://fareastpa.com/        /shop/   302!
 https://www.fareastpa.com/    /shop/   302!
 https://sorghuman.com/local         /shop/   302!
 https://sorghuman.com/local.html    /shop/   302!
+
+# ─────────────────────────────────────────────────────────────
+# 商品转发短链:/p/SKU → 生成微信/社交预览卡的函数(地址栏保持 /p/SKU)
+# 微信等爬虫抓取此页读取 og:image/og:title/og:description 生成卡片;
+# 真人访问会被函数自动跳转到 /shop/?p=SKU 打开商品详情。
+# ─────────────────────────────────────────────────────────────
+/p/*    /.netlify/functions/product-share?p=:splat    200
