@@ -57,6 +57,27 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 
 .buy-btn{display:block;text-align:center;background:var(--gold);color:white;text-decoration:none;padding:14px 36px;border-radius:2px;font-size:15px;font-weight:500;margin:2rem auto 0;max-width:300px;}
 
+/* 可点击的产品卡 */
+a.card{text-decoration:none;color:inherit;}
+.card .more{display:block;margin-top:10px;font-size:12px;font-weight:500;color:var(--green);}
+.card:hover .more{text-decoration:underline;}
+
+/* 底部下单入口 */
+.order-cta{margin:3rem auto 0;padding-top:2rem;border-top:1px solid var(--border);text-align:center;}
+.order-cta h2{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:.4rem;}
+.order-cta .sub{font-size:13px;color:var(--muted);margin-bottom:1.6rem;}
+.order-btns{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;}
+.order-btn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:230px;text-decoration:none;padding:16px 28px;border-radius:2px;border:1.5px solid var(--green);}
+.order-btn .t{font-size:15px;font-weight:600;}
+.order-btn .s{font-size:12px;opacity:.8;}
+.order-btn.primary{background:var(--green);color:#fff;border-color:var(--green);}
+.order-btn.primary:hover{background:var(--green-light);border-color:var(--green-light);}
+.order-btn.ghost{background:#fff;color:var(--green);}
+.order-btn.ghost:hover{background:var(--cream);}
+.order-apply{margin-top:1.4rem;font-size:13px;color:var(--muted);}
+.order-apply a{color:var(--green);font-weight:500;}
+@media(max-width:560px){.order-btn{min-width:100%;}}
+
 footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:20px 5%;font-size:13px;margin-top:40px;}
 footer a{color:rgba(255,255,255,0.4);}
 
@@ -139,11 +160,26 @@ footer a{color:rgba(255,255,255,0.4);}
 
     <p class="section-note">No thawing needed — steam any bun for 8–10 min, or microwave for 4 min. 所有包子无需解冻，直接蒸8-10分钟或微波炉加热4分钟即可。</p>
 
-    <a href="https://sorghuman-erp.onrender.com/orders/new" target="_blank" rel="noopener" class="erp-btn">Sales rep: place an order for a client 业务员下单 →</a>
-
     <div id="productSections"><p style="color:var(--muted);padding:2rem 0;">加载中… Loading…</p></div>
 
-    <a href="local.html" class="buy-btn">&#128722; 立即购买 &middot; Shop now</a>
+    <a href="local.html" class="buy-btn">&#128722; 立即购买 &middot; Shop now（本地配送 Local delivery）</a>
+
+    <!-- 底部下单入口 · Ordering -->
+    <div class="order-cta">
+      <h2>批发下单 &middot; Wholesale Ordering</h2>
+      <p class="sub">超市 / 分销商请从这里进入 ERP 下单 &middot; Stores &amp; distributors order through the ERP</p>
+      <div class="order-btns">
+        <a href="https://sorghuman-erp.onrender.com/customer-portal/login" target="_blank" rel="noopener" class="order-btn primary">
+          <span class="t">已注册超市客户下单</span>
+          <span class="s">Registered store login →</span>
+        </a>
+        <a href="https://sorghuman-erp.onrender.com/orders/new" target="_blank" rel="noopener" class="order-btn ghost">
+          <span class="t">业务员代客下单</span>
+          <span class="s">Sales rep: order for a client →</span>
+        </a>
+      </div>
+      <p class="order-apply">还不是批发客户？<a href="https://sorghuman-erp.onrender.com/register/customer" target="_blank" rel="noopener">申请开通批发账户 Apply for a wholesale account →</a></p>
+    </div>
 
   </div>
 </div>
@@ -170,13 +206,18 @@ function esc(s){ return (s==null?'':String(s)).replace(/[<>&]/g,function(c){retu
 function cardHtml(p){
   var desc = p.description ? '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>' : '';
   var spec = p.spec ? '<span class="tag">'+esc(p.spec)+'</span>' : '';
-  return '<div class="card">'
+  // 有 SKU 就把整张卡做成链接，点进各自的详情页
+  var href = p.sku ? '/shop/?p='+encodeURIComponent(p.sku) : '';
+  var open = href ? '<a class="card" href="'+href+'">' : '<div class="card">';
+  var close = href ? '</a>' : '</div>';
+  var more = href ? '<span class="more">查看详情 · View details →</span>' : '';
+  return open
     + '<img src="'+esc(p.image_url||'')+'" alt="'+esc(p.name_zh||p.name_en||'')+'" loading="lazy">'
     + '<div class="card-body">'
     +   '<h3>'+esc(p.name_en||p.name_zh||'')+'</h3>'
     +   (p.name_zh ? '<p class="zh">'+esc(p.name_zh)+'</p>' : '')
-    +   desc + spec
-    + '</div></div>';
+    +   desc + spec + more
+    + '</div>' + close;
 }
 
 async function loadProducts(){
