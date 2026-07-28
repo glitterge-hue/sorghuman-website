@@ -198,6 +198,39 @@ td{padding:10px 14px;vertical-align:middle;}
         <div style="font-size:11px;color:#aaa;margin-top:4px;">上面的「图片链接」作为主图（第一张）。这里每行填一个附加图链接，顾客端产品详情页会显示为可左右切换的多图。</div>
       </div>
     </div>
+    <div style="margin:8px 0 12px;padding-top:14px;border-top:1px solid #eee;font-size:12px;font-weight:700;color:#2A6B3A;letter-spacing:.04em;">
+      商品详情 · 顾客端详情页 / 转发卡片显示（可留空）
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>商品介绍（中文）</label>
+        <textarea id="fDescZh" placeholder="皮薄馅足，选用当季梅干菜手工调馅…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Description (English)</label>
+        <textarea id="fDescEn" placeholder="Thin skin, generous filling, hand-wrapped…"></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>蒸制 / 食用说明（中文）</label>
+        <textarea id="fCookZh" placeholder="无需解冻，水开后大火蒸 12 分钟即可…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Cooking (English)</label>
+        <textarea id="fCookEn" placeholder="Steam from frozen over high heat for 12 min…"></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>配料表（中文）</label>
+        <textarea id="fIngZh" placeholder="面粉、梅干菜、猪肉、食用盐、白砂糖…"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Ingredients (English)</label>
+        <textarea id="fIngEn" placeholder="Wheat flour, preserved mustard greens, pork…"></textarea>
+      </div>
+    </div>
     <div class="form-row">
       <div class="form-group">
         <label><input type="checkbox" id="fCommon" checked> 通用（所有店默认上架）</label>
@@ -352,6 +385,9 @@ function openAdd() {
   document.getElementById('fCat').value='frozen'; document.getElementById('fSort').value='';
   document.getElementById('fImg').value='';
   document.getElementById('fGallery').value='';
+  document.getElementById('fDescZh').value=''; document.getElementById('fDescEn').value='';
+  document.getElementById('fCookZh').value=''; document.getElementById('fCookEn').value='';
+  document.getElementById('fIngZh').value=''; document.getElementById('fIngEn').value='';
   document.getElementById('fCommon').checked=true; document.getElementById('fActive').checked=true;
   document.getElementById('editMsg').textContent='';
   document.getElementById('editOverlay').classList.add('show');
@@ -368,6 +404,9 @@ function openEdit(sku) {
   document.getElementById('fCat').value=p.category; document.getElementById('fSort').value=p.sort_order||'';
   document.getElementById('fImg').value=p.image_url||'';
   document.getElementById('fGallery').value=galleryToArr(p.gallery).join('\n');
+  document.getElementById('fDescZh').value=p.description_zh||''; document.getElementById('fDescEn').value=p.description_en||'';
+  document.getElementById('fCookZh').value=p.cooking_zh||'';     document.getElementById('fCookEn').value=p.cooking_en||'';
+  document.getElementById('fIngZh').value =p.ingredients_zh||''; document.getElementById('fIngEn').value =p.ingredients_en||'';
   document.getElementById('fCommon').checked=!!p.common; document.getElementById('fActive').checked=!!p.active;
   document.getElementById('editMsg').textContent='';
   document.getElementById('editOverlay').classList.add('show');
@@ -393,6 +432,12 @@ async function saveProduct() {
     sort_order  : parseInt(document.getElementById('fSort').value)||0,
     image_url   : document.getElementById('fImg').value.trim()||null,
     gallery     : (function(){ var g=galleryToArr(document.getElementById('fGallery').value); return g.length?g:null; })(),
+    description_zh : document.getElementById('fDescZh').value.trim()||null,
+    description_en : document.getElementById('fDescEn').value.trim()||null,
+    cooking_zh     : document.getElementById('fCookZh').value.trim()||null,
+    cooking_en     : document.getElementById('fCookEn').value.trim()||null,
+    ingredients_zh : document.getElementById('fIngZh').value.trim()||null,
+    ingredients_en : document.getElementById('fIngEn').value.trim()||null,
     common      : document.getElementById('fCommon').checked,
     active      : document.getElementById('fActive').checked,
   };
