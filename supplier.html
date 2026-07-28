@@ -116,6 +116,22 @@
     .form-card { padding: 1.5rem; }
     .page-header { padding: 90px 5% 40px; }
   }
+
+  .erp-cta { max-width:760px; margin:0 auto; text-align:center; border:1px solid var(--border); border-radius:2px; padding:3rem 2rem; background:#fff; }
+  .erp-cta-eyebrow { font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--green); font-weight:500; margin-bottom:.8rem; }
+  .erp-cta h2 { font-family:'DM Serif Display',serif; font-size:26px; margin-bottom:1rem; color:var(--dark); }
+  .erp-cta-desc { font-size:14px; color:var(--muted); line-height:1.8; margin-bottom:2rem; }
+  .erp-cta-btns { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+  .erp-cta-btn { display:flex; flex-direction:column; align-items:center; gap:3px; min-width:250px; text-decoration:none; padding:18px 28px; border-radius:2px; border:1.5px solid var(--green); transition:background .2s,border-color .2s; }
+  .erp-cta-btn .t { font-size:16px; font-weight:500; }
+  .erp-cta-btn .s { font-size:12px; opacity:.85; }
+  .erp-cta-btn.primary { background:var(--green); color:#fff; }
+  .erp-cta-btn.primary:hover { background:var(--green-light); border-color:var(--green-light); }
+  .erp-cta-btn.ghost { background:#fff; color:var(--green); }
+  .erp-cta-btn.ghost:hover { background:var(--cream,#FAF7F2); }
+  .erp-cta-note { font-size:13px; color:var(--muted); line-height:1.7; margin-top:2rem; }
+  .erp-cta-note a { color:var(--green); }
+  @media(max-width:560px){ .erp-cta-btn{min-width:100%;} }
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q99SSTBGE8"></script>
@@ -140,7 +156,7 @@
   <div class="page-header-inner">
     <p class="eyebrow">Partner with us · 成为我们的供应商</p>
     <h1>Supplier Registration</h1>
-    <p>We are always looking for high-quality frozen food manufacturers in China to expand our product range. Please complete the form below and our sourcing team will be in touch within 3–5 business days.</p>
+    <p>We welcome high-quality frozen food manufacturers worldwide. Registration, quotations and contracts are now handled in our online Supplier Portal — get started below. 我们欢迎来自全球的优质冷冻食品制造商;入驻、报价与合同现已全部迁移至线上供应商门户,请从下方进入。</p>
   </div>
 </div>
 
@@ -161,7 +177,7 @@
       <div class="req-item">
         <div class="req-icon">📦</div>
         <h4>Export-ready packaging</h4>
-        <p>Bilingual English/Chinese labels meeting FDA requirements</p>
+        <p>FDA-compliant English-language labels (bilingual where required)</p>
       </div>
       <div class="req-item">
         <div class="req-icon">✅</div>
@@ -170,150 +186,27 @@
       </div>
     </div>
 
-    <div id="formWrapper">
-      <div class="error-banner" id="errorBanner"></div>
-      <div class="form-card">
-
-        <p class="form-section-title">Company information · 企业信息</p>
-        <div class="form-grid">
-          <div class="form-group full">
-            <label>Company name (Chinese) <span class="zh">Company Name 企业名称</span><span class="required">*</span></label>
-            <input type="text" id="companyZh" placeholder="e.g. 江苏某某食品有限公司">
-          </div>
-          <div class="form-group full">
-            <label>Company name (English)<span class="required">*</span></label>
-            <input type="text" id="companyEn" placeholder="e.g. Jiangsu XX Food Co., Ltd.">
-          </div>
-          <div class="form-group full">
-            <label>Factory address <span class="zh">Factory Address 工厂地址</span><span class="required">*</span></label>
-            <input type="text" id="address" placeholder="Full address including province, city, street">
-          </div>
-          <div class="form-group">
-            <label>FDA Registration Number<span class="required">*</span></label>
-            <input type="text" id="fda" placeholder="e.g. 12345678901">
-            <span class="form-note">U.S. FDA food facility registration. <a href="https://www.fda.gov/food/online-registration-food-facilities/register-food-facility-online" target="_blank">Register here →</a></span>
-          </div>
-          <div class="form-group">
-            <label>DUNS Number<span class="required">*</span></label>
-            <input type="text" id="duns" placeholder="e.g. 12-345-6789">
-            <span class="form-note">9-digit Dun &amp; Bradstreet identifier</span>
-          </div>
-        </div>
-
-        <p class="form-section-title">Contact person · 联系人信息</p>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Contact name <span class="zh">Contact Name 联系人姓名</span><span class="required">*</span></label>
-            <input type="text" id="contact" placeholder="Full name">
-          </div>
-          <div class="form-group">
-            <label>Title <span class="zh">Title 职位</span></label>
-            <input type="text" id="title" placeholder="e.g. Export Manager">
-          </div>
-          <div class="form-group">
-            <label>Phone <span class="zh">Phone 电话</span><span class="required">*</span></label>
-            <input type="tel" id="phone" placeholder="+86 138 0000 0000">
-          </div>
-          <div class="form-group">
-            <label>WeChat ID <span class="zh">WeChat 微信号</span></label>
-            <input type="text" id="wechat" placeholder="WeChat ID (optional)">
-          </div>
-          <div class="form-group full">
-            <label>Email <span class="zh">Email 邮箱</span><span class="required">*</span></label>
-            <input type="email" id="email" placeholder="export@yourcompany.com">
-          </div>
-        </div>
-
-        <p class="form-section-title">Products available · 可供商品</p>
-        <div class="form-group full">
-          <div class="checkbox-grid">
-            <label class="checkbox-item">
-              <input type="checkbox" value="Steamed Buns Buns 包子">
-              <span class="cb-label">Steamed Buns<span class="cb-zh">Buns 包子</span></span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="Dumplings 饺子">
-              <span class="cb-label">Dumplings<span class="cb-zh">Dumplings 饺子</span></span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="Dim Sum Dim Sum 点心">
-              <span class="cb-label">Dim Sum<span class="cb-zh">Dim Sum 点心</span></span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="Rice Cakes Rice Cake 年糕">
-              <span class="cb-label">Rice Cakes<span class="cb-zh">Rice Cake 年糕</span></span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="Spring Rolls Spring Roll 春卷">
-              <span class="cb-label">Spring Rolls<span class="cb-zh">Spring Roll 春卷</span></span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="Noodles Noodles 面条">
-              <span class="cb-label">Noodles<span class="cb-zh">Noodles 面条</span></span>
-            </label>
-            <label class="checkbox-item">
-              <input type="checkbox" value="Glutinous Rice Products Glutinous Rice Products 糯米制品">
-              <span class="cb-label">Glutinous Rice<span class="cb-zh">Glutinous Rice Products 糯米制品</span></span>
-            </label>
-            <label class="checkbox-item" id="otherCheckItem">
-              <input type="checkbox" value="Other" id="otherCheck">
-              <span class="cb-label">Other<span class="cb-zh">Other 其他</span></span>
-            </label>
-          </div>
-          <div class="other-input" id="otherInput">
-            <input type="text" id="otherText" placeholder="Please describe other products · 请描述Other 其他商品">
-          </div>
-        </div>
-
-        <p class="form-section-title">Certifications · 资质证书</p>
-        <div class="form-group full">
-          <div class="cert-grid">
-            <label class="cert-item"><input type="checkbox" value="HACCP"> HACCP</label>
-            <label class="cert-item"><input type="checkbox" value="ISO 22000"> ISO 22000</label>
-            <label class="cert-item"><input type="checkbox" value="BRC"> BRC</label>
-            <label class="cert-item"><input type="checkbox" value="FSSC 22000"> FSSC 22000</label>
-            <label class="cert-item"><input type="checkbox" value="Halal 清真"> Halal 清真</label>
-            <label class="cert-item"><input type="checkbox" value="Kosher"> Kosher</label>
-            <label class="cert-item"><input type="checkbox" value="Organic 有机"> Organic 有机</label>
-            <label class="cert-item"><input type="checkbox" value="SC (中国食品生产许可)"> SC Food Production License SC 食品生产许可</label>
-          </div>
-        </div>
-
-        <p class="form-section-title">Additional information · 补充信息</p>
-        <div class="form-grid">
-          <div class="form-group">
-            <label>Annual export volume <span class="zh">Annual Export Volume 年出口量</span></label>
-            <select id="volume">
-              <option value="">— Select —</option>
-              <option>Under 50 containers / 50柜以下</option>
-              <option>50–200 containers / 50–200柜</option>
-              <option>200–500 containers / 200–500柜</option>
-              <option>500+ containers / 500柜以上</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label>Minimum order quantity <span class="zh">MOQ 最小起订量</span></label>
-            <input type="text" id="moq" placeholder="e.g. 1 x 20ft container">
-          </div>
-          <div class="form-group full">
-            <label>Additional notes <span class="zh">Additional Notes 补充说明</span></label>
-            <textarea id="notes" placeholder="Any additional information about your company, products, existing U.S. customers, or export experience...&#10;请填写关于贵司、产品、现有美国客户或出口经验的任何补充信息"></textarea>
-          </div>
-        </div>
-
-        <div class="submit-row">
-          <button class="submit-btn" onclick="submitForm()">Submit application · 提交申请</button>
-          <p class="submit-note">Fields marked <span style="color:var(--red)">*</span> are required.<br>We will respond within 3–5 business days · 我们将在3-5个工作日内回复</p>
-        </div>
-
+    <div class="erp-cta">
+      <p class="erp-cta-eyebrow">供应商门户 · Supplier Portal</p>
+      <h2>入驻与报价请进入供应商门户</h2>
+      <p class="erp-cta-desc">
+        供应商注册、DUNS / FDA 代办、报价单、双语采购合同、付款与订单对账,现已全部在线上「供应商门户」完成。<br>
+        Supplier onboarding, DUNS/FDA agency filing, quotations, bilingual purchase contracts, payments and order reconciliation are all handled in our online Supplier Portal.
+      </p>
+      <div class="erp-cta-btns">
+        <a href="https://sorghuman-erp.onrender.com/register/supplier" target="_blank" rel="noopener" class="erp-cta-btn primary">
+          <span class="t">注册成为供应商</span>
+          <span class="s">Register as a supplier →</span>
+        </a>
+        <a href="https://sorghuman-erp.onrender.com/supplier-portal/login" target="_blank" rel="noopener" class="erp-cta-btn ghost">
+          <span class="t">已注册供应商登录</span>
+          <span class="s">Registered supplier login →</span>
+        </a>
       </div>
-    </div>
-
-    <div class="success-page" id="successPage">
-      <div class="success-icon">✓</div>
-      <h2>Application submitted!</h2>
-      <p>Thank you for your interest in partnering with Sorghuman Holding LLC. Our sourcing team will review your application and contact you at the email provided within 3–5 business days.<br><br>Thank you! Our sourcing team will contact you within 3–5 business days. 感谢您提交申请！我们的采购团队将在3-5个工作日内与您联系。</p>
-      <a href="index.html" class="back-btn">← Back to main site 返回主站</a>
+      <p class="erp-cta-note">
+        注册后即可在门户内提交报价、签署双语采购合同、查看付款与订单进度。如需协助,请联系
+        <a href="mailto:info@sorghuman.com">info@sorghuman.com</a>。
+      </p>
     </div>
 
   </div>
@@ -323,55 +216,6 @@
   <p>© 2025 Sorghuman Holding LLC · 高仁控股国际有限公司 · <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
 </footer>
 
-<script>
-document.getElementById('otherCheck').addEventListener('change', function() {
-  document.getElementById('otherInput').style.display = this.checked ? 'block' : 'none';
-});
 
-function submitForm() {
-  var fields = [
-    { id: 'companyZh', label: 'Company Name 企业名称 (Chinese)' },
-    { id: 'companyEn', label: 'Company name (English)' },
-    { id: 'address',   label: 'Factory address' },
-    { id: 'fda',       label: 'FDA Registration Number' },
-    { id: 'duns',      label: 'DUNS Number' },
-    { id: 'contact',   label: 'Contact name' },
-    { id: 'phone',     label: 'Phone' },
-    { id: 'email',     label: 'Email' }
-  ];
-
-  var errors = [];
-  fields.forEach(function(f) {
-    var el = document.getElementById(f.id);
-    el.classList.remove('error');
-    if (!el.value.trim()) {
-      el.classList.add('error');
-      errors.push(f.label);
-    }
-  });
-
-  var emailEl = document.getElementById('email');
-  if (emailEl.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
-    emailEl.classList.add('error');
-    errors.push('Valid email address');
-  }
-
-  var checked = document.querySelectorAll('.checkbox-grid input[type=checkbox]:checked');
-  if (checked.length === 0) errors.push('At least one product category');
-
-  var banner = document.getElementById('errorBanner');
-  if (errors.length > 0) {
-    banner.style.display = 'block';
-    banner.textContent = 'Please complete the following required fields: ' + errors.join(', ');
-    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    return;
-  }
-
-  banner.style.display = 'none';
-  document.getElementById('formWrapper').style.display = 'none';
-  document.getElementById('successPage').style.display = 'block';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-}
-</script>
 </body>
 </html>
