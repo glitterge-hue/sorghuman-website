@@ -886,7 +886,7 @@ function closeDetail(){
 
 function shareProduct(sku){
   var p = findProduct(sku);
-  var u = location.origin + location.pathname + '?p=' + encodeURIComponent(sku);
+  var u = location.origin + '/p/' + encodeURIComponent(sku);
   var label = p ? (p.name_zh+' '+p.name_en) : '';
   if(navigator.share){
     navigator.share({ title: label, url: u }).catch(function(){});
