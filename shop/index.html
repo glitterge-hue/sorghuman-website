@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Order</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- PWA（白标）：manifest 与图标按门店动态生成，具体品牌由 applyStore() 写入 -->
+<meta name="theme-color" content="#2A6B3A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Store">
+<link id="pwaManifest" rel="manifest" href="/shop/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/shop/app-icon.svg?c=2A6B3A&amp;t=S&amp;s=192">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
 :root{
@@ -626,6 +634,7 @@ function applyStore(){
     f.style.display = 'block';
     f.textContent = '演示模式：正在用内嵌数据。部署后会自动读取线上配置。';
   }
+  if (window.brandPWA) window.brandPWA();
 }
 
 // ---- 营业时间 / 节假日通知 ----
@@ -1087,6 +1096,88 @@ function submitCheckout(cart){
 }
 
 boot();
+</script>
+<!-- PWA 安装按钮（可装时才出现） -->
+<button id="pwaInstallBtn" style="display:none;position:fixed;right:16px;bottom:16px;z-index:9999;align-items:center;gap:8px;background:var(--brand,#2A6B3A);color:#fff;border:none;border-radius:999px;padding:11px 18px;font-size:14px;font-weight:600;box-shadow:0 8px 22px rgba(0,0,0,.20);cursor:pointer;">
+  <span style="font-size:16px;line-height:1;">⤓</span><span class="pwa-label">安装 App</span>
+</button>
+<script>
+(function(){
+  // 1) 注册 Service Worker —— Chrome 弹「安装」提示的前置条件
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/shop/sw.js', { scope: '/shop/' }).catch(function(){});
+  }
+  function storeParamStr(){
+    var m = location.search.match(/[?&]store=([^&]+)/);
+    return m ? '?store=' + m[1] : '';
+  }
+  function setMeta(name, content){
+    var m = document.querySelector('meta[name="' + name + '"]');
+    if (!m) { m = document.createElement('meta'); m.setAttribute('name', name); document.head.appendChild(m); }
+    m.setAttribute('content', content);
+  }
+  function setLink(rel, href){
+    var l = document.querySelector('link[rel="' + rel + '"]');
+    if (!l) { l = document.createElement('link'); l.rel = rel; document.head.appendChild(l); }
+    l.href = href;
+  }
+  // 生成品牌图标 PNG（iOS 的 apple-touch-icon / favicon 用）
+  function makeIcon(text, color, size){
+    try{
+      var c = document.createElement('canvas'); c.width = c.height = size;
+      var x = c.getContext('2d'); var r = size * 0.22;
+      x.fillStyle = color;
+      x.beginPath(); x.moveTo(r,0);
+      x.arcTo(size,0,size,size,r); x.arcTo(size,size,0,size,r);
+      x.arcTo(0,size,0,0,r); x.arcTo(0,0,size,0,r); x.closePath(); x.fill();
+      x.fillStyle = '#fff';
+      x.font = '700 ' + Math.round(size*0.5) + 'px "PingFang SC","Microsoft YaHei",sans-serif';
+      x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillText((text||'S').charAt(0), size/2, size/2 + size*0.03);
+      return c.toDataURL('image/png');
+    }catch(e){ return null; }
+  }
+  // 由 applyStore() 调用：把 App 名称/主题色/图标写进页面
+  window.brandPWA = function(){
+    try{
+      var s = window.store || {};
+      var name = (s.name_zh || s.name_en || 'Store');
+      var color = s.theme || '#2A6B3A';
+      setMeta('theme-color', color);
+      setMeta('apple-mobile-web-app-title', name);
+      var ml = document.getElementById('pwaManifest');
+      if (ml) ml.href = '/shop/manifest.webmanifest' + storeParamStr();
+      var png180 = makeIcon(name, color, 180);
+      if (png180) { setLink('apple-touch-icon', png180); setLink('icon', makeIcon(name, color, 64) || png180); }
+      var b = document.getElementById('pwaInstallBtn');
+      if (b) {
+        var lbl = b.querySelector('.pwa-label');
+        if (lbl) lbl.textContent = '安装“' + name + '”';
+        // iOS 没有 beforeinstallprompt：非独立模式下也显示按钮，点了给引导
+        var isiOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+        var standalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone;
+        if (isiOS && !standalone) { b.style.display = 'flex'; b.dataset.ios = '1'; }
+      }
+    }catch(e){}
+  };
+  // 2) Android/Chrome：拦截安装提示，用自定义按钮触发
+  var deferred = null;
+  window.addEventListener('beforeinstallprompt', function(e){
+    e.preventDefault(); deferred = e;
+    var b = document.getElementById('pwaInstallBtn'); if (b) b.style.display = 'flex';
+  });
+  window.addEventListener('appinstalled', function(){
+    var b = document.getElementById('pwaInstallBtn'); if (b) b.style.display = 'none';
+  });
+  document.addEventListener('click', function(ev){
+    var b = ev.target.closest && ev.target.closest('#pwaInstallBtn'); if (!b) return;
+    if (b.dataset.ios === '1') {
+      alert('安装到主屏幕：\n点击浏览器底部的「分享」按钮，选择「添加到主屏幕 / Add to Home Screen」。');
+      return;
+    }
+    if (deferred) { deferred.prompt(); deferred = null; b.style.display = 'none'; }
+  });
+})();
 </script>
 </body>
 </html>
