@@ -22,3 +22,11 @@ https://sorghuman.com/local.html    /shop/   302!
 # 真人访问会被函数自动跳转到 /shop/?p=SKU 打开商品详情。
 # ─────────────────────────────────────────────────────────────
 /p/*    /.netlify/functions/product-share?p=:splat    200
+
+# ─────────────────────────────────────────────────────────────
+# 白标 PWA：按门店动态生成的 manifest 与 App 图标
+# /shop/manifest.webmanifest → store-manifest 函数（按域名返回该店品牌）
+# /shop/app-icon.svg         → store-icon 函数（主题色底 + 店名首字）
+# ─────────────────────────────────────────────────────────────
+/shop/manifest.webmanifest    /.netlify/functions/store-manifest    200
+/shop/app-icon.svg            /.netlify/functions/store-icon         200
