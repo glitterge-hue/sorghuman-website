@@ -41,6 +41,10 @@ exports.handler = async (event) => {
     shipping_name         : session.shipping_details?.name 
                             || session.customer_details?.name || null,
     total                 : session.amount_total ? session.amount_total / 100 : null,
+    // 订阅（session.mode==='subscription'）会带上 stripe 的订阅 ID，
+    // 用于后续自动续订、取消或客户自助管理。
+    purchase_type          : session.mode === 'subscription' ? 'subscription' : 'one_time',
+    stripe_subscription_id : session.subscription || null,
   };
 
   await fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${session.id}`, {

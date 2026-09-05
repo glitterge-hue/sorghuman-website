@@ -38,7 +38,7 @@ exports.handler = async (event) => {
       sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
       sb('store_products',
         `store_id=eq.${storeId}&active=eq.true` +
-        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order,description_zh,description_en,ingredients_zh,ingredients_en,cooking_zh,cooking_en,nutrition,gallery)` +
+        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order,description_zh,description_en,ingredients_zh,ingredients_en,cooking_zh,cooking_en,nutrition,gallery,product_line,subscription_enabled,subscription_interval,subscription_interval_count,subscription_price)` +
         `&order=sort_order.asc`),
     ]);
 
@@ -81,6 +81,14 @@ exports.handler = async (event) => {
         cooking_en     : sp.products.cooking_en || '',
         nutrition      : sp.products.nutrition || null,
         gallery        : sp.products.gallery || null,
+        // 非食品 / 订阅（Non-food / subscription）
+        product_line             : sp.products.product_line || 'food',
+        subscription_enabled     : !!sp.products.subscription_enabled,
+        subscription_interval    : sp.products.subscription_interval || 'month',
+        subscription_interval_count: sp.products.subscription_interval_count || 1,
+        subscription_price       : sp.products.subscription_price != null
+          ? parseFloat(sp.products.subscription_price)
+          : null,
       }));
 
     const globalPromo = settingsRows[0]?.value || null;
@@ -100,6 +108,10 @@ exports.handler = async (event) => {
           beverages : '饮料 Beverages',
           fresh     : '生鲜 Fresh Produce',
           grocery   : '百货 Grocery',
+          // 非食品 · 餐厅耗材（Non-Food · Restaurant Supplies）
+          mealbox   : '一次性餐盒 Disposable Meal Boxes',
+          film      : '包装膜 Packaging Film',
+          tape      : '打包胶带辅料 Packing Tape & Supplies',
         }
       })
     };

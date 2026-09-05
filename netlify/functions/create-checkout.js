@@ -45,6 +45,8 @@ exports.handler = async (event) => {
 
   const { cart, origin } = body;
   const storeId = body.storeId || 'default';
+  // 'one_time'（默认，现金/单次付款）或 'subscription'（按月自动续订）
+  const purchaseType = body.purchaseType === 'subscription' ? 'subscription' : 'one_time';
 
   // ── 兼容 local.html 旧格式（直接传 Stripe lineItems + Price ID）──
   if (body.lineItems && Array.isArray(body.lineItems)) {
@@ -63,7 +65,8 @@ exports.handler = async (event) => {
       const total = body.lineItems.reduce((s,li)=>s+(li.unit_amount||0)*(li.quantity||1),0)/100;
       await sbInsert('orders',{
         store_id:'default', stripe_session_id:session.id,
-        items:body.lineItems, subtotal:total, delivery_fee:0, total:total, status:'pending'
+        items:body.lineItems, subtotal:total, delivery_fee:0, total:total, status:'pending',
+        purchase_type:'one_time'
       });
       return { statusCode:200, headers:CORS, body:JSON.stringify({ url:session.url }) };
     } catch(e) {
@@ -94,41 +97,71 @@ exports.handler = async (event) => {
     products.forEach(p => { prodMap[p.sku] = p; });
 
     // ── 服务器端算价 ──────────────────────────────────────────
+    // 订阅模式：只接受开启了 subscription_enabled 的商品，单价用
+    // subscription_price（若未设置，按一次性价打 92 折作为订阅优惠价）。
     const lineItems = [];
+    const skippedNonSubscribable = [];
     for (const item of cart) {
       const p = prodMap[item.sku];
       if (!p) continue;
-      const price = priceMap[p.sku] != null
+      const onceOffPrice = priceMap[p.sku] != null
         ? priceMap[p.sku]
         : parseFloat((p.base_price * markup).toFixed(2));
-      lineItems.push({
-        price_data: {
-          currency    : 'usd',
-          product_data: { name: p.name_zh + '  ' + p.name_en },
-          unit_amount : Math.round(price * 100),
-        },
-        quantity: Math.max(1, Math.floor(Number(item.qty))),
-      });
+
+      if (purchaseType === 'subscription') {
+        if (!p.subscription_enabled) { skippedNonSubscribable.push(p.sku); continue; }
+        const subPrice = p.subscription_price != null
+          ? parseFloat(p.subscription_price)
+          : parseFloat((onceOffPrice * 0.92).toFixed(2));
+        lineItems.push({
+          price_data: {
+            currency    : 'usd',
+            product_data: { name: p.name_zh + '  ' + p.name_en + '（订阅 Subscription）' },
+            unit_amount : Math.round(subPrice * 100),
+            recurring   : {
+              interval      : p.subscription_interval || 'month',
+              interval_count: p.subscription_interval_count || 1,
+            },
+          },
+          quantity: Math.max(1, Math.floor(Number(item.qty))),
+        });
+      } else {
+        lineItems.push({
+          price_data: {
+            currency    : 'usd',
+            product_data: { name: p.name_zh + '  ' + p.name_en },
+            unit_amount : Math.round(onceOffPrice * 100),
+          },
+          quantity: Math.max(1, Math.floor(Number(item.qty))),
+        });
+      }
     }
 
     if (lineItems.length === 0)
-      return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'No valid items' }) };
+      return { statusCode: 400, headers: CORS, body: JSON.stringify({
+        error: purchaseType === 'subscription'
+          ? 'No subscribable items in cart'
+          : 'No valid items',
+      }) };
 
-    // ── 配送费 ────────────────────────────────────────────────
-    const subtotalCents  = lineItems.reduce((s, li) => s + li.price_data.unit_amount * li.quantity, 0);
-    const thresholdCents = Math.round((store.free_delivery_threshold ?? 30) * 100);
-    const feeCents       = Math.round((store.delivery_fee ?? 5) * 100);
-    const deliveryCents  = subtotalCents < thresholdCents ? feeCents : 0;
-
-    if (deliveryCents > 0) {
-      lineItems.push({
-        price_data: {
-          currency    : 'usd',
-          product_data: { name: '配送费 Delivery Fee' },
-          unit_amount : deliveryCents,
-        },
-        quantity: 1,
-      });
+    // ── 配送费（仅一次性购买计算；订阅商品按合同/批量方式另行安排配送，不在结账时计费）──
+    const subtotalCents = lineItems.reduce(
+      (s, li) => s + li.price_data.unit_amount * li.quantity, 0);
+    let deliveryCents = 0;
+    if (purchaseType !== 'subscription') {
+      const thresholdCents = Math.round((store.free_delivery_threshold ?? 30) * 100);
+      const feeCents       = Math.round((store.delivery_fee ?? 5) * 100);
+      deliveryCents        = subtotalCents < thresholdCents ? feeCents : 0;
+      if (deliveryCents > 0) {
+        lineItems.push({
+          price_data: {
+            currency    : 'usd',
+            product_data: { name: '配送费 Delivery Fee' },
+            unit_amount : deliveryCents,
+          },
+          quantity: 1,
+        });
+      }
     }
 
     // ── 创建 Stripe 收银会话 ───────────────────────────────────
@@ -136,16 +169,17 @@ exports.handler = async (event) => {
     const successUrl = `${base}/shop/?order=success`;
     const cancelUrl  = `${base}/shop/`;
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams = {
       payment_method_types        : ['card'],
       line_items                  : lineItems,
-      mode                        : 'payment',
+      mode                        : purchaseType === 'subscription' ? 'subscription' : 'payment',
       success_url                 : successUrl,
       cancel_url                  : cancelUrl,
-      metadata                    : { store_id: storeId },
+      metadata                    : { store_id: storeId, purchase_type: purchaseType },
       shipping_address_collection : { allowed_countries: ['US'] },
       phone_number_collection     : { enabled: true },
-    });
+    };
+    const session = await stripe.checkout.sessions.create(sessionParams);
 
     // ── 写订单到 Supabase ─────────────────────────────────────
     await sbInsert('orders', {
@@ -156,9 +190,13 @@ exports.handler = async (event) => {
       delivery_fee     : deliveryCents  / 100,
       total            : (subtotalCents + deliveryCents) / 100,
       status           : 'pending',
+      purchase_type    : purchaseType,
     });
 
-    return { statusCode: 200, headers: CORS, body: JSON.stringify({ url: session.url }) };
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({
+      url: session.url,
+      skipped: skippedNonSubscribable.length ? skippedNonSubscribable : undefined,
+    }) };
 
   } catch (e) {
     console.error('checkout error:', e.message);

@@ -21,6 +21,10 @@ const CATEGORY_LABELS = {
   beverages : '饮品 Beverages',
   rice      : '优质大米 Premium Rice',
   grocery   : '百货 Grocery',
+  // 非食品 · 餐厅耗材（Non-Food · Restaurant Supplies）
+  mealbox   : '一次性餐盒 Disposable Meal Boxes',
+  film      : '包装膜 Packaging Film',
+  tape      : '打包胶带辅料 Packing Tape & Supplies',
 };
 
 exports.handler = async (event) => {
@@ -30,7 +34,8 @@ exports.handler = async (event) => {
   try {
     const res = await fetch(
       `${SUPA_URL}/rest/v1/products?active=eq.true&showcase=eq.true` +
-      `&select=sku,name_zh,name_en,spec,category,showcase_category,image_url,description,sort_order` +
+      `&select=sku,name_zh,name_en,spec,category,showcase_category,image_url,description,sort_order,` +
+      `product_line,subscription_enabled,subscription_interval,subscription_interval_count,subscription_price,base_price` +
       `&order=sort_order.asc`,
       { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }
     );
