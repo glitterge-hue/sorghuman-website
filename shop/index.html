@@ -108,6 +108,14 @@ footer #footStore:hover{color:var(--brand);}
 .cat-tabs-section{background:#fff;border-bottom:1px solid var(--border);padding:16px 5%;}
 .cat-tabs{max-width:920px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;}
 .cat-tab{padding:9px 18px;border:1.5px solid var(--brand);border-radius:30px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--brand);font-family:inherit;transition:background .15s,color .15s;white-space:nowrap;}
+.cat-tab.nonfood{border-color:var(--gold);color:var(--gold);}
+.cat-tab.nonfood:hover,.cat-tab.nonfood.active{background:var(--gold);color:#fff;}
+/* 一次性 / 订阅 切换（Purchase-type toggle：仅支持订阅的商品显示）*/
+.ptype-toggle{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;}
+.ptype-btn{border:1.5px solid var(--border);background:#fff;color:var(--muted);font-family:inherit;font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s;}
+.ptype-btn.active{border-color:var(--gold);background:var(--gold);color:#fff;}
+.cart-sub-heading{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin:14px 0 6px;padding-top:12px;border-top:1px dashed var(--border);}
+.cart-sub-heading:first-child{border-top:none;padding-top:0;margin-top:0;}
 .cat-tab:hover,.cat-tab.active{background:var(--brand);color:#fff;}
 /* 品类卡片：电脑端三个一行，手机两个一行，等高对齐 */
 .cat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:4px 0;}
@@ -132,6 +140,7 @@ footer #footStore:hover{color:var(--brand);}
 .prod-info .zh{font-size:13px;color:var(--muted);}
 .prod-info .spec{font-size:11.5px;color:var(--muted);margin-top:2px;}
 .prod-info .price{font-size:14px;font-weight:600;color:var(--dark);margin-top:5px;font-variant-numeric:tabular-nums;}
+.prod-actions{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
 .qty-control{display:flex;align-items:center;gap:10px;}
 .qty-btn{width:30px;height:30px;border:1px solid var(--border);background:#fff;border-radius:3px;font-size:17px;cursor:pointer;color:var(--brand);line-height:1;}
 .qty-btn:hover{border-color:var(--brand);}
@@ -299,6 +308,9 @@ footer a{color:var(--brand);}
     <button class="cat-tab" data-cat="beverages"  onclick="setCat('beverages')">饮料 Beverages</button>
     <button class="cat-tab" data-cat="fresh"      onclick="setCat('fresh')">生鲜 Fresh</button>
     <button class="cat-tab" data-cat="grocery"    onclick="setCat('grocery')">百货 Grocery</button>
+    <button class="cat-tab nonfood" data-cat="mealbox" onclick="setCat('mealbox')">🍱 一次性餐盒 Meal Boxes</button>
+    <button class="cat-tab nonfood" data-cat="film"    onclick="setCat('film')">🧻 包装膜 Film</button>
+    <button class="cat-tab nonfood" data-cat="tape"    onclick="setCat('tape')">📦 打包耗材 Tape &amp; Supplies</button>
   </div>
 </div>
 
@@ -308,22 +320,38 @@ footer a{color:var(--brand);}
     <div class="cart-box">
       <h3>购物车 Cart</h3>
       <div id="cartEmpty" class="cart-empty">购物车是空的 · Cart is empty.<br>请选择商品加入购物车。</div>
-      <div id="cartItems"></div>
-      <div id="cartTotals" class="cart-totals" style="display:none;">
-        <div class="cart-row"><span>小计 Subtotal</span><span id="cartSubtotal"></span></div>
-        <div class="cart-row"><span style="color:var(--muted);">配送 Delivery</span><span id="cartDelivery"></span></div>
-        <div class="cart-row total"><span>合计 Total</span><span id="cartTotal"></span></div>
-      </div>
-      <p class="cart-note" id="cartNote" style="display:none;"></p>
-      <div class="zip-inline" id="zipInline" style="display:none;">
-        <p class="zip-inline-label">请输入邮编确认配送范围 · Enter your ZIP:</p>
-        <div class="zip-inline-row">
-          <input class="zip-input" id="zipCart" placeholder="ZIP Code" maxlength="5">
-          <button class="zip-btn" onclick="confirmZipAndProceed()">确认 Confirm</button>
+
+      <div id="cartOneTimeSection" style="display:none;">
+        <div class="cart-sub-heading">🛒 一次性购买 One-time</div>
+        <div id="cartItems"></div>
+        <div id="cartTotals" class="cart-totals" style="display:none;">
+          <div class="cart-row"><span>小计 Subtotal</span><span id="cartSubtotal"></span></div>
+          <div class="cart-row"><span style="color:var(--muted);">配送 Delivery</span><span id="cartDelivery"></span></div>
+          <div class="cart-row total"><span>合计 Total</span><span id="cartTotal"></span></div>
         </div>
-        <div class="zip-msg" id="zipCartMsg" style="display:none;"></div>
+        <p class="cart-note" id="cartNote" style="display:none;"></p>
+        <div class="zip-inline" id="zipInline" style="display:none;">
+          <p class="zip-inline-label">请输入邮编确认配送范围 · Enter your ZIP:</p>
+          <div class="zip-inline-row">
+            <input class="zip-input" id="zipCart" placeholder="ZIP Code" maxlength="5">
+            <button class="zip-btn" onclick="confirmZipAndProceed()">确认 Confirm</button>
+          </div>
+          <div class="zip-msg" id="zipCartMsg" style="display:none;"></div>
+        </div>
+        <button class="checkout-btn" id="checkoutBtn" onclick="goToCheckout()" disabled>去结账 Checkout &rarr;</button>
       </div>
-      <button class="checkout-btn" id="checkoutBtn" onclick="goToCheckout()" disabled>去结账 Checkout &rarr;</button>
+
+      <div id="cartSubSection" style="display:none;">
+        <div class="cart-sub-heading">📅 订阅配送 Subscription（按月自动续订 Auto-renews monthly）</div>
+        <div id="cartItemsSub"></div>
+        <div id="cartTotalsSub" class="cart-totals" style="display:none;">
+          <div class="cart-row"><span>每月小计 Monthly subtotal</span><span id="cartSubtotalSub"></span></div>
+          <div class="cart-row total"><span>每月合计 Monthly total</span><span id="cartTotalSub"></span></div>
+        </div>
+        <p class="cart-note">订阅商品与一次性商品分开结账；配送方式将在下单后与您确认。<br>Subscription items checkout separately from one-time items; delivery arranged after order.</p>
+        <button class="checkout-btn" id="checkoutBtnSub" onclick="goToCheckoutSub()">订阅结账 Subscribe &rarr;</button>
+      </div>
+
       <p class="stripe-note">结账安全加密 · Secured by Stripe</p>
     </div>
   </div>
@@ -354,7 +382,10 @@ var FALLBACK_CATALOG = {
     snacks:'零食 Snacks',
     beverages:'饮料 Beverages',
     fresh:'生鲜 Fresh Produce',
-    grocery:'百货 Grocery'
+    grocery:'百货 Grocery',
+    mealbox:'一次性餐盒 Disposable Meal Boxes',
+    film:'包装膜 Packaging Film',
+    tape:'打包胶带辅料 Packing Tape & Supplies'
   },
   products:[
     {sku:'4650',  name_en:'Glutinous Rice Shaomai',        name_zh:'糯米烧卖',     spec:'16 oz / 6 pcs', category:'frozen', base_price:4.99, common:true},
@@ -367,7 +398,14 @@ var FALLBACK_CATALOG = {
     {sku:'PLUM-1',   name_en:'Sour Plum Soup (single)',    name_zh:'酸梅汤 单瓶',  spec:'16 fl oz', category:'beverages', base_price:2.99, common:true},
     {sku:'PLUM-20',  name_en:'Sour Plum Soup (case/20)',   name_zh:'酸梅汤 整箱',  spec:'20x16 fl oz', category:'beverages', base_price:49.99, common:true},
     {sku:'PLUM-CONC',name_en:'Sour Plum Concentrate',      name_zh:'酸梅汁浓缩液', spec:'浓缩', category:'beverages', base_price:9.99, common:true},
-    {sku:'RICE-ST25',name_en:'ST25 Vietnamese Rice',       name_zh:'蟹老伯ST25大米',spec:'5 kg', category:'grains', base_price:25.00, common:true}
+    {sku:'RICE-ST25',name_en:'ST25 Vietnamese Rice',       name_zh:'蟹老伯ST25大米',spec:'5 kg', category:'grains', base_price:25.00, common:true},
+    // 非食品 · 江苏中宁塑业（Jiangsu Zhongning Plastic）餐厅耗材样品，均支持按月订阅配送
+    {sku:'ZN124',  name_en:'Round Disposable Meal Box w/ Lid',  name_zh:'一次性餐盒（圆形，带盖）', spec:'18.8×15×5.7cm · 49只/箱', category:'mealbox', base_price:26.90, common:true, subscription_enabled:true, subscription_interval:'month', subscription_price:24.90},
+    {sku:'ZN148',  name_en:'5-Compartment Meal Box w/ Lid',     name_zh:'五格分隔餐盒（带盖）',     spec:'43.6g · 250只/箱',        category:'mealbox', base_price:54.90, common:true, subscription_enabled:true, subscription_interval:'month', subscription_price:49.90},
+    {sku:'ZN130',  name_en:'Round Bowl w/ Lid',                 name_zh:'圆形碗（带盖）',           spec:'16.3×11.4×9.3cm · 300只/箱',category:'mealbox', base_price:59.90, common:true, subscription_enabled:true, subscription_interval:'month', subscription_price:54.90},
+    {sku:'ZN-FILM-STRETCH', name_en:'Hand Stretch Wrap Film',   name_zh:'手工缠绕膜',               spec:'高8cm·厚2丝·300m/卷',     category:'film',    base_price:8.90,  common:true, subscription_enabled:true, subscription_interval:'month', subscription_price:7.90},
+    {sku:'ZN-TAPE-PP',    name_en:'PP Packing Tape / Strap',    name_zh:'PP打包带',                 spec:'宽12mm·厚0.9mm·10kg/卷',  category:'tape',    base_price:19.90, common:true, subscription_enabled:true, subscription_interval:'month', subscription_price:17.90},
+    {sku:'ZN-TAPE-CLOTH', name_en:'Colored Cloth (Duct) Tape',  name_zh:'彩色布基胶带',             spec:'高7.8cm·150m/卷',         category:'tape',    base_price:6.90,  common:true, subscription_enabled:true, subscription_interval:'month', subscription_price:5.90}
   ]
 };
 
@@ -399,10 +437,15 @@ var CAT_INFO = [
   {cat:'snacks',     icon:'🍿', zh:'零食',     en:'Snacks'},
   {cat:'beverages',  icon:'🧃', zh:'饮料',     en:'Beverages'},
   {cat:'fresh',      icon:'🥬', zh:'生鲜',     en:'Fresh Produce'},
-  {cat:'grocery',    icon:'🛒', zh:'百货',     en:'Grocery'}
+  {cat:'grocery',    icon:'🛒', zh:'百货',     en:'Grocery'},
+  // 非食品 · 餐厅耗材（可订阅按月配送）
+  {cat:'mealbox',    icon:'🍱', zh:'一次性餐盒', en:'Meal Boxes'},
+  {cat:'film',       icon:'🧻', zh:'包装膜',     en:'Packaging Film'},
+  {cat:'tape',       icon:'📦', zh:'打包胶带辅料', en:'Tape & Supplies'}
 ];
 
 var catalog = null, store = null, qty = {}, isDemo = false;
+var ptype = {}; // 每个 sku 的购买方式：'one_time'（默认）或 'subscription'，仅对 subscription_enabled 的商品有意义
 var activeCat = null, zipConfirmed = false;
 
 function round2(n){ return Math.round(n*100)/100; }
@@ -722,11 +765,41 @@ function carries(p){
   return !!p.common;
 }
 
-function priceOf(p){
+function priceOfOnce(p){
   var ov = store.prices ? store.prices[p.sku] : undefined;
   if(ov!==undefined && ov!==null && ov!=='') return round2(Number(ov));
   return round2(p.base_price * (store.markup||1));
 }
+function priceOf(p){
+  var once = priceOfOnce(p);
+  if(p.subscription_enabled && ptype[p.sku]==='subscription'){
+    if(p.subscription_price!=null && p.subscription_price!=='') return round2(Number(p.subscription_price));
+    return round2(once*0.92); // 未单独设置订阅价时，默认订阅省 8%
+  }
+  return once;
+}
+function subDiscountPct(p){
+  var once = priceOfOnce(p);
+  if(!once) return 0;
+  var sub = (p.subscription_price!=null && p.subscription_price!=='') ? Number(p.subscription_price) : once*0.92;
+  return Math.max(0, Math.round((1 - sub/once)*100));
+}
+function setPtype(sku, pt){
+  ptype[sku] = pt;
+  var row = document.querySelector('[data-ptype-row="'+sku+'"]');
+  if(row){
+    row.querySelectorAll('.ptype-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.pt===pt); });
+  }
+  var priceEls = document.querySelectorAll('[data-price-for="'+sku+'"]');
+  var p = findProduct(sku);
+  if(p) priceEls.forEach(function(el){ el.textContent = fmt(priceOf(p)); });
+  updateCart();
+}
+document.addEventListener('click', function(e){
+  var b = e.target.closest('.ptype-btn');
+  if(!b) return;
+  setPtype(b.dataset.sku, b.dataset.pt);
+});
 
 function onSearch(q){
   q = q.trim().toLowerCase();
@@ -781,6 +854,15 @@ function imgTag(p, cls){
     : '<div class="prod-img-placeholder" data-detail="'+esc(p.sku)+'">🛍</div>';
 }
 
+function ptypeToggleHTML(p){
+  if(!p.subscription_enabled) return '';
+  ptype[p.sku] = ptype[p.sku] || 'one_time';
+  var pct = subDiscountPct(p);
+  return '<div class="ptype-toggle" data-ptype-row="'+esc(p.sku)+'">' +
+    '<button class="ptype-btn'+(ptype[p.sku]==='one_time'?' active':'')+'" data-sku="'+esc(p.sku)+'" data-pt="one_time">一次性 One-time</button>' +
+    '<button class="ptype-btn'+(ptype[p.sku]==='subscription'?' active':'')+'" data-sku="'+esc(p.sku)+'" data-pt="subscription">📅 订阅省'+pct+'% Subscribe</button>' +
+  '</div>';
+}
 function rowInnerHTML(p){
   qty[p.sku] = qty[p.sku]||0;
   return imgTag(p,'prod-img') +
@@ -788,13 +870,16 @@ function rowInnerHTML(p){
       '<h3>'+p.name_en+'</h3>' +
       '<div class="zh">'+p.name_zh+'</div>' +
       '<div class="spec">'+(p.spec||'')+'</div>' +
-      '<div class="price">'+fmt(priceOf(p))+'</div>' +
+      '<div class="price" data-price-for="'+esc(p.sku)+'">'+fmt(priceOf(p))+'</div>' +
     '</div>' +
     '<button class="prod-share" data-share="'+esc(p.sku)+'" title="复制商品链接 · Share" aria-label="Share">🔗</button>' +
-    '<div class="qty-control">' +
-      '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="-1">\u2212</button>' +
-      '<div class="qty-num" id="q-'+esc(p.sku)+'">'+qty[p.sku]+'</div>' +
-      '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="1">+</button>' +
+    '<div class="prod-actions">' +
+      '<div class="qty-control">' +
+        '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="-1">\u2212</button>' +
+        '<div class="qty-num" id="q-'+esc(p.sku)+'">'+qty[p.sku]+'</div>' +
+        '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="1">+</button>' +
+      '</div>' +
+      ptypeToggleHTML(p) +
     '</div>';
 }
 
@@ -857,7 +942,8 @@ function renderDetail(p){
     '<div class="detail-name">'+p.name_en+'</div>'+
     '<div class="detail-name-zh">'+p.name_zh+'</div>'+
     (p.spec?'<div class="detail-spec">'+p.spec+'</div>':'')+
-    '<div class="detail-price">'+fmt(priceOf(p))+'</div>'+
+    '<div class="detail-price" data-price-for="'+esc(p.sku)+'">'+fmt(priceOf(p))+'</div>'+
+    (p.subscription_enabled ? ptypeToggleHTML(p) : '')+
     '<div class="detail-actions">'+
       '<div class="qty-control">'+
         '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="-1">\u2212</button>'+
@@ -999,57 +1085,101 @@ document.addEventListener('click', function(e){
 });
 
 function updateCart(){
-  var items = [], subtotal = 0, count = 0;
+  var oneTimeItems = [], oneTimeSubtotal = 0, oneTimeCount = 0;
+  var subItems = [], subSubtotal = 0, subCount = 0;
+
   catalog.products.forEach(function(p){
     var n = qty[p.sku]||0;
     if(n>0){
+      var isSub = !!(p.subscription_enabled && ptype[p.sku]==='subscription');
       var line = round2(n*priceOf(p));
-      subtotal += line; count += n;
-      items.push({p:p, n:n, line:line});
+      if(isSub){ subSubtotal += line; subCount += n; subItems.push({p:p, n:n, line:line}); }
+      else      { oneTimeSubtotal += line; oneTimeCount += n; oneTimeItems.push({p:p, n:n, line:line}); }
     }
   });
-  subtotal = round2(subtotal);
-  var thr = store.free_delivery_threshold!=null ? store.free_delivery_threshold : 30;
-  var fee = store.delivery_fee!=null ? store.delivery_fee : 5;
-  var delivery = count===0 ? 0 : (subtotal>=thr ? 0 : fee);
-  var total = round2(subtotal+delivery);
+  oneTimeSubtotal = round2(oneTimeSubtotal);
+  subSubtotal     = round2(subSubtotal);
 
-  var emptyEl   = document.getElementById('cartEmpty');
-  var itemsEl   = document.getElementById('cartItems');
-  var totalsEl  = document.getElementById('cartTotals');
-  var noteEl    = document.getElementById('cartNote');
-  var btn       = document.getElementById('checkoutBtn');
+  var emptyEl = document.getElementById('cartEmpty');
+  var oneSec  = document.getElementById('cartOneTimeSection');
+  var subSec  = document.getElementById('cartSubSection');
 
-  if(count===0){
-    emptyEl.style.display='block'; itemsEl.innerHTML='';
-    totalsEl.style.display='none'; noteEl.style.display='none';
-    btn.disabled=true; return;
+  if(oneTimeCount===0 && subCount===0){
+    emptyEl.style.display='block'; oneSec.style.display='none'; subSec.style.display='none';
+    return;
   }
-  emptyEl.style.display='none'; totalsEl.style.display='block'; btn.disabled=false;
+  emptyEl.style.display='none';
 
-  itemsEl.innerHTML = items.map(function(it){
-    return '<div class="cart-item"><span class="cart-item-name">'+it.p.name_zh+' x'+it.n+'</span><span class="cart-item-price">'+fmt(it.line)+'</span></div>';
-  }).join('');
+  // ── 一次性购买 ──
+  oneSec.style.display = oneTimeCount>0 ? 'block' : 'none';
+  if(oneTimeCount>0){
+    var itemsEl  = document.getElementById('cartItems');
+    var totalsEl = document.getElementById('cartTotals');
+    var noteEl   = document.getElementById('cartNote');
+    var btn      = document.getElementById('checkoutBtn');
+    totalsEl.style.display='block'; btn.disabled=false;
 
-  document.getElementById('cartSubtotal').textContent = fmt(subtotal);
-  document.getElementById('cartDelivery').innerHTML   = delivery===0 ? '<span class="free-tag">免费 Free</span>' : fmt(delivery);
-  document.getElementById('cartTotal').textContent    = fmt(total);
+    itemsEl.innerHTML = oneTimeItems.map(function(it){
+      return '<div class="cart-item"><span class="cart-item-name">'+it.p.name_zh+' x'+it.n+'</span><span class="cart-item-price">'+fmt(it.line)+'</span></div>';
+    }).join('');
 
-  var need = round2(thr - subtotal);
-  noteEl.style.display = 'block';
-  noteEl.textContent = need>0 ? ('再加 '+fmt(need)+' 即可免费配送 · Add '+fmt(need)+' for free delivery!') : 'Free delivery applied!';
+    var thr = store.free_delivery_threshold!=null ? store.free_delivery_threshold : 30;
+    var fee = store.delivery_fee!=null ? store.delivery_fee : 5;
+    var delivery = oneTimeSubtotal>=thr ? 0 : fee;
+    var total = round2(oneTimeSubtotal+delivery);
+
+    document.getElementById('cartSubtotal').textContent = fmt(oneTimeSubtotal);
+    document.getElementById('cartDelivery').innerHTML   = delivery===0 ? '<span class="free-tag">免费 Free</span>' : fmt(delivery);
+    document.getElementById('cartTotal').textContent    = fmt(total);
+
+    var need = round2(thr - oneTimeSubtotal);
+    noteEl.style.display = 'block';
+    noteEl.textContent = need>0 ? ('再加 '+fmt(need)+' 即可免费配送 · Add '+fmt(need)+' for free delivery!') : 'Free delivery applied!';
+  }
+
+  // ── 订阅配送 ──
+  subSec.style.display = subCount>0 ? 'block' : 'none';
+  if(subCount>0){
+    var itemsSubEl  = document.getElementById('cartItemsSub');
+    var totalsSubEl = document.getElementById('cartTotalsSub');
+    totalsSubEl.style.display = 'block';
+
+    itemsSubEl.innerHTML = subItems.map(function(it){
+      return '<div class="cart-item"><span class="cart-item-name">'+it.p.name_zh+' x'+it.n+'</span><span class="cart-item-price">'+fmt(it.line)+'/mo</span></div>';
+    }).join('');
+
+    document.getElementById('cartSubtotalSub').textContent = fmt(subSubtotal)+' / mo';
+    document.getElementById('cartTotalSub').textContent    = fmt(subSubtotal)+' / mo';
+  }
+}
+
+function collectCart(kind){
+  // kind: 'one_time' 或 'subscription'
+  var cart = [];
+  catalog.products.forEach(function(p){
+    var n = qty[p.sku]||0;
+    if(n<=0) return;
+    var isSub = !!(p.subscription_enabled && ptype[p.sku]==='subscription');
+    if((kind==='subscription') === isSub) cart.push({sku:p.sku, qty:n});
+  });
+  return cart;
 }
 
 function goToCheckout(){
-  var cart = [];
-  catalog.products.forEach(function(p){ var n=qty[p.sku]||0; if(n>0) cart.push({sku:p.sku,qty:n}); });
+  var cart = collectCart('one_time');
   if(cart.length===0) return;
   if(!zipConfirmed){
     document.getElementById('zipInline').style.display = 'block';
     document.getElementById('zipCart').focus();
     return;
   }
-  submitCheckout(cart);
+  submitCheckout(cart, 'one_time', 'checkoutBtn', '去结账 Checkout \u2192');
+}
+
+function goToCheckoutSub(){
+  var cart = collectCart('subscription');
+  if(cart.length===0) return;
+  submitCheckout(cart, 'subscription', 'checkoutBtnSub', '订阅结账 Subscribe \u2192');
 }
 
 function confirmZipAndProceed(){
@@ -1064,9 +1194,7 @@ function confirmZipAndProceed(){
     zipConfirmed = true;
     setTimeout(function(){
       document.getElementById('zipInline').style.display = 'none';
-      var cart = [];
-      catalog.products.forEach(function(p){ var n=qty[p.sku]||0; if(n>0) cart.push({sku:p.sku,qty:n}); });
-      submitCheckout(cart);
+      submitCheckout(collectCart('one_time'), 'one_time', 'checkoutBtn', '去结账 Checkout \u2192');
     }, 700);
   } else {
     msg.className='zip-msg err';
@@ -1078,13 +1206,13 @@ document.addEventListener('keydown', function(e){
   if(e.key==='Enter' && document.activeElement && document.activeElement.id==='zipCart') confirmZipAndProceed();
 });
 
-function submitCheckout(cart){
-  var btn = document.getElementById('checkoutBtn');
+function submitCheckout(cart, purchaseType, btnId, restoreLabel){
+  var btn = document.getElementById(btnId);
   btn.disabled=true; btn.textContent='跳转中 Redirecting…';
   fetch(CHECKOUT_URL, {
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({storeId:store.store_id, cart:cart, origin:window.location.origin})
+    body:JSON.stringify({storeId:store.store_id, cart:cart, origin:window.location.origin, purchaseType:purchaseType})
   })
   .then(function(r){ return r.json(); })
   .then(function(d){
@@ -1092,7 +1220,7 @@ function submitCheckout(cart){
     else { alert('结账暂时无法完成 · ' + ((d&&d.error)||'请稍后再试')); resetBtn(); }
   })
   .catch(function(){ alert('结账暂时无法完成，请稍后再试。'); resetBtn(); });
-  function resetBtn(){ btn.disabled=false; btn.textContent='去结账 Checkout \u2192'; }
+  function resetBtn(){ btn.disabled=false; btn.textContent=restoreLabel; }
 }
 
 boot();
