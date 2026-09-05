@@ -200,12 +200,14 @@ document.addEventListener('click',function(e){
 
 // ── 动态加载产品（从 get-products 接口，按分类分组，显示规格，不放价格）──
 var PRODUCTS_API = '/.netlify/functions/get-products';
-var CAT_ORDER = ['buns','dumplings','frozen','beverages','rice','grocery'];
+var CAT_ORDER = ['buns','dumplings','frozen','beverages','rice','grocery','mealbox','film','tape'];
+var NONFOOD_CATS = ['mealbox','film','tape'];
 function esc(s){ return (s==null?'':String(s)).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); }
 
 function cardHtml(p){
   var desc = p.description ? '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>' : '';
   var spec = p.spec ? '<span class="tag">'+esc(p.spec)+'</span>' : '';
+  var sub  = p.subscription_enabled ? '<span class="tag" style="background:#C8922A;color:#fff;border-color:#C8922A;">📅 可订阅 Subscribe available</span>' : '';
   // 有 SKU 就把整张卡做成链接，点进各自的详情页
   var href = p.sku ? '/shop/?p='+encodeURIComponent(p.sku) : '';
   var open = href ? '<a class="card" href="'+href+'">' : '<div class="card">';
@@ -216,7 +218,7 @@ function cardHtml(p){
     + '<div class="card-body">'
     +   '<h3>'+esc(p.name_en||p.name_zh||'')+'</h3>'
     +   (p.name_zh ? '<p class="zh">'+esc(p.name_zh)+'</p>' : '')
-    +   desc + spec + more
+    +   desc + spec + sub + more
     + '</div>' + close;
 }
 
@@ -244,7 +246,13 @@ async function loadProducts(){
 
     box.innerHTML = keys.map(function(k){
       var title = labels[k] || k;
-      return '<div class="divider"></div><h2 class="section-title">'+esc(title)+'</h2>'
+      var isFirstNonfood = NONFOOD_CATS.indexOf(k)!==-1 && NONFOOD_CATS.indexOf(keys[keys.indexOf(k)-1])===-1;
+      var banner = isFirstNonfood
+        ? '<div class="divider"></div><h2 class="section-title">餐厅耗材 · Non-Food Restaurant Supplies</h2>'
+          + '<p class="section-note">一次性餐盒、包装膜、打包胶带等，可一次性购买，也可选择按月订阅自动配送。<br>'
+          + 'Meal boxes, packaging film and packing tape — order once, or subscribe for automatic monthly restocking.</p>'
+        : '';
+      return banner + '<div class="divider"></div><h2 class="section-title">'+esc(title)+'</h2>'
            + '<div class="grid">'+groups[k].map(cardHtml).join('')+'</div>';
     }).join('');
   }catch(e){
