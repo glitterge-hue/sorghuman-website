@@ -8,3 +8,16 @@
   for = "/*"
   [headers.values]
     X-Frame-Options = "DENY"
+
+# 商店壳页面（/shop/、/shop/index.html）不做长期缓存：
+# 每次发新版本，顾客点开分享链接都能立刻拿到最新代码，
+# 不需要像我们调试时那样手动强制刷新（Ctrl+Shift+R）。
+[[headers]]
+  for = "/shop/"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+
+[[headers]]
+  for = "/shop/index.html"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
