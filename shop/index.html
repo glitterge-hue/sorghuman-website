@@ -621,7 +621,10 @@ async function boot(){
 
   // 深链：?p=SKU 直接打开该商品详情（转发链接落地）
   var pWanted = new URLSearchParams(location.search).get('p');
-  if(pWanted && findProduct(pWanted)) openDetail(pWanted);
+  if(pWanted){
+    if(findProduct(pWanted)) openDetail(pWanted);
+    else toast('该商品在本店暂未上架 · Item not available in this store');
+  }
 }
 
 // 从主题色自动推算深浅档，门店只需填一个色号
