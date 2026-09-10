@@ -99,24 +99,41 @@ exports.handler = async (event) => {
     // ── 服务器端算价 ──────────────────────────────────────────
     // 订阅模式：只接受开启了 subscription_enabled 的商品，单价用
     // subscription_price（若未设置，按一次性价打 92 折作为订阅优惠价）。
+    //
+    // 单件 / 整箱（mode: 'unit' 默认 | 'case'）：只有 units_per_case > 1 的商品
+    // 才能选整箱；整箱单价 = 单件单价 × units_per_case × 0.95（统一95折，
+    // 对所有门店一视同仁，不受门店 markup/单独定价影响折扣比例本身——
+    // 门店的 markup/store_prices 只影响"单件单价"这个基数，95折统一叠加在其上）。
     const lineItems = [];
     const skippedNonSubscribable = [];
+    const skippedNoCase = [];
     for (const item of cart) {
       const p = prodMap[item.sku];
       if (!p) continue;
-      const onceOffPrice = priceMap[p.sku] != null
+      const mode = item.mode === 'case' ? 'case' : 'unit';
+      const unitsPerCase = parseInt(p.units_per_case, 10) || 0;
+      if (mode === 'case' && unitsPerCase <= 1) { skippedNoCase.push(p.sku); continue; }
+
+      const onceOffUnitPrice = priceMap[p.sku] != null
         ? priceMap[p.sku]
         : parseFloat((p.base_price * markup).toFixed(2));
+      const onceOffPrice = mode === 'case'
+        ? parseFloat((onceOffUnitPrice * unitsPerCase * 0.95).toFixed(2))
+        : onceOffUnitPrice;
+      const caseSuffix = mode === 'case' ? `（整箱 Case of ${unitsPerCase}）` : '';
 
       if (purchaseType === 'subscription') {
         if (!p.subscription_enabled) { skippedNonSubscribable.push(p.sku); continue; }
-        const subPrice = p.subscription_price != null
+        const subUnitPrice = p.subscription_price != null
           ? parseFloat(p.subscription_price)
-          : parseFloat((onceOffPrice * 0.92).toFixed(2));
+          : parseFloat((onceOffUnitPrice * 0.92).toFixed(2));
+        const subPrice = mode === 'case'
+          ? parseFloat((subUnitPrice * unitsPerCase * 0.95).toFixed(2))
+          : subUnitPrice;
         lineItems.push({
           price_data: {
             currency    : 'usd',
-            product_data: { name: p.name_zh + '  ' + p.name_en + '（订阅 Subscription）' },
+            product_data: { name: p.name_zh + '  ' + p.name_en + caseSuffix + '（订阅 Subscription）' },
             unit_amount : Math.round(subPrice * 100),
             recurring   : {
               interval      : p.subscription_interval || 'month',
@@ -129,7 +146,7 @@ exports.handler = async (event) => {
         lineItems.push({
           price_data: {
             currency    : 'usd',
-            product_data: { name: p.name_zh + '  ' + p.name_en },
+            product_data: { name: p.name_zh + '  ' + p.name_en + caseSuffix },
             unit_amount : Math.round(onceOffPrice * 100),
           },
           quantity: Math.max(1, Math.floor(Number(item.qty))),
@@ -141,7 +158,7 @@ exports.handler = async (event) => {
       return { statusCode: 400, headers: CORS, body: JSON.stringify({
         error: purchaseType === 'subscription'
           ? 'No subscribable items in cart'
-          : 'No valid items',
+          : (skippedNoCase.length ? 'Selected items do not support whole-case purchase' : 'No valid items'),
       }) };
 
     // ── 配送费（仅一次性购买计算；订阅商品按合同/批量方式另行安排配送，不在结账时计费）──
@@ -196,6 +213,7 @@ exports.handler = async (event) => {
     return { statusCode: 200, headers: CORS, body: JSON.stringify({
       url: session.url,
       skipped: skippedNonSubscribable.length ? skippedNonSubscribable : undefined,
+      skippedNoCase: skippedNoCase.length ? skippedNoCase : undefined,
     }) };
 
   } catch (e) {

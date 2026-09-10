@@ -38,7 +38,7 @@ exports.handler = async (event) => {
       sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
       sb('store_products',
         `store_id=eq.${storeId}&active=eq.true` +
-        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order,description_zh,description_en,ingredients_zh,ingredients_en,cooking_zh,cooking_en,nutrition,gallery,product_line,subscription_enabled,subscription_interval,subscription_interval_count,subscription_price)` +
+        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,units_per_case,image_url,sort_order,description_zh,description_en,ingredients_zh,ingredients_en,cooking_zh,cooking_en,nutrition,gallery,product_line,subscription_enabled,subscription_interval,subscription_interval_count,subscription_price)` +
         `&order=sort_order.asc`),
     ]);
 
@@ -69,6 +69,9 @@ exports.handler = async (event) => {
         base_price: sp.price != null
           ? parseFloat(sp.price)
           : parseFloat((sp.products.base_price * markup).toFixed(2)),
+        // 装箱数：填写后（>1）该 SKU 同时支持"单件"与"整箱"购买，
+        // 整箱价由前端/结账函数按 单件价×装箱数×0.95 统一计算（95折，适用于所有门店）。
+        units_per_case: sp.products.units_per_case || null,
         common    : true,
         image_url : sp.products.image_url,
         featured  : sp.featured || false,  // 门店级爆品

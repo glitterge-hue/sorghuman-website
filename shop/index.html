@@ -114,6 +114,10 @@ footer #footStore:hover{color:var(--brand);}
 .ptype-toggle{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;}
 .ptype-btn{border:1.5px solid var(--border);background:#fff;color:var(--muted);font-family:inherit;font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s;}
 .ptype-btn.active{border-color:var(--gold);background:var(--gold);color:#fff;}
+/* 单件 / 整箱 切换（Case-purchase toggle：仅装箱数>1 的商品显示）*/
+.case-toggle{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;}
+.case-btn{border:1.5px solid var(--border);background:#fff;color:var(--muted);font-family:inherit;font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s;}
+.case-btn.active{border-color:var(--brand);background:var(--brand);color:#fff;}
 .cart-sub-heading{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin:14px 0 6px;padding-top:12px;border-top:1px dashed var(--border);}
 .cart-sub-heading:first-child{border-top:none;padding-top:0;margin-top:0;}
 .cat-tab:hover,.cat-tab.active{background:var(--brand);color:#fff;}
@@ -388,7 +392,7 @@ var FALLBACK_CATALOG = {
     tape:'打包胶带辅料 Packing Tape & Supplies'
   },
   products:[
-    {sku:'4650',  name_en:'Glutinous Rice Shaomai',        name_zh:'糯米烧卖',     spec:'16 oz / 6 pcs', category:'frozen', base_price:4.99, common:true},
+    {sku:'4650',  name_en:'Glutinous Rice Shaomai',        name_zh:'糯米烧卖',     spec:'16 oz / 6 pcs', category:'frozen', base_price:4.99, common:true, units_per_case:12},
     {sku:'6784',  name_en:'Three-Diced Beancurd-Skin Bun', name_zh:'三丁腐皮包',   spec:'16 oz / 6 pcs', category:'frozen', base_price:4.99, common:true},
     {sku:'7194',  name_en:"Shepherd's Purse Bun",          name_zh:'荠菜包',       spec:'16 oz / 6 pcs', category:'frozen', base_price:4.99, common:true},
     {sku:'7951',  name_en:'Dried Mustard Green Bun',       name_zh:'梅干菜包',     spec:'16 oz / 6 pcs', category:'frozen', base_price:4.99, common:true},
@@ -446,6 +450,7 @@ var CAT_INFO = [
 
 var catalog = null, store = null, qty = {}, isDemo = false;
 var ptype = {}; // 每个 sku 的购买方式：'one_time'（默认）或 'subscription'，仅对 subscription_enabled 的商品有意义
+var caseMode = {}; // 每个 sku 的下单单位：'unit'（默认，单件）或 'case'（整箱），仅对 units_per_case>1 的商品有意义
 var activeCat = null, zipConfirmed = false;
 
 function round2(n){ return Math.round(n*100)/100; }
@@ -773,13 +778,21 @@ function priceOfOnce(p){
   if(ov!==undefined && ov!==null && ov!=='') return round2(Number(ov));
   return round2(p.base_price * (store.markup||1));
 }
+// 是否支持"单件 / 整箱"两种购买方式（ERP 填写了装箱数且大于1）
+function sellsByCase(p){ return !!(p.units_per_case && Number(p.units_per_case) > 1); }
+// 整箱价 = 单件单价 × 装箱数 × 95%（统一95折，适用于所有门店）
+function casePriceOf(unitPrice, p){ return round2(unitPrice * Number(p.units_per_case) * 0.95); }
+function isCaseMode(sku){ return caseMode[sku] === 'case'; }
 function priceOf(p){
   var once = priceOfOnce(p);
+  var unitPrice = once;
   if(p.subscription_enabled && ptype[p.sku]==='subscription'){
-    if(p.subscription_price!=null && p.subscription_price!=='') return round2(Number(p.subscription_price));
-    return round2(once*0.92); // 未单独设置订阅价时，默认订阅省 8%
+    unitPrice = (p.subscription_price!=null && p.subscription_price!=='')
+      ? round2(Number(p.subscription_price))
+      : round2(once*0.92); // 未单独设置订阅价时，默认订阅省 8%
   }
-  return once;
+  if(sellsByCase(p) && isCaseMode(p.sku)) return casePriceOf(unitPrice, p);
+  return unitPrice;
 }
 function subDiscountPct(p){
   var once = priceOfOnce(p);
@@ -787,6 +800,22 @@ function subDiscountPct(p){
   var sub = (p.subscription_price!=null && p.subscription_price!=='') ? Number(p.subscription_price) : once*0.92;
   return Math.max(0, Math.round((1 - sub/once)*100));
 }
+function setCaseMode(sku, mode){
+  caseMode[sku] = mode;
+  var row = document.querySelector('[data-case-row="'+sku+'"]');
+  if(row){
+    row.querySelectorAll('.case-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.mode===mode); });
+  }
+  var priceEls = document.querySelectorAll('[data-price-for="'+sku+'"]');
+  var p = findProduct(sku);
+  if(p) priceEls.forEach(function(el){ el.textContent = fmt(priceOf(p)); });
+  updateCart();
+}
+document.addEventListener('click', function(e){
+  var b = e.target.closest('.case-btn');
+  if(!b) return;
+  setCaseMode(b.dataset.sku, b.dataset.mode);
+});
 function setPtype(sku, pt){
   ptype[sku] = pt;
   var row = document.querySelector('[data-ptype-row="'+sku+'"]');
@@ -866,6 +895,17 @@ function ptypeToggleHTML(p){
     '<button class="ptype-btn'+(ptype[p.sku]==='subscription'?' active':'')+'" data-sku="'+esc(p.sku)+'" data-pt="subscription">📅 订阅省'+pct+'% Subscribe</button>' +
   '</div>';
 }
+function caseToggleHTML(p){
+  if(!sellsByCase(p)) return '';
+  caseMode[p.sku] = caseMode[p.sku] || 'unit';
+  var unitPrice = priceOfOnce(p);
+  var casePrice = casePriceOf(unitPrice, p);
+  var pct = unitPrice>0 ? Math.max(0, Math.round((1 - casePrice/(unitPrice*Number(p.units_per_case)))*100)) : 0;
+  return '<div class="case-toggle" data-case-row="'+esc(p.sku)+'">' +
+    '<button class="case-btn'+(caseMode[p.sku]==='unit'?' active':'')+'" data-sku="'+esc(p.sku)+'" data-mode="unit">单件 Each</button>' +
+    '<button class="case-btn'+(caseMode[p.sku]==='case'?' active':'')+'" data-sku="'+esc(p.sku)+'" data-mode="case">📦 整箱('+p.units_per_case+'件) 省'+pct+'% Case</button>' +
+  '</div>';
+}
 function rowInnerHTML(p){
   qty[p.sku] = qty[p.sku]||0;
   return imgTag(p,'prod-img') +
@@ -874,6 +914,7 @@ function rowInnerHTML(p){
       '<div class="zh">'+p.name_zh+'</div>' +
       '<div class="spec">'+(p.spec||'')+'</div>' +
       '<div class="price" data-price-for="'+esc(p.sku)+'">'+fmt(priceOf(p))+'</div>' +
+      caseToggleHTML(p) +
     '</div>' +
     '<button class="prod-share" data-share="'+esc(p.sku)+'" title="复制商品链接 · Share" aria-label="Share">🔗</button>' +
     '<div class="prod-actions">' +
@@ -946,6 +987,7 @@ function renderDetail(p){
     '<div class="detail-name-zh">'+p.name_zh+'</div>'+
     (p.spec?'<div class="detail-spec">'+p.spec+'</div>':'')+
     '<div class="detail-price" data-price-for="'+esc(p.sku)+'">'+fmt(priceOf(p))+'</div>'+
+    caseToggleHTML(p)+
     (p.subscription_enabled ? ptypeToggleHTML(p) : '')+
     '<div class="detail-actions">'+
       '<div class="qty-control">'+
@@ -1123,7 +1165,8 @@ function updateCart(){
     totalsEl.style.display='block'; btn.disabled=false;
 
     itemsEl.innerHTML = oneTimeItems.map(function(it){
-      return '<div class="cart-item"><span class="cart-item-name">'+it.p.name_zh+' x'+it.n+'</span><span class="cart-item-price">'+fmt(it.line)+'</span></div>';
+      var caseTag = (sellsByCase(it.p) && isCaseMode(it.p.sku)) ? '（整箱 case）' : '';
+      return '<div class="cart-item"><span class="cart-item-name">'+it.p.name_zh+caseTag+' x'+it.n+'</span><span class="cart-item-price">'+fmt(it.line)+'</span></div>';
     }).join('');
 
     var thr = store.free_delivery_threshold!=null ? store.free_delivery_threshold : 30;
@@ -1148,7 +1191,8 @@ function updateCart(){
     totalsSubEl.style.display = 'block';
 
     itemsSubEl.innerHTML = subItems.map(function(it){
-      return '<div class="cart-item"><span class="cart-item-name">'+it.p.name_zh+' x'+it.n+'</span><span class="cart-item-price">'+fmt(it.line)+'/mo</span></div>';
+      var caseTag = (sellsByCase(it.p) && isCaseMode(it.p.sku)) ? '（整箱 case）' : '';
+      return '<div class="cart-item"><span class="cart-item-name">'+it.p.name_zh+caseTag+' x'+it.n+'</span><span class="cart-item-price">'+fmt(it.line)+'/mo</span></div>';
     }).join('');
 
     document.getElementById('cartSubtotalSub').textContent = fmt(subSubtotal)+' / mo';
@@ -1163,7 +1207,10 @@ function collectCart(kind){
     var n = qty[p.sku]||0;
     if(n<=0) return;
     var isSub = !!(p.subscription_enabled && ptype[p.sku]==='subscription');
-    if((kind==='subscription') === isSub) cart.push({sku:p.sku, qty:n});
+    if((kind==='subscription') === isSub){
+      var mode = (sellsByCase(p) && isCaseMode(p.sku)) ? 'case' : 'unit';
+      cart.push({sku:p.sku, qty:n, mode:mode});
+    }
   });
   return cart;
 }

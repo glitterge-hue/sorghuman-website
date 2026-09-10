@@ -55,6 +55,10 @@ td{padding:10px 14px;vertical-align:middle;}
 .badge-grocery{background:#f5f0ff;color:#5a3a9a;}
 .badge-grains{background:#fdf6e3;color:#9a7b1a;}
 .badge-beverages{background:#e8f7fb;color:#1a7a8a;}
+.badge-dry_food{background:#fdf6e3;color:#9a7b1a;}
+.badge-frozen_food{background:#e8f4fd;color:#1a6b9a;}
+.badge-non_food{background:#f5f0ff;color:#5a3a9a;}
+.badge-food_contact{background:#f0fff0;color:#1a7a1a;}
 .badge-on{background:#f0f7f2;color:#2A6B3A;}
 .badge-off{background:#fdf2f2;color:#c0392b;}
 /* 弹窗 */
@@ -108,6 +112,10 @@ td{padding:10px 14px;vertical-align:middle;}
       <option value="beverages">饮料</option>
       <option value="fresh">生鲜</option>
       <option value="grocery">百货</option>
+      <option value="dry_food">食品干货（ERP）</option>
+      <option value="frozen_food">食品冷冻（ERP）</option>
+      <option value="non_food">非食品（ERP）</option>
+      <option value="food_contact">食品接触材料（ERP）</option>
     </select>
     <select id="activeFilter" onchange="filterProducts()">
       <option value="">全部状态</option>
@@ -129,13 +137,14 @@ td{padding:10px 14px;vertical-align:middle;}
           <th>规格</th>
           <th>品类</th>
           <th>基准价</th>
+          <th>装箱数</th>
           <th>通用</th>
           <th>状态</th>
           <th>操作</th>
         </tr>
       </thead>
       <tbody id="productTbody">
-        <tr><td colspan="9" style="text-align:center;padding:30px;color:#888;">加载中…</td></tr>
+        <tr><td colspan="10" style="text-align:center;padding:30px;color:#888;">加载中…</td></tr>
       </tbody>
     </table>
   </div>
@@ -160,7 +169,12 @@ td{padding:10px 14px;vertical-align:middle;}
           <option value="beverages">饮料 Beverages</option>
           <option value="fresh">生鲜 Fresh</option>
           <option value="grocery">百货 Grocery</option>
+          <option value="dry_food">食品干货 Dry / Shelf-stable (ERP)</option>
+          <option value="frozen_food">食品冷冻 Frozen food (ERP)</option>
+          <option value="non_food">非食品 Non-food (ERP)</option>
+          <option value="food_contact">食品接触材料 Food-contact material (ERP)</option>
         </select>
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">带"(ERP)"的分类通常由 ERP 商品同步写入；手动新增商品可任选。</div>
       </div>
     </div>
     <div class="form-group">
@@ -183,9 +197,16 @@ td{padding:10px 14px;vertical-align:middle;}
     </div>
     <div class="form-row">
       <div class="form-group">
+        <label>装箱数 Units per case（选填）</label>
+        <input id="fUnitsPerCase" type="number" step="1" min="1" placeholder="如 24">
+        <div style="font-size:11px;color:#aaa;margin-top:4px;">填写后基准价视为单件价，网站同时提供单件/整箱购买，整箱价=单件价×装箱数×95%（所有门店统一）。</div>
+      </div>
+      <div class="form-group">
         <label>排序 Sort Order</label>
         <input id="fSort" type="number" placeholder="10">
       </div>
+    </div>
+    <div class="form-row" style="grid-template-columns:1fr;">
       <div class="form-group">
         <label>图片链接 Image URL</label>
         <input id="fImg" placeholder="https://...">
@@ -261,7 +282,8 @@ td{padding:10px 14px;vertical-align:middle;}
     <h2>批量导入商品 Excel</h2>
     <div class="csv-hint">
       上传 <code>.xlsx</code> Excel 文件（也支持 .csv）。第一行必须是表头。<br>
-      必需列：<code>sku, name_zh, base_price</code>；可选列：<code>name_en, spec, category, common, image_url, gallery, showcase, showcase_category, description, sort_order</code><br>
+      必需列：<code>sku, name_zh, base_price</code>；可选列：<code>name_en, spec, category, common, image_url, gallery, showcase, showcase_category, description, sort_order, units_per_case</code><br>
+      <code>units_per_case</code>（装箱数）：选填，填写后 base_price 视为单件价，网站同时提供单件/整箱购买，整箱价=单件价×装箱数×95%（所有门店统一）。<br>
       <code>gallery</code> 多图：一个单元格内每行一个链接（单元格内换行用 Alt+Enter），或用逗号分隔多个链接。<br>
       品类可选值：<code>frozen</code> / <code>grains</code> / <code>condiments</code> / <code>snacks</code> / <code>beverages</code> / <code>fresh</code> / <code>grocery</code><br>
       已存在的 SKU 会自动更新（upsert）。<br>
@@ -289,7 +311,9 @@ async function initSupabase(){
 
 const CAT_LABELS = {
   frozen:'冷冻食品', grains:'米面粮油', condiments:'调味品',
-  snacks:'零食', beverages:'饮料', fresh:'生鲜', grocery:'百货'
+  snacks:'零食', beverages:'饮料', fresh:'生鲜', grocery:'百货',
+  dry_food:'食品干货(ERP)', frozen_food:'食品冷冻(ERP)',
+  non_food:'非食品(ERP)', food_contact:'食品接触材料(ERP)'
 };
 
 let allProducts = [], editingSku = null;
@@ -396,7 +420,7 @@ function filterProducts() {
 function renderTable(list) {
   const tbody = document.getElementById('productTbody');
   if (!list.length) {
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:30px;color:#888;">没有符合条件的商品</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:30px;color:#888;">没有符合条件的商品</td></tr>';
     return;
   }
   tbody.innerHTML = list.map(p => `
@@ -407,6 +431,7 @@ function renderTable(list) {
       <td style="color:#888;font-size:12px;">${p.spec||'-'}</td>
       <td><span class="badge badge-${p.category}">${CAT_LABELS[p.category]||p.category}</span></td>
       <td class="price">$${Number(p.base_price).toFixed(2)}</td>
+      <td style="text-align:center;color:#888;">${p.units_per_case ? p.units_per_case+' / 箱' : '-'}</td>
       <td style="text-align:center;">${p.common?'✓':''}</td>
       <td style="text-align:center;">
         <button onclick="toggleFeatured('${p.sku}',${!!p.featured})"
@@ -447,6 +472,7 @@ function openAdd() {
   document.getElementById('fNameZh').value=''; document.getElementById('fNameEn').value='';
   document.getElementById('fSpec').value=''; document.getElementById('fPrice').value='';
   document.getElementById('fCat').value='frozen'; document.getElementById('fSort').value='';
+  document.getElementById('fUnitsPerCase').value='';
   document.getElementById('fImg').value='';
   document.getElementById('fGallery').value='';
   document.getElementById('fDescZh').value=''; document.getElementById('fDescEn').value='';
@@ -466,6 +492,7 @@ function openEdit(sku) {
   document.getElementById('fNameZh').value=p.name_zh; document.getElementById('fNameEn').value=p.name_en;
   document.getElementById('fSpec').value=p.spec||''; document.getElementById('fPrice').value=p.base_price;
   document.getElementById('fCat').value=p.category; document.getElementById('fSort').value=p.sort_order||'';
+  document.getElementById('fUnitsPerCase').value=p.units_per_case||'';
   document.getElementById('fImg').value=p.image_url||'';
   document.getElementById('fGallery').value=galleryToArr(p.gallery).join('\n');
   document.getElementById('fDescZh').value=p.description_zh||''; document.getElementById('fDescEn').value=p.description_en||'';
@@ -493,6 +520,7 @@ async function saveProduct() {
     spec        : document.getElementById('fSpec').value.trim()||null,
     category    : document.getElementById('fCat').value,
     base_price  : price,
+    units_per_case: (function(){ var v=parseInt(document.getElementById('fUnitsPerCase').value,10); return (v>1)?v:null; })(),
     sort_order  : parseInt(document.getElementById('fSort').value)||0,
     image_url   : document.getElementById('fImg').value.trim()||null,
     gallery     : (function(){ var g=galleryToArr(document.getElementById('fGallery').value); return g.length?g:null; })(),
@@ -530,7 +558,7 @@ async function deleteProduct(sku, name) {
 function exportXlsx() {
   if (!allProducts || !allProducts.length) { alert('暂无产品可导出'); return; }
 
-  const COLS = ['sku','name_zh','name_en','spec','category','base_price','common',
+  const COLS = ['sku','name_zh','name_en','spec','category','base_price','units_per_case','common',
                 'image_url','gallery','showcase','showcase_category','description','featured','sort_order','active'];
 
   const rows = [...allProducts].sort((a,b)=>{
@@ -609,6 +637,7 @@ async function importXlsx() {
     if (has('description'))       row.description       = str(val(r,'description')) || null;
     if (has('sort_order'))      { const so = parseInt(val(r,'sort_order')); if (!isNaN(so)) row.sort_order = so; }
     if (has('gallery'))         { const g = galleryToArr(str(val(r,'gallery'))); row.gallery = g.length ? g : null; }
+    if (has('units_per_case'))  { const u = parseInt(val(r,'units_per_case')); row.units_per_case = (u>1) ? u : null; }
     rows.push(row);
   }
 
