@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Products · Sorghuman Holding LLC</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--green:#2A6B3A;--green-light:#4A9B5A;--gold:#C8922A;--cream:#FAF7F2;--dark:#1A1A18;--muted:#6B6B62;--border:#E2DDD4;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);line-height:1.6;}
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,0.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 5%;height:64px;}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.nav-logo img{height:40px;width:40px;object-fit:contain;}
+.nav-logo span{font-family:'DM Serif Display',serif;font-size:18px;color:var(--green);}
+.nav-links{display:flex;gap:2rem;}
+.nav-links a{text-decoration:none;font-size:14px;color:var(--muted);transition:color 0.2s;}
+.nav-links a:hover{color:var(--green);}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;padding:4px;background:none;border:none;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--dark);border-radius:2px;}
+.mobile-menu{display:none;position:fixed;top:64px;left:0;right:0;background:var(--cream);border-bottom:1px solid var(--border);z-index:99;padding:1rem 5%;flex-direction:column;}
+.mobile-menu a{text-decoration:none;font-size:15px;color:var(--dark);padding:14px 0;border-bottom:1px solid var(--border);display:block;}
+.mobile-menu a:last-child{border-bottom:none;}
+.mobile-menu.open{display:flex;}
+
+.page-header{background:var(--green);padding:100px 5% 60px;color:white;}
+.page-header-inner{max-width:1100px;margin:0 auto;}
+.eyebrow{font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:1rem;}
+.page-header h1{font-family:'DM Serif Display',serif;font-size:clamp(32px,4vw,48px);margin-bottom:1rem;}
+.page-header p{font-size:15px;color:rgba(255,255,255,0.8);max-width:520px;line-height:1.8;}
+
+.page-body{padding:60px 5%;}
+.page-body-inner{max-width:1100px;margin:0 auto;}
+.divider{width:48px;height:2px;background:var(--gold);margin-bottom:1.5rem;}
+.section-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,3vw,36px);color:var(--dark);margin-bottom:1.5rem;}
+.section-note{font-size:14px;color:var(--muted);margin-bottom:2rem;line-height:1.8;}
+
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:3rem;}
+.card{background:white;border:1px solid var(--border);border-radius:2px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s,box-shadow 0.2s;}
+.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.08);}
+
+/* 实拍照片高度调高，背景色与照片背景一致 */
+.card img{width:100%;height:240px;object-fit:cover;object-position:center;display:block;background:#e8e0d4;}
+
+.card-body{padding:1rem 1.25rem 1.25rem;flex:1;display:flex;flex-direction:column;}
+.card-body h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:3px;}
+.card-body .zh{font-size:12px;color:var(--muted);margin-bottom:8px;}
+.tag{display:inline-block;font-size:11px;padding:3px 10px;border:1px solid var(--green);color:var(--green);border-radius:20px;margin-top:auto;}
+.card-body .desc{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6;}
+.erp-btn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;padding:12px 28px;border-radius:2px;font-size:14px;font-weight:500;margin-bottom:2rem;}
+.erp-btn:hover{background:var(--green-light);}
+
+.buy-btn{display:block;text-align:center;background:var(--gold);color:white;text-decoration:none;padding:14px 36px;border-radius:2px;font-size:15px;font-weight:500;margin:2rem auto 0;max-width:300px;}
+
+/* 可点击的产品卡 */
+a.card{text-decoration:none;color:inherit;}
+.card .more{display:block;margin-top:10px;font-size:12px;font-weight:500;color:var(--green);}
+.card:hover .more{text-decoration:underline;}
+
+/* 底部下单入口 */
+.order-cta{margin:3rem auto 0;padding-top:2rem;border-top:1px solid var(--border);text-align:center;}
+.order-cta h2{font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:.4rem;}
+.order-cta .sub{font-size:13px;color:var(--muted);margin-bottom:1.6rem;}
+.order-btns{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;}
+.order-btn{display:flex;flex-direction:column;align-items:center;gap:2px;min-width:230px;text-decoration:none;padding:16px 28px;border-radius:2px;border:1.5px solid var(--green);}
+.order-btn .t{font-size:15px;font-weight:600;}
+.order-btn .s{font-size:12px;opacity:.8;}
+.order-btn.primary{background:var(--green);color:#fff;border-color:var(--green);}
+.order-btn.primary:hover{background:var(--green-light);border-color:var(--green-light);}
+.order-btn.ghost{background:#fff;color:var(--green);}
+.order-btn.ghost:hover{background:var(--cream);}
+.order-apply{margin-top:1.4rem;font-size:13px;color:var(--muted);}
+.order-apply a{color:var(--green);font-weight:500;}
+@media(max-width:560px){.order-btn{min-width:100%;}}
+
+footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:20px 5%;font-size:13px;margin-top:40px;}
+footer a{color:rgba(255,255,255,0.4);}
+
+@media(max-width:768px){.nav-links{display:none;}.hamburger{display:flex;}.grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:400px){.grid{grid-template-columns:1fr;}}
+</style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q99SSTBGE8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Q99SSTBGE8');
+</script>
+
+<style>
+  /* --- unified bilingual nav (stacked EN over 中文) --- */
+  .nav-links { display: flex; align-items: center; gap: 1.25rem; }
+  .nav-links a {
+    text-decoration: none;
+    display: flex; flex-direction: column; align-items: center;
+    line-height: 1.18; white-space: nowrap; text-align: center;
+    padding: 4px 0; transition: color 0.2s;
+  }
+  .nav-links a .en { font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--dark); }
+  .nav-links a .zh { font-size: 10.5px; letter-spacing: 0.08em; color: var(--muted); margin-top: 2px; }
+  .nav-links a:hover .en, .nav-links a:hover .zh,
+  .nav-links a.active .en, .nav-links a.active .zh { color: var(--green); }
+  @media (max-width: 1024px) {
+    .nav-links { display: none !important; }
+    .hamburger { display: flex !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="images/logo.jpg" alt="Sorghuman">
+    <span>SORGHUMAN</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html#about"><span class="en">About</span><span class="zh">关于</span></a>
+    <a href="products.html" class="active"><span class="en">Products</span><span class="zh">产品</span></a>
+    <a href="clients.html"><span class="en">Clients</span><span class="zh">客户</span></a>
+    <a href="local.html"><span class="en">Local delivery</span><span class="zh">本地配送</span></a>
+    <a href="order.html"><span class="en">Wholesale</span><span class="zh">商业批发</span></a>
+    <a href="supplier.html"><span class="en">Factories</span><span class="zh">工厂供货</span></a>
+    <a href="distributor-apply.html"><span class="en">Distributors</span><span class="zh">分销商入驻</span></a>
+    <a href="careers.html"><span class="en">Careers</span><span class="zh">招聘</span></a>
+    <a href="index.html#contact"><span class="en">Contact</span><span class="zh">联系</span></a>
+    </div>
+  <button class="hamburger" onclick="toggleMenu()" id="hamburger">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-menu" id="mobileMenu">
+    <a href="index.html#about" onclick="if(typeof closeMenu==='function')closeMenu()">About 关于 &rarr;</a>
+    <a href="products.html" onclick="if(typeof closeMenu==='function')closeMenu()">Products 产品 &rarr;</a>
+    <a href="clients.html" onclick="if(typeof closeMenu==='function')closeMenu()">Clients 客户 &rarr;</a>
+    <a href="local.html" onclick="if(typeof closeMenu==='function')closeMenu()">Local delivery 本地配送 &rarr;</a>
+    <a href="order.html" onclick="if(typeof closeMenu==='function')closeMenu()">Wholesale 商业批发 &rarr;</a>
+    <a href="supplier.html" onclick="if(typeof closeMenu==='function')closeMenu()">Factories 工厂供货 &rarr;</a>
+    <a href="distributor-apply.html" onclick="if(typeof closeMenu==='function')closeMenu()">Distributors 分销商入驻 &rarr;</a>
+    <a href="careers.html" onclick="if(typeof closeMenu==='function')closeMenu()">Careers 招聘 &rarr;</a>
+    <a href="index.html#contact" onclick="if(typeof closeMenu==='function')closeMenu()">Contact 联系 &rarr;</a>
+    </div>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <p class="eyebrow">Our range &middot; 产品目录</p>
+    <h1>Our Products</h1>
+    <p>Authentic frozen Chinese food &mdash; steamed buns, dim sum, beverages and more. Ready to cook straight from frozen.</p>
+  </div>
+</div>
+
+<div class="page-body">
+  <div class="page-body-inner">
+
+    <p class="section-note">No thawing needed — steam any bun for 8–10 min, or microwave for 4 min. 所有包子无需解冻，直接蒸8-10分钟或微波炉加热4分钟即可。</p>
+
+    <div id="productSections"><p style="color:var(--muted);padding:2rem 0;">加载中… Loading…</p></div>
+
+    <a href="local.html" class="buy-btn">&#128722; 立即购买 &middot; Shop now（本地配送 Local delivery）</a>
+
+    <!-- 底部下单入口 · Ordering -->
+    <div class="order-cta">
+      <h2>批发下单 &middot; Wholesale Ordering</h2>
+      <p class="sub">超市 / 分销商请从这里进入 ERP 下单 &middot; Stores &amp; distributors order through the ERP</p>
+      <div class="order-btns">
+        <a href="https://sorghuman-erp.onrender.com/customer-portal/login" target="_blank" rel="noopener" class="order-btn primary">
+          <span class="t">已注册超市客户下单</span>
+          <span class="s">Registered store login →</span>
+        </a>
+        <a href="https://sorghuman-erp.onrender.com/orders/new" target="_blank" rel="noopener" class="order-btn ghost">
+          <span class="t">业务员代客下单</span>
+          <span class="s">Sales rep: order for a client →</span>
+        </a>
+      </div>
+      <p class="order-apply">还不是批发客户？<a href="https://sorghuman-erp.onrender.com/register/customer" target="_blank" rel="noopener">申请开通批发账户 Apply for a wholesale account →</a></p>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p>&copy; 2025 Sorghuman Holding LLC &middot; Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &middot;
+  <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
+</footer>
+
+<script>
+function toggleMenu(){document.getElementById('mobileMenu').classList.toggle('open');}
+function closeMenu(){document.getElementById('mobileMenu').classList.remove('open');}
+document.addEventListener('click',function(e){
+  var m=document.getElementById('mobileMenu');
+  var b=document.getElementById('hamburger');
+  if(m.classList.contains('open')&&!m.contains(e.target)&&!b.contains(e.target)){m.classList.remove('open');}
+});
+
+// ── 动态加载产品（从 get-products 接口，按分类分组，显示规格，不放价格）──
+var PRODUCTS_API = '/.netlify/functions/get-products';
+var CAT_ORDER = ['buns','dumplings','frozen','beverages','rice','grocery','mealbox','film','tape'];
+var NONFOOD_CATS = ['mealbox','film','tape'];
+function esc(s){ return (s==null?'':String(s)).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); }
+
+function cardHtml(p){
+  var desc = p.description ? '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>' : '';
+  var spec = p.spec ? '<span class="tag">'+esc(p.spec)+'</span>' : '';
+  var sub  = p.subscription_enabled ? '<span class="tag" style="background:#C8922A;color:#fff;border-color:#C8922A;">📅 可订阅 Subscribe available</span>' : '';
+  // 有 SKU 就把整张卡做成链接，点进各自的详情页
+  var href = p.sku ? '/shop/?p='+encodeURIComponent(p.sku) : '';
+  var open = href ? '<a class="card" href="'+href+'">' : '<div class="card">';
+  var close = href ? '</a>' : '</div>';
+  var more = href ? '<span class="more">查看详情 · View details →</span>' : '';
+  return open
+    + '<img src="'+esc(p.image_url||'')+'" alt="'+esc(p.name_zh||p.name_en||'')+'" loading="lazy">'
+    + '<div class="card-body">'
+    +   '<h3>'+esc(p.name_en||p.name_zh||'')+'</h3>'
+    +   (p.name_zh ? '<p class="zh">'+esc(p.name_zh)+'</p>' : '')
+    +   desc + spec + sub + more
+    + '</div>' + close;
+}
+
+async function loadProducts(){
+  var box = document.getElementById('productSections');
+  try{
+    var res = await fetch(PRODUCTS_API);
+    var data = await res.json();
+    var products = data.products || [];
+    var labels = data.categories || {};
+    if(!products.length){ box.innerHTML = '<p style="color:var(--muted);padding:2rem 0;">暂无产品 No products yet.</p>'; return; }
+
+    // 按分组归类（优先 showcase_category，退回 category）
+    var groups = {};
+    products.forEach(function(p){
+      var k = p.showcase_category || p.category || 'other';
+      (groups[k] = groups[k] || []).push(p);
+    });
+
+    // 按预设顺序排列分组
+    var keys = Object.keys(groups).sort(function(a,b){
+      var ia = CAT_ORDER.indexOf(a), ib = CAT_ORDER.indexOf(b);
+      return (ia<0?99:ia) - (ib<0?99:ib);
+    });
+
+    box.innerHTML = keys.map(function(k){
+      var title = labels[k] || k;
+      var isFirstNonfood = NONFOOD_CATS.indexOf(k)!==-1 && NONFOOD_CATS.indexOf(keys[keys.indexOf(k)-1])===-1;
+      var banner = isFirstNonfood
+        ? '<div class="divider"></div><h2 class="section-title">餐厅耗材 · Non-Food Restaurant Supplies</h2>'
+          + '<p class="section-note">一次性餐盒、包装膜、打包胶带等，可一次性购买，也可选择按月订阅自动配送。<br>'
+          + 'Meal boxes, packaging film and packing tape — order once, or subscribe for automatic monthly restocking.</p>'
+        : '';
+      return banner + '<div class="divider"></div><h2 class="section-title">'+esc(title)+'</h2>'
+           + '<div class="grid">'+groups[k].map(cardHtml).join('')+'</div>';
+    }).join('');
+  }catch(e){
+    box.innerHTML = '<p style="color:var(--muted);padding:2rem 0;">加载失败 Load failed：'+esc(e.message)+'</p>';
+  }
+}
+loadProducts();
+</script>
+</body>
+</html>

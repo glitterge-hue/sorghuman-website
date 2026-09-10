@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Order Confirmed · Sorghuman</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--green:#2A6B3A;--gold:#C8922A;--cream:#FAF7F2;--dark:#1A1A18;--muted:#6B6B62;--border:#E2DDD4;}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--dark);min-height:100vh;display:flex;flex-direction:column;}
+nav{background:rgba(250,247,242,0.96);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 5%;height:64px;}
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none;}
+.nav-logo img{height:40px;width:40px;object-fit:contain;}
+.nav-logo span{font-family:'DM Serif Display',serif;font-size:18px;color:var(--green);}
+.main{flex:1;display:flex;align-items:center;justify-content:center;padding:60px 5%;}
+.box{background:white;border:1px solid var(--border);border-radius:2px;padding:3rem;max-width:520px;width:100%;text-align:center;}
+.icon{width:72px;height:72px;background:#f0f7f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem;font-size:32px;}
+h1{font-family:'DM Serif Display',serif;font-size:32px;color:var(--green);margin-bottom:1rem;}
+p{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:1rem;}
+.order-detail{background:var(--cream);border-radius:2px;padding:1rem;font-size:13px;color:var(--dark);text-align:left;margin:1rem 0;line-height:1.9;}
+.btn{display:inline-block;background:var(--green);color:white;text-decoration:none;padding:13px 32px;border-radius:2px;font-size:14px;font-weight:500;margin-top:1rem;}
+footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:20px 5%;font-size:13px;}
+footer a{color:rgba(255,255,255,0.4);}
+</style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q99SSTBGE8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Q99SSTBGE8');
+</script>
+</head>
+<body>
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="images/logo.jpg" alt="Sorghuman">
+    <span>SORGHUMAN</span>
+  </a>
+</nav>
+<div class="main">
+  <div class="box">
+    <div class="icon">✓</div>
+    <h1>Order confirmed!</h1>
+    <p>Thank you for your order! We've received your payment and will contact you by email to confirm the delivery time.<br>感谢您的订购！我们已收到付款，将通过邮件与您确认配送时间。</p>
+    <div class="order-detail" id="orderDetail"></div>
+    <p style="font-size:13px;">Questions? Email us at <a href="mailto:info@sorghuman.com" style="color:var(--green);">info@sorghuman.com</a></p>
+    <a href="index.html" class="btn">Back to main site</a>
+  </div>
+</div>
+<footer><p>© 2025 Sorghuman Holding LLC · <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p></footer>
+<script>
+var params = new URLSearchParams(window.location.search);
+var order = params.get('order');
+if (order) {
+  var items = order.split(' | ');
+  document.getElementById('orderDetail').innerHTML = '<strong style="font-size:12px;letter-spacing:0.08em;text-transform:uppercase;color:#6B6B62;">Order summary</strong><br>' + items.join('<br>');
+}
+</script>
+</body>
+</html>

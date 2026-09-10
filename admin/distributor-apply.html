@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>分销商入驻 · Become a Supplier | Sorghuman</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',system-ui,sans-serif;background:#f7f6f2;color:#1a1a18;line-height:1.6;}
+.hero{background:#1A4A28;color:#fff;padding:52px 24px;text-align:center;}
+.hero h1{font-size:30px;font-weight:700;margin-bottom:10px;}
+.hero p{font-size:15px;color:rgba(255,255,255,.85);max-width:620px;margin:0 auto;}
+.wrap{max-width:760px;margin:-28px auto 60px;padding:0 20px;}
+.card{background:#fff;border-radius:10px;border:1px solid #e8e8e0;padding:28px;margin-bottom:20px;box-shadow:0 2px 12px rgba(0,0,0,.04);}
+.card h2{font-size:16px;color:#1A4A28;margin-bottom:4px;}
+.card .sub{font-size:13px;color:#999;margin-bottom:20px;}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.fg{display:flex;flex-direction:column;gap:6px;}
+.fg.full{grid-column:1/-1;}
+.fg label{font-size:13px;font-weight:600;color:#444;}
+.fg label .req{color:#c0392b;}
+.fg input,.fg select,.fg textarea{border:1px solid #ddd;border-radius:6px;padding:10px 12px;font-size:14px;font-family:inherit;outline:none;background:#fff;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:#2A6B3A;}
+.fg .hint{font-size:11px;color:#aaa;}
+.fg textarea{min-height:90px;resize:vertical;}
+.chips{display:flex;flex-wrap:wrap;gap:8px;}
+.chip{padding:7px 14px;border:1px solid #ddd;border-radius:20px;font-size:13px;cursor:pointer;background:#fff;user-select:none;}
+.chip.on{background:#eaf2ec;border-color:#2A6B3A;color:#1A4A28;font-weight:600;}
+.steps{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px;}
+.step{background:rgba(255,255,255,.12);border-radius:20px;padding:6px 14px;font-size:12px;}
+.btn{background:#2A6B3A;color:#fff;border:none;border-radius:6px;padding:14px 40px;font-size:15px;font-weight:600;font-family:inherit;cursor:pointer;}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+.err{background:#fdf2f2;color:#c0392b;padding:12px;border-radius:6px;font-size:13px;margin-bottom:16px;display:none;}
+.done{text-align:center;padding:50px 20px;display:none;}
+.done .ic{font-size:52px;}
+.done h2{font-size:22px;color:#1A4A28;margin:14px 0 8px;}
+.done p{color:#666;font-size:14px;}
+.note{background:#fdf8ec;border-left:3px solid #d4a017;padding:12px 14px;font-size:13px;color:#7a5c00;border-radius:4px;margin-top:16px;}
+@media(max-width:620px){.grid{grid-template-columns:1fr;}.fg.full{grid-column:1;}}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <h1>🚚 分销商入驻 · Become a Supplier</h1>
+  <p>把你的商品直接送到东岸华人超市的补货页上。门店在自己的后台一键下单，你在自己的后台确认发货。</p>
+  <div class="steps">
+    <span class="step">① 提交资质</span><span class="step">② 我们 2 天内核验</span>
+    <span class="step">③ 拿到后台账号</span><span class="step">④ 上架定价、审门店</span>
+  </div>
+</div>
+
+<div class="wrap">
+  <div id="formBox">
+    <div class="err" id="errBox"></div>
+
+    <div class="card">
+      <h2>公司信息 Company</h2>
+      <div class="sub">必须与营业执照一致。我们会核验。</div>
+      <div class="grid">
+        <div class="fg"><label>公司中文名 <span class="req">*</span></label><input id="name_zh" placeholder="例：华隆食品"></div>
+        <div class="fg"><label>English Name</label><input id="name_en" placeholder="e.g. Hualong Foods Inc."></div>
+        <div class="fg full"><label>法定名称 Legal Name <span class="req">*</span></label>
+          <input id="legal_name" placeholder="与执照/税表完全一致"><span class="hint">e.g. Hualong Trading LLC</span></div>
+        <div class="fg"><label>联邦税号 EIN <span class="req">*</span></label><input id="ein" placeholder="12-3456789"></div>
+        <div class="fg"><label>类型 Type</label>
+          <select id="type">
+            <option value="distributor">分销商 Distributor</option>
+            <option value="importer">进口商 Importer</option>
+            <option value="manufacturer">生产厂家 Manufacturer</option>
+          </select></div>
+        <div class="fg full"><label>营业地址 <span class="req">*</span></label><input id="biz_address" placeholder="街道, 城市, 州, 邮编"></div>
+        <div class="fg"><label>食品经营/批发许可证号</label><input id="food_license" placeholder="州发的 license #"></div>
+        <div class="fg"><label>产品责任险到期日</label><input id="coi_expiry" type="date"><span class="hint">COI 到期日</span></div>
+        <div class="fg full"><label>公司网站</label><input id="website" placeholder="https://"></div>
+      </div>
+      <div class="note">
+        ⚠️ 批准前我们会向你索要：营业执照、州食品批发许可、产品责任险 COI（Sorghuman 需列为 additional insured）。
+        做冻品的还需 HACCP 或 SQF/BRC 证明。备好这些能大幅加快审核。
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>联系人 Contact</h2>
+      <div class="sub">审核结果和后台账号会发到这个邮箱。</div>
+      <div class="grid">
+        <div class="fg"><label>姓名 <span class="req">*</span></label><input id="contact_name"></div>
+        <div class="fg"><label>电话 <span class="req">*</span></label><input id="phone" type="tel"></div>
+        <div class="fg full"><label>邮箱 <span class="req">*</span></label><input id="email" type="email" placeholder="sales@yourcompany.com"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>商品与服务范围 Products &amp; Coverage</h2>
+      <div class="sub">你能送到哪些州？留空 = 全境。</div>
+
+      <div class="fg full" style="margin-bottom:18px;">
+        <label>主营品类（可多选）</label>
+        <div class="chips" id="catChips"></div>
+      </div>
+
+      <div class="fg full" style="margin-bottom:18px;">
+        <label>送货覆盖的州（可多选）</label>
+        <div class="chips" id="stateChips"></div>
+      </div>
+
+      <div class="fg full">
+        <label>补充说明</label>
+        <textarea id="apply_note" placeholder="现有客户数量、每周送货频次、起送金额、付款条件、仓库位置…"></textarea>
+      </div>
+    </div>
+
+    <div style="text-align:center;">
+      <button class="btn" id="submitBtn" onclick="submitApply()">提交入驻申请 Submit</button>
+      <p style="font-size:12px;color:#999;margin-top:12px;">
+        提交即表示同意 <a href="/terms.html" style="color:#2A6B3A;">平台条款</a>。入驻免费，平台不参与你与门店之间的结算。
+      </p>
+    </div>
+  </div>
+
+  <div class="done" id="doneBox">
+    <div class="ic">✅</div>
+    <h2>申请已提交</h2>
+    <p id="doneMsg"></p>
+    <p style="margin-top:18px;font-size:13px;color:#999;">
+      有问题请联系 <a href="mailto:info@sorghuman.com" style="color:#2A6B3A;">info@sorghuman.com</a>
+    </p>
+  </div>
+</div>
+
+<script>
+const CATS = [
+  ['frozen','冷冻食品'],['grains','米面粮油'],['condiments','调味品'],
+  ['beverage','饮料'],['snacks','零食'],['produce','蔬果'],
+  ['seafood','水产'],['meat','肉类'],['dairy','乳制品'],['grocery','杂货'],
+];
+const STATES = ['NY','NJ','PA','CT','MA','MD','VA','DE','RI','NH','VT','ME','OH','NC','GA','FL'];
+
+const picked = { categories:new Set(), service_states:new Set() };
+
+function chips(elId, list, key){
+  document.getElementById(elId).innerHTML = list.map(x=>{
+    const [v,label] = Array.isArray(x) ? x : [x,x];
+    return `<span class="chip" data-v="${v}" onclick="toggle('${key}','${v}',this)">${label}</span>`;
+  }).join('');
+}
+function toggle(key, v, el){
+  picked[key].has(v) ? picked[key].delete(v) : picked[key].add(v);
+  el.classList.toggle('on');
+}
+chips('catChips', CATS, 'categories');
+chips('stateChips', STATES, 'service_states');
+
+const val = id => document.getElementById(id).value.trim();
+
+async function submitApply(){
+  const btn = document.getElementById('submitBtn');
+  const err = document.getElementById('errBox');
+  err.style.display = 'none';
+
+  const body = {
+    name_zh: val('name_zh'), name_en: val('name_en'), legal_name: val('legal_name'),
+    ein: val('ein'), type: val('type'), biz_address: val('biz_address'),
+    food_license: val('food_license'), coi_expiry: val('coi_expiry'), website: val('website'),
+    contact_name: val('contact_name'), phone: val('phone'), email: val('email'),
+    categories: [...picked.categories],
+    service_states: [...picked.service_states],
+    apply_note: val('apply_note'),
+  };
+
+  btn.disabled = true; btn.textContent = '提交中…';
+  try {
+    const res = await fetch('/.netlify/functions/distributor-apply', {
+      method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+    }).then(r=>r.json());
+
+    if(res.error){
+      err.textContent = res.error; err.style.display='block';
+      window.scrollTo({top:0, behavior:'smooth'});
+      btn.disabled = false; btn.textContent = '提交入驻申请 Submit';
+      return;
+    }
+    document.getElementById('formBox').style.display = 'none';
+    document.getElementById('doneMsg').textContent = res.message || '我们会尽快联系您。';
+    document.getElementById('doneBox').style.display = 'block';
+    window.scrollTo({top:0});
+  } catch(e){
+    err.textContent = '网络错误，请重试'; err.style.display='block';
+    btn.disabled = false; btn.textContent = '提交入驻申请 Submit';
+  }
+}
+</script>
+</body>
+</html>

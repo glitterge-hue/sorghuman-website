@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>套餐与订阅 · Plans &amp; Subscription — Sorghuman 高仁</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #2A6B3A; --green-light: #4A9B5A; --gold: #C8922A;
+    --cream: #FAF7F2; --dark: #1A1A18; --muted: #6B6B62; --border: #E2DDD4;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--dark); line-height: 1.6; }
+
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; background: rgba(250,247,242,0.95); backdrop-filter: blur(8px); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 5%; height: 64px; }
+  .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .nav-logo img { height: 40px; width: 40px; object-fit: contain; }
+  .nav-logo span { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--green); }
+  .nav-links { display: flex; gap: 1.6rem; }
+  .nav-links a { text-decoration: none; font-size: 14px; color: var(--muted); transition: color 0.2s; letter-spacing: 0.03em; }
+  .nav-links a:hover, .nav-links a.active { color: var(--green); }
+  .hamburger { display: none; flex-direction: column; gap: 5px; cursor: pointer; padding: 4px; background: none; border: none; }
+  .hamburger span { display: block; width: 22px; height: 2px; background: var(--dark); border-radius: 2px; }
+  .mobile-menu { display: none; position: fixed; top: 64px; left: 0; right: 0; background: var(--cream); border-bottom: 1px solid var(--border); z-index: 99; padding: 1rem 5%; flex-direction: column; }
+  .mobile-menu a { text-decoration: none; font-size: 15px; color: var(--dark); padding: 14px 0; border-bottom: 1px solid var(--border); }
+  .mobile-menu a:last-child { border-bottom: none; }
+  .mobile-menu.open { display: flex; }
+
+  /* HEADER */
+  .page-header { background: var(--green); color: #fff; padding: 110px 5% 64px; }
+  .page-header-inner { max-width: 1040px; margin: 0 auto; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: rgba(255,255,255,0.65); margin-bottom: 1rem; }
+  .page-header h1 { font-family: 'DM Serif Display', serif; font-size: clamp(32px, 4.5vw, 50px); line-height: 1.12; margin-bottom: 1rem; }
+  .page-header p { font-size: 16px; color: rgba(255,255,255,0.85); max-width: 600px; line-height: 1.8; }
+  .promise { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 1.75rem; }
+  .promise span { font-size: 13px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.22); padding: 7px 14px; border-radius: 999px; }
+
+  /* PLANS */
+  .plans-wrap { max-width: 1040px; margin: 0 auto; padding: 64px 5% 24px; }
+  .plans { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .plan { background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 32px 28px; display: flex; flex-direction: column; transition: transform .2s, box-shadow .2s; }
+  .plan:hover { transform: translateY(-4px); box-shadow: 0 14px 36px rgba(0,0,0,0.08); }
+  .plan.featured { border-color: var(--green); box-shadow: 0 14px 36px rgba(42,107,58,0.12); }
+  .plan-tag { align-self: flex-start; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.75rem; min-height: 16px; }
+  .plan h3 { font-family: 'DM Serif Display', serif; font-size: 24px; color: var(--dark); margin-bottom: 2px; }
+  .plan .en { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; }
+  .price { font-family: 'DM Serif Display', serif; font-size: 46px; color: var(--green); line-height: 1; }
+  .price small { font-size: 16px; color: var(--muted); font-family: 'DM Sans', sans-serif; }
+  .criteria { font-size: 13.5px; color: var(--muted); line-height: 1.7; margin: 1.25rem 0 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); flex-grow: 1; }
+  .plan-btn { display: block; text-align: center; text-decoration: none; background: var(--green); color: #fff; padding: 13px 0; border-radius: 2px; font-size: 15px; font-weight: 500; letter-spacing: 0.03em; transition: background 0.2s; }
+  .plan-btn:hover { background: var(--green-light); }
+  .plan.featured .plan-btn { background: var(--gold); }
+  .plan.featured .plan-btn:hover { background: #b8831e; }
+
+  .fee-note { max-width: 1040px; margin: 18px auto 0; padding: 0 5%; }
+  .fee-note p { font-size: 13.5px; color: var(--muted); background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 16px 20px; line-height: 1.7; }
+  .fee-note strong { color: var(--green); }
+
+  /* INCLUDES */
+  .includes { max-width: 1040px; margin: 0 auto; padding: 56px 5% 24px; }
+  .includes h2 { font-family: 'DM Serif Display', serif; font-size: 28px; margin-bottom: 0.4rem; }
+  .includes .sub { font-size: 14px; color: var(--muted); margin-bottom: 2rem; }
+  .inc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .inc-card { background: #fff; border: 1px solid var(--border); border-radius: 4px; padding: 26px 28px; }
+  .inc-card .label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin-bottom: 1rem; }
+  .inc-card ul { list-style: none; }
+  .inc-card li { font-size: 14.5px; color: #333; padding: 8px 0 8px 22px; position: relative; }
+  .inc-card li::before { content: '✓'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+
+  /* COMPARE */
+  .compare-wrap { max-width: 1040px; margin: 0 auto; padding: 56px 5% 8px; }
+  .compare-wrap h2 { font-family: 'DM Serif Display', serif; font-size: 28px; margin-bottom: 0.4rem; }
+  .compare-wrap .sub { font-size: 14px; color: var(--muted); margin-bottom: 1.5rem; }
+  .compare-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--border); border-radius: 6px; }
+  table.compare { width: 100%; min-width: 760px; border-collapse: collapse; background: #fff; font-size: 13.5px; }
+  table.compare th, table.compare td { padding: 13px 16px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  table.compare thead th { background: var(--cream); font-weight: 500; font-size: 13px; color: var(--dark); }
+  table.compare tbody th { font-weight: 500; color: var(--dark); background: #fcfbf9; white-space: nowrap; }
+  table.compare td { color: var(--muted); }
+  table.compare td.own { background: rgba(42,107,58,0.06); color: var(--dark); font-weight: 500; }
+  table.compare td.own::before { content: '✓ '; color: var(--green); font-weight: 700; }
+  table.compare thead th.own { background: var(--green); color: #fff; }
+  table.compare tr:last-child th, table.compare tr:last-child td { border-bottom: none; }
+  .compare-note { font-size: 12.5px; color: var(--muted); margin-top: 10px; line-height: 1.6; }
+
+  /* SUMMARY */
+  .summary { background: #fff; border-top: 1px solid var(--border); }
+  .summary-inner { max-width: 1040px; margin: 0 auto; padding: 56px 5%; }
+  .summary .divider { width: 48px; height: 2px; background: var(--gold); margin-bottom: 1.25rem; }
+  .summary h2 { font-family: 'DM Serif Display', serif; font-size: 26px; margin-bottom: 1rem; }
+  .summary p { font-size: 15px; color: var(--muted); line-height: 1.85; max-width: 720px; margin-bottom: 0.75rem; }
+  .summary .oneline { font-size: 17px; color: var(--dark); font-family: 'DM Serif Display', serif; margin-top: 1.25rem; }
+
+  /* FOOTER */
+  footer { background: var(--dark); color: rgba(255,255,255,0.45); text-align: center; padding: 24px 5%; font-size: 13px; }
+  footer a { color: rgba(255,255,255,0.45); }
+
+  @media (max-width: 860px) {
+    .plans { grid-template-columns: 1fr; }
+    .inc-grid { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .hamburger { display: flex; }
+  }
+</style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q99SSTBGE8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Q99SSTBGE8');
+</script>
+
+<style>
+  /* --- unified bilingual nav (stacked EN over 中文) --- */
+  .nav-links { display: flex; align-items: center; gap: 1.25rem; }
+  .nav-links a {
+    text-decoration: none;
+    display: flex; flex-direction: column; align-items: center;
+    line-height: 1.18; white-space: nowrap; text-align: center;
+    padding: 4px 0; transition: color 0.2s;
+  }
+  .nav-links a .en { font-size: 12.5px; font-weight: 500; letter-spacing: 0.02em; color: var(--dark); }
+  .nav-links a .zh { font-size: 10.5px; letter-spacing: 0.08em; color: var(--muted); margin-top: 2px; }
+  .nav-links a:hover .en, .nav-links a:hover .zh,
+  .nav-links a.active .en, .nav-links a.active .zh { color: var(--green); }
+  @media (max-width: 1024px) {
+    .nav-links { display: none !important; }
+    .hamburger { display: flex !important; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="images/logo.jpg" alt="Sorghuman">
+    <span>SORGHUMAN</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html#about"><span class="en">About</span><span class="zh">关于</span></a>
+    <a href="products.html"><span class="en">Products</span><span class="zh">产品</span></a>
+    <a href="clients.html"><span class="en">Clients</span><span class="zh">客户</span></a>
+    <a href="local.html"><span class="en">Local delivery</span><span class="zh">本地配送</span></a>
+    <a href="https://sorghuman-erp.onrender.com/register/customer" target="_blank" rel="noopener"><span class="en">Wholesale</span><span class="zh">商业批发</span></a>
+    <a href="supplier.html"><span class="en">Factories</span><span class="zh">工厂供货</span></a>
+    <a href="distributor-apply.html"><span class="en">Distributors</span><span class="zh">分销商入驻</span></a>
+    <a href="careers.html"><span class="en">Careers</span><span class="zh">招聘</span></a>
+    <a href="index.html#contact"><span class="en">Contact</span><span class="zh">联系</span></a>
+    </div>
+  <button class="hamburger" onclick="document.getElementById('mm').classList.toggle('open')" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+<div class="mobile-menu" id="mm">
+    <a href="index.html#about" onclick="if(typeof closeMenu==='function')closeMenu()">About 关于 &rarr;</a>
+    <a href="products.html" onclick="if(typeof closeMenu==='function')closeMenu()">Products 产品 &rarr;</a>
+    <a href="clients.html" onclick="if(typeof closeMenu==='function')closeMenu()">Clients 客户 &rarr;</a>
+    <a href="local.html" onclick="if(typeof closeMenu==='function')closeMenu()">Local delivery 本地配送 &rarr;</a>
+    <a href="https://sorghuman-erp.onrender.com/register/customer" target="_blank" rel="noopener" onclick="if(typeof closeMenu==='function')closeMenu()">Wholesale 商业批发 &rarr;</a>
+    <a href="supplier.html" onclick="if(typeof closeMenu==='function')closeMenu()">Factories 工厂供货 &rarr;</a>
+    <a href="distributor-apply.html" onclick="if(typeof closeMenu==='function')closeMenu()">Distributors 分销商入驻 &rarr;</a>
+    <a href="careers.html" onclick="if(typeof closeMenu==='function')closeMenu()">Careers 招聘 &rarr;</a>
+    <a href="index.html#contact" onclick="if(typeof closeMenu==='function')closeMenu()">Contact 联系 &rarr;</a>
+    </div>
+
+<!-- HEADER -->
+<header class="page-header">
+  <div class="page-header-inner">
+    <p class="eyebrow">独立站方案 · Plans &amp; Subscription</p>
+    <h1>为本地亚洲超市建设自己的独立网站<br><span style="font-size:0.6em;opacity:0.8;">Build Your Own Online Store for Local Asian Supermarkets</span></h1>
+    <p>本地客人能找到你，扫码即可下单，线上收款直接存入你自己的账户，不改变任何日常操作。<br><span style="opacity:0.75;">Local customers can find you, scan to order, and online payments go straight into your own account — without changing any of your daily operations.</span></p>
+    <div class="promise">
+      <span>费用固定 · Fixed Cost</span>
+      <span>不收佣金 · No Commission</span>
+      <span>牢固建立顾客档案 · Build Solid Customer Records</span>
+    </div>
+  </div>
+</header>
+
+<!-- PLANS -->
+<!--
+  流程：套餐按钮 → /sign?plan=basic|standard|large（在线签约）→ 签署后自动跳对应 Stripe 订阅链接付款。
+  各档 Stripe 订阅链接现统一维护在 sign.html 的 PLANS 配置里：
+    基础 $299 (basic)    prod_Ueo3deteoukqdo → https://buy.stripe.com/28E9AS6go0iS9Yt8XG0RG03
+    标准 $399 (standard) prod_UjJlwIJc6UHmQc → https://buy.stripe.com/6oUeVcdIQ4z81rX4Hq0RG02
+    大型 $499 (large)    prod_UjJmmuy0bkspW2 → https://buy.stripe.com/5kQcN47ksghQ5Idgq80RG01
+  如需改链接，改 sign.html 里的 PLANS.pay 即可；本页按钮只指向 /sign。
+-->
+<section class="plans-wrap">
+  <div class="plans">
+
+    <div class="plan">
+      <span class="plan-tag">基础门店 · Basic</span>
+      <h3>基础门店</h3>
+      <p class="en">Basic Store</p>
+      <div class="price">$299<small> / 月</small></div>
+      <p class="criteria">3,000 平方英尺以下，<strong>并且</strong> 2,000 个单品以下。<br>3,000 sq ft &amp; under 2,000 SKUs.</p>
+      <a class="plan-btn" href="/sign?plan=basic" data-prod="prod_Ueo3deteoukqdo">签约并订阅 · Sign &amp; Subscribe</a>
+    </div>
+
+    <div class="plan featured">
+      <span class="plan-tag">标准门店 · Standard</span>
+      <h3>标准门店</h3>
+      <p class="en">Standard Store</p>
+      <div class="price">$399<small> / 月</small></div>
+      <p class="criteria">3,000–8,000 平方英尺，<strong>或</strong> 2,000–5,000 个单品。<br>3,000–8,000 sq ft, or 2,000–5,000 SKUs.</p>
+      <a class="plan-btn" href="/sign?plan=standard" data-prod="prod_UjJlwIJc6UHmQc">签约并订阅 · Sign &amp; Subscribe</a>
+    </div>
+
+    <div class="plan">
+      <span class="plan-tag">大型门店 · Large</span>
+      <h3>大型门店</h3>
+      <p class="en">Large Store</p>
+      <div class="price">$499<small> / 月</small></div>
+      <p class="criteria">超过 8,000 平方英尺，<strong>或</strong> 超过 5,000 个单品。<br>Over 8,000 sq ft, or over 5,000 SKUs.</p>
+      <a class="plan-btn" href="/sign?plan=large" data-prod="prod_UjJmmuy0bkspW2">签约并订阅 · Sign &amp; Subscribe</a>
+    </div>
+
+  </div>
+</section>
+
+<div class="fee-note">
+  <p>门店面积与单品数量如对应不同档位，<strong>以较高档位为准</strong>。线上支付处理费为每笔 <strong>3.5% + $0.30</strong>（由支付通道收取）。<strong>高仁永远不收销售佣金。</strong><br><span style="opacity:0.8;">If store size and SKU count fall into different tiers, <strong>the higher tier applies</strong>. Online payment processing is <strong>3.5% + $0.30</strong> per transaction (charged by the payment provider). <strong>Sorghuman never charges sales commission.</strong></span></p>
+</div>
+
+<!-- INCLUDES -->
+<section class="includes">
+  <h2>费用包含 · What's Included</h2>
+  <p class="sub">真正困难的不是“做一个网页”，而是长期维护商品、价格、订单、支付、配送和本地推广——这些都在月费内。<br>The hard part isn't building a webpage — it's the ongoing upkeep of products, prices, orders, payments, delivery, and local promotion. All of it is included in the monthly fee.</p>
+  <div class="inc-grid">
+    <div class="inc-card">
+      <p class="label">建站与技术 · Build &amp; Tech</p>
+      <ul>
+        <li>独立网站建设　Independent website build</li>
+        <li>域名和服务器支持　Domain &amp; server support</li>
+        <li>网站托管和基础维护　Hosting &amp; basic maintenance</li>
+        <li>支付系统接入　Payment system integration</li>
+      </ul>
+    </div>
+    <div class="inc-card">
+      <p class="label">运营支持 · Operations Support</p>
+      <ul>
+        <li>商品分类和商品展示　Product categories &amp; display</li>
+        <li>商品价格和基础信息更新支持　Price &amp; basic info update support</li>
+        <li>促销横幅和节日商品展示　Promo banners &amp; seasonal features</li>
+        <li>配送范围和自取设置支持　Delivery zone &amp; pickup setup support</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- COMPARE -->
+<section class="compare-wrap">
+  <h2>为什么是「门店 + 独立站」· Why "Store + Own Site"</h2>
+  <p class="sub">同样卖亚洲食品，不同经营模式差在哪——一句话看懂。<br>Selling the same Asian groceries, where do the business models differ — at a glance.</p>
+  <div class="compare-scroll">
+    <table class="compare">
+      <thead>
+        <tr>
+          <th>对比项<br><small style="font-weight:400;opacity:0.7;">Category</small></th>
+          <th class="own">超市自己的独立站<br><small style="font-weight:400;opacity:0.85;">Store's Own Site</small></th>
+          <th>电商<br><small style="font-weight:400;opacity:0.7;">E-commerce</small></th>
+          <th>实体店<br><small style="font-weight:400;opacity:0.7;">Physical Store</small></th>
+          <th>平台三方店<br><small style="font-weight:400;opacity:0.7;">Marketplace Seller</small></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>佣金抽成<br><small style="font-weight:400;opacity:0.6;">Commission</small></th>
+          <td class="own">固定月费，永不收销售佣金<br><small style="opacity:0.7;">Flat monthly fee, no sales commission ever</small></td>
+          <td>平台按规则抽取佣金与费用<br><small style="opacity:0.7;">Platform takes commission &amp; fees by its rules</small></td>
+          <td>无平台佣金<br><small style="opacity:0.7;">No platform commission</small></td>
+          <td>需承担平台佣金与多项费用<br><small style="opacity:0.7;">Bears platform commission &amp; various fees</small></td>
+        </tr>
+        <tr>
+          <th>费用透明度<br><small style="font-weight:400;opacity:0.6;">Cost Transparency</small></th>
+          <td class="own">月费固定，成本好预算<br><small style="opacity:0.7;">Fixed monthly fee, easy to budget</small></td>
+          <td>费用由平台规则决定<br><small style="opacity:0.7;">Costs set by platform rules</small></td>
+          <td>成本主要来自线下经营<br><small style="opacity:0.7;">Costs mainly from offline operations</small></td>
+          <td>费用随平台政策变化<br><small style="opacity:0.7;">Costs change with platform policy</small></td>
+        </tr>
+        <tr>
+          <th>顾客归属<br><small style="font-weight:400;opacity:0.6;">Customer Ownership</small></th>
+          <td class="own">顾客沉淀在门店自己的品牌下<br><small style="opacity:0.7;">Customers stay under your store's brand</small></td>
+          <td>顾客主要属于平台<br><small style="opacity:0.7;">Customers mainly belong to the platform</small></td>
+          <td>顾客属于门店<br><small style="opacity:0.7;">Customers belong to the store</small></td>
+          <td>顾客关系多由平台掌握<br><small style="opacity:0.7;">Customer relationship held by the platform</small></td>
+        </tr>
+        <tr>
+          <th>流量去向<br><small style="font-weight:400;opacity:0.6;">Traffic Destination</small></th>
+          <td class="own">线上流量可引回自己门店<br><small style="opacity:0.7;">Online traffic flows back to your store</small></td>
+          <td>流量主要导向平台<br><small style="opacity:0.7;">Traffic mainly goes to the platform</small></td>
+          <td>依赖自然到店客流<br><small style="opacity:0.7;">Relies on organic walk-in traffic</small></td>
+          <td>主要导向平台店铺<br><small style="opacity:0.7;">Mainly drives to the marketplace shop</small></td>
+        </tr>
+        <tr>
+          <th>生鲜与配送<br><small style="font-weight:400;opacity:0.6;">Fresh &amp; Delivery</small></th>
+          <td class="own">保留生鲜优势，支持本地配送与自取<br><small style="opacity:0.7;">Keeps fresh advantage, local delivery &amp; pickup</small></td>
+          <td>受仓储冷链与配送限制<br><small style="opacity:0.7;">Limited by warehousing, cold chain &amp; shipping</small></td>
+          <td>生鲜优势强，但难线上下单<br><small style="opacity:0.7;">Strong on fresh, but hard to order online</small></td>
+          <td>受平台规则与配送限制<br><small style="opacity:0.7;">Limited by platform rules &amp; logistics</small></td>
+        </tr>
+        <tr>
+          <th>本地推广<br><small style="font-weight:400;opacity:0.6;">Local Promotion</small></th>
+          <td class="own">承接社媒、地图与本地广告流量<br><small style="opacity:0.7;">Captures social, maps &amp; local ad traffic</small></td>
+          <td>平台统一推广，门店自主有限<br><small style="opacity:0.7;">Platform-led promo, limited store control</small></td>
+          <td>主要靠口碑与招牌<br><small style="opacity:0.7;">Relies on word of mouth &amp; storefront</small></td>
+          <td>活动与流量由平台分配<br><small style="opacity:0.7;">Campaigns &amp; traffic allocated by platform</small></td>
+        </tr>
+        <tr>
+          <th>下单时间<br><small style="font-weight:400;opacity:0.6;">Ordering Hours</small></th>
+          <td class="own">网站 24 小时展示并接单<br><small style="opacity:0.7;">Site displays &amp; takes orders 24/7</small></td>
+          <td>可 24 小时下单<br><small style="opacity:0.7;">Orders accepted 24/7</small></td>
+          <td>受营业时间限制<br><small style="opacity:0.7;">Limited by opening hours</small></td>
+          <td>受平台与门店安排<br><small style="opacity:0.7;">Subject to platform &amp; store schedule</small></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="compare-note">本表为不同经营模式的一般性说明，仅供参考；具体费用与服务以各方实际政策为准。<br>This table is a general illustration of different business models, for reference only; actual fees and services follow each party's real policies.</p>
+</section>
+
+<!-- SUMMARY -->
+<section class="summary">
+  <div class="summary-inner">
+    <div class="divider"></div>
+    <h2>合作摘要 · Partnership Summary</h2>
+    <p><strong>高仁提供：</strong>独立网站建设、域名和服务器支持、网站托管、商品展示、在线下单、支付接入、促销页面、配送范围设置、后台基础管理和日常维护支持。<br><span style="opacity:0.8;"><strong>Sorghuman provides:</strong> website build, domain &amp; server support, hosting, product display, online ordering, payment integration, promo pages, delivery-zone setup, basic back-office management, and day-to-day maintenance support.</span></p>
+    <p><strong>门店负责：</strong>提供门店资料、商品清单、价格、图片、配送范围和订单处理安排；上线后负责确认订单、备货、配送或自取。<br><span style="opacity:0.8;"><strong>The store is responsible for:</strong> providing store info, product list, prices, images, delivery zones, and order-handling arrangements; after launch, confirming orders, stocking, and delivery or pickup.</span></p>
+    <p class="oneline">不是把门店变成平台卖家，而是帮助门店拥有自己的独立线上门店。<br><span style="font-size:0.82em;opacity:0.7;">Not turning your store into a marketplace seller — helping your store own its independent online storefront.</span></p>
+  </div>
+</section>
+
+<footer>
+  <p>&copy; 2026 Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &middot; <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
+  <p style="margin-top:6px;"><a href="privacy.html">Privacy Policy</a> &middot; <a href="terms.html">Terms of Service</a></p>
+</footer>
+
+</body>
+</html>

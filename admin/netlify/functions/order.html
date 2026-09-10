@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+<link rel="manifest" href="/site.webmanifest">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bulk Order · 批量购买 · Sorghuman Holding LLC</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --green: #2A6B3A; --green-light: #4A9B5A; --gold: #C8922A;
+    --cream: #FAF7F2; --dark: #1A1A18; --muted: #6B6B62;
+    --border: #E2DDD4; --red: #C0392B;
+  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--cream); color: var(--dark); line-height: 1.6; }
+
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(250,247,242,0.96); backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 5%; height: 64px;
+  }
+  .nav-logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+  .nav-logo img { height: 40px; width: 40px; object-fit: contain; }
+  .nav-logo span { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--green); }
+  .nav-back { font-size: 13px; color: var(--muted); text-decoration: none; display: flex; align-items: center; gap: 6px; transition: color 0.2s; }
+  .nav-back:hover { color: var(--green); }
+  .nav-back::before { content: '←'; font-size: 16px; }
+
+  .page-header { background: var(--gold); padding: 100px 5% 60px; color: white; }
+  .page-header-inner { max-width: 860px; margin: 0 auto; }
+  .page-header .eyebrow { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: rgba(255,255,255,0.7); margin-bottom: 1rem; }
+  .page-header h1 { font-family: 'DM Serif Display', serif; font-size: clamp(32px, 4vw, 48px); line-height: 1.15; margin-bottom: 1rem; }
+  .page-header p { font-size: 15px; color: rgba(255,255,255,0.85); max-width: 540px; line-height: 1.8; }
+
+  .notice-bar { background: #FFF8E8; border-bottom: 1px solid #F0D890; padding: 14px 5%; text-align: center; font-size: 14px; color: #7A5C00; }
+  .notice-bar strong { font-weight: 500; }
+
+  .page-body { padding: 50px 5%; }
+  .page-body-inner { max-width: 860px; margin: 0 auto; display: grid; grid-template-columns: 1fr 340px; gap: 32px; align-items: start; }
+
+  .form-card { background: white; border: 1px solid var(--border); border-radius: 2px; padding: 2rem; }
+  .form-section-title { font-size: 11px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; margin-top: 2rem; }
+  .form-section-title:first-child { margin-top: 0; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 5px; }
+  .form-group.full { grid-column: 1 / -1; }
+  .form-group label { font-size: 12px; font-weight: 500; color: var(--dark); }
+  .form-group label .zh { font-weight: 400; color: var(--muted); margin-left: 4px; }
+  .form-group label .req { color: var(--red); margin-left: 2px; }
+  .form-group input, .form-group textarea, .form-group select {
+    border: 1px solid var(--border); border-radius: 2px;
+    padding: 9px 12px; font-size: 14px;
+    font-family: 'DM Sans', sans-serif; color: var(--dark);
+    background: #FDFCFA; outline: none; transition: border-color 0.2s;
+  }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color: var(--gold); background: white; box-shadow: 0 0 0 3px rgba(200,146,42,0.1); }
+  .form-group input.error, .form-group select.error { border-color: var(--red); }
+  .form-group textarea { resize: vertical; min-height: 80px; }
+  .form-note { font-size: 12px; color: var(--muted); }
+
+  .customer-type-row { display: flex; gap: 12px; margin-bottom: 1.25rem; }
+  .type-btn { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 2px; background: white; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.2s; text-align: center; }
+  .type-btn.active { border-color: var(--gold); color: var(--gold); background: #FFF8E8; }
+
+  /* Products section */
+  .products-section { margin-top: 0; }
+  .product-category { margin-bottom: 1.5rem; }
+  .category-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 10px 14px; background: var(--cream); border: 1px solid var(--border); border-radius: 2px; user-select: none; transition: background 0.2s; }
+  .category-header:hover { background: #f0ece3; }
+  .category-header h3 { font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 10px; }
+  .category-header .zh { font-size: 12px; color: var(--muted); font-weight: 400; }
+  .category-arrow { font-size: 12px; color: var(--muted); transition: transform 0.2s; }
+  .category-arrow.open { transform: rotate(180deg); }
+  .category-items { display: none; border: 1px solid var(--border); border-top: none; border-radius: 0 0 2px 2px; overflow: hidden; }
+  .category-items.open { display: block; }
+  .product-row { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); background: white; }
+  .product-row:last-child { border-bottom: none; }
+  .product-name { font-size: 14px; font-weight: 500; }
+  .product-name .zh { display: block; font-size: 12px; color: var(--muted); font-weight: 400; margin-top: 2px; }
+  .product-name .spec { display: block; font-size: 11px; color: var(--muted); }
+  .qty-control { display: flex; align-items: center; gap: 0; }
+  .qty-btn { width: 28px; height: 28px; border: 1px solid var(--border); background: var(--cream); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--dark); transition: background 0.15s; font-family: 'DM Sans', sans-serif; line-height: 1; }
+  .qty-btn:hover { background: #e8e3d8; }
+  .qty-btn:first-child { border-radius: 2px 0 0 2px; }
+  .qty-btn:last-child { border-radius: 0 2px 2px 0; }
+  .qty-input { width: 48px; height: 28px; border: 1px solid var(--border); border-left: none; border-right: none; text-align: center; font-size: 14px; font-family: 'DM Sans', sans-serif; background: white; outline: none; color: var(--dark); }
+  .qty-input:focus { border-color: var(--gold); border-left: 1px solid var(--gold); border-right: 1px solid var(--gold); }
+  .qty-unit { font-size: 12px; color: var(--muted); min-width: 40px; }
+  .price-note { font-size: 11px; color: var(--muted); font-style: italic; }
+
+  /* Order summary sidebar */
+  .order-summary { background: white; border: 1px solid var(--border); border-radius: 2px; padding: 1.5rem; position: sticky; top: 84px; }
+  .order-summary h3 { font-family: 'DM Serif Display', serif; font-size: 20px; margin-bottom: 1rem; padding-bottom: 12px; border-bottom: 1px solid var(--border); }
+  .summary-empty { font-size: 13px; color: var(--muted); text-align: center; padding: 1.5rem 0; }
+  .summary-items { min-height: 60px; }
+  .summary-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 8px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+  .summary-item:last-child { border-bottom: none; }
+  .summary-item-name { font-size: 13px; line-height: 1.4; flex: 1; }
+  .summary-item-qty { font-size: 13px; color: var(--muted); white-space: nowrap; }
+  .summary-footer { margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .summary-note { font-size: 12px; color: var(--muted); line-height: 1.7; margin-bottom: 1rem; background: #FFF8E8; padding: 10px 12px; border-radius: 2px; border-left: 3px solid var(--gold); }
+  .submit-btn { width: 100%; background: var(--gold); color: white; border: none; border-radius: 2px; padding: 13px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; letter-spacing: 0.03em; }
+  .submit-btn:hover { background: #b8831e; }
+  .submit-btn:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+  .item-count-badge { background: var(--gold); color: white; border-radius: 20px; font-size: 11px; padding: 1px 7px; margin-left: 8px; font-weight: 500; }
+
+  .error-banner { display: none; background: #fdf2f2; border: 1px solid #e8a0a0; border-radius: 2px; padding: 12px 16px; font-size: 13px; color: var(--red); margin-bottom: 1rem; }
+
+  .success-page { display: none; max-width: 560px; margin: 80px auto; text-align: center; padding: 0 5% 80px; }
+  .success-icon { width: 72px; height: 72px; background: #FFF8E8; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 32px; }
+  .success-page h2 { font-family: 'DM Serif Display', serif; font-size: 32px; color: var(--gold); margin-bottom: 1rem; }
+  .success-page p { font-size: 15px; color: var(--muted); line-height: 1.8; margin-bottom: 1.5rem; }
+  .back-btn { display: inline-block; border: 1px solid var(--green); color: var(--green); text-decoration: none; padding: 12px 28px; border-radius: 2px; font-size: 14px; transition: background 0.2s; }
+  .back-btn:hover { background: #f0f7f2; }
+
+  footer { background: #1A1A18; color: rgba(255,255,255,0.4); text-align: center; padding: 20px 5%; font-size: 13px; margin-top: 40px; }
+  footer a { color: rgba(255,255,255,0.4); }
+
+  @media (max-width: 768px) {
+    .page-body-inner { grid-template-columns: 1fr; }
+    .order-summary { position: static; order: -1; }
+    .form-grid { grid-template-columns: 1fr; }
+  }
+</style>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-Q99SSTBGE8"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-Q99SSTBGE8');
+</script>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="index.html">
+    <img src="images/logo.jpg" alt="Sorghuman">
+    <span>SORGHUMAN</span>
+  </a>
+  <a class="nav-back" href="index.html">Back to main site 返回主站</a>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <p class="eyebrow">Bulk order · 批量购买</p>
+    <h1>Bulk Order · 批量购买</h1>
+    <p>For retailers, restaurants, and wholesale buyers. Select products and quantities — we will reply by email with total price including shipping. 适合超市、餐饮及批发采购。</p>
+  </div>
+</div>
+
+<div class="notice-bar">
+  <strong>Pricing note:</strong> All prices are quoted by email after order submission — shipping costs vary by location. We aim to respond within 1–2 business days. &nbsp;|&nbsp; <strong>Pricing note 价格说明：</strong>提交订单后我们将通过邮件告知含运费的总价，通常1-2个工作日内回复。
+</div>
+
+<div class="page-body" id="mainBody">
+  <div class="page-body-inner">
+
+    <!-- LEFT: Form -->
+    <div>
+      <div class="error-banner" id="errorBanner"></div>
+
+      <div class="form-card">
+        <p class="form-section-title">I am ordering as · 订购身份</p>
+        <div class="customer-type-row">
+          <button class="type-btn active" onclick="setType('individual')" id="btn-individual">Individual customer · 个人客户</button>
+          <button class="type-btn" onclick="setType('business')" id="btn-business">Business / Store · 商家 / 超市</button>
+        </div>
+
+        <div id="wholesaleNotice" style="display:none;margin-top:14px;padding:16px 18px;background:#f0f7f0;border:1px solid #cfe3cf;border-radius:10px;">
+          <p style="margin:0 0 6px;font-weight:600;color:#2e7d32;">Wholesale buyers order through your account · 批发采购请通过账户下单</p>
+          <p style="margin:0 0 12px;font-size:14px;line-height:1.6;color:#333;">
+            Stores and wholesale buyers get live wholesale pricing and self-service ordering. Register once to set your login, and after we approve your store you can place orders any time.<br>
+            超市与批发客户可查看批发价并自助下单。请先建档设置登录名，审核通过后即可随时下单。
+          </p>
+          <a href="https://sorghuman-erp.onrender.com/register/customer" target="_blank" rel="noopener" style="display:inline-block;padding:10px 18px;background:#2e7d32;color:#fff;text-decoration:none;border-radius:8px;font-weight:600;">Register &amp; order 建档下单 &rarr;</a>
+          <a href="https://sorghuman-erp.onrender.com/customer-portal/login" target="_blank" rel="noopener" style="display:inline-block;margin-left:8px;padding:10px 18px;background:#fff;color:#2e7d32;text-decoration:none;border:1px solid #2e7d32;border-radius:8px;font-weight:600;">Already registered? Sign in 已有账户登录</a>
+          <p style="margin:12px 0 0;font-size:12px;color:#888;">Prefer a one-off email quote instead? Just fill in the form below. · 只想要一次性邮件报价？直接填写下方表单即可。</p>
+        </div>
+
+        <p class="form-section-title">Contact information · 联系信息</p>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Full name <span class="zh">Name 姓名</span><span class="req">*</span></label>
+            <input type="text" id="name" placeholder="Your full name">
+          </div>
+          <div class="form-group" id="businessNameGroup" style="display:none;">
+            <label>Business name <span class="zh">Business Name 商家名称</span><span class="req">*</span></label>
+            <input type="text" id="businessName" placeholder="Store or company name">
+          </div>
+          <div class="form-group">
+            <label>Phone <span class="zh">Phone 电话</span><span class="req">*</span></label>
+            <input type="tel" id="phone" placeholder="+1 (000) 000-0000">
+          </div>
+          <div class="form-group full">
+            <label>Email <span class="zh">Email 邮箱</span><span class="req">*</span></label>
+            <input type="email" id="email" placeholder="your@email.com">
+            <span class="form-note">We will send your quote to this address · 报价将发送至此Email 邮箱</span>
+          </div>
+          <div class="form-group full">
+            <label>Delivery address <span class="zh">Delivery Address 收货地址</span><span class="req">*</span></label>
+            <input type="text" id="address1" placeholder="Street address">
+          </div>
+          <div class="form-group">
+            <label>City <span class="zh">City 城市</span><span class="req">*</span></label>
+            <input type="text" id="city" placeholder="City">
+          </div>
+          <div class="form-group">
+            <label>State <span class="req">*</span></label>
+            <select id="state">
+              <option value="">— Select state —</option>
+              <option>New York (NY)</option><option>New Jersey (NJ)</option>
+              <option>Pennsylvania (PA)</option><option>Connecticut (CT)</option>
+              <option>Massachusetts (MA)</option><option>Rhode Island (RI)</option>
+              <option>Maryland (MD)</option><option>Virginia (VA)</option>
+              <option>Florida (FL)</option><option>California (CA)</option>
+              <option>Texas (TX)</option><option>Illinois (IL)</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>ZIP code <span class="req">*</span></label>
+            <input type="text" id="zip" placeholder="00000" maxlength="10">
+          </div>
+        </div>
+
+        <p class="form-section-title">Select products &amp; quantities · 选择商品及数量</p>
+        <div class="products-section" id="productsSection">
+
+          <!-- Category: Steamed Buns -->
+          <div class="product-category">
+            <div class="category-header" onclick="toggleCategory(this)">
+              <h3>Steamed Buns <span class="zh">Buns 包子系列</span></h3>
+              <span class="category-arrow">▼</span>
+            </div>
+            <div class="category-items open">
+              <div class="product-row">
+                <div class="product-name">Dried Mustard Green Bun<span class="zh">Preserved Mustard Green Bun 梅干菜包</span><span class="spec">16 oz (454g) · 6 pcs/pack</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Dried Mustard Green Bun Preserved Mustard Green Bun 梅干菜包" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+              <div class="product-row">
+                <div class="product-name">Shredded Radish Bun<span class="zh">Radish Bun 千顺萝卜包</span><span class="spec">16 oz (454g) · 6 pcs/pack</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Shredded Radish Bun Radish Bun 千顺萝卜包" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+              <div class="product-row">
+                <div class="product-name">Shanghai Bok Choy &amp; Shiitake Bun<span class="zh">Bok Choy &amp; Mushroom Bun 上海青香菇包</span><span class="spec">16 oz (454g) · 6 pcs/pack</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Shanghai Bok Choy &amp; Shiitake Bun Bok Choy &amp; Mushroom Bun 上海青香菇包" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+              <div class="product-row">
+                <div class="product-name">Chinese Chive &amp; Egg Bun<span class="zh">Chive &amp; Egg Bun 韭菜鸡蛋包</span><span class="spec">16 oz (454g) · 6 pcs/pack</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Chinese Chive &amp; Egg Bun Chive &amp; Egg Bun 韭菜鸡蛋包" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+              <div class="product-row">
+                <div class="product-name">Adzuki Bean Bun<span class="zh">Red Bean Bun 豆沙包</span><span class="spec">10.58 oz (300g) · 6 pcs/pack</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Adzuki Bean Bun Red Bean Bun 豆沙包" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+              <div class="product-row">
+                <div class="product-name">Tofu, Bamboo &amp; Shiitake Bun<span class="zh">Tofu, Bamboo &amp; Mushroom Bun 豆腐竹笋香菇包</span><span class="spec">16 oz (454g) · 6 pcs/pack</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Tofu, Bamboo &amp; Shiitake Bun Tofu, Bamboo &amp; Mushroom Bun 豆腐竹笋香菇包" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: Dumplings -->
+          <div class="product-category">
+            <div class="category-header" onclick="toggleCategory(this)">
+              <h3>Dumplings <span class="zh">Dumplings 饺子系列</span></h3>
+              <span class="category-arrow">▼</span>
+            </div>
+            <div class="category-items open">
+              <div class="product-row">
+                <div class="product-name">Mushroom &amp; Vegetable Dumpling<span class="zh">Mushroom Dumplings 菌菇水饺</span><span class="spec">Frozen · sold by carton</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Mushroom &amp; Vegetable Dumpling Mushroom Dumplings 菌菇水饺" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: Dim Sum -->
+          <div class="product-category">
+            <div class="category-header" onclick="toggleCategory(this)">
+              <h3>Dim Sum <span class="zh">Dim Sum 点心系列</span></h3>
+              <span class="category-arrow">▼</span>
+            </div>
+            <div class="category-items open">
+              <div class="product-row">
+                <div class="product-name">Assorted Dim Sum<span class="zh">Assorted Dim Sum 什锦点心</span><span class="spec">Frozen · sold by carton</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Assorted Dim Sum Assorted Dim Sum 什锦点心" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Category: Rice Cakes -->
+          <div class="product-category">
+            <div class="category-header" onclick="toggleCategory(this)">
+              <h3>Rice Cakes <span class="zh">Rice Cakes 年糕 / 糕点</span></h3>
+              <span class="category-arrow">▼</span>
+            </div>
+            <div class="category-items open">
+              <div class="product-row">
+                <div class="product-name">Sliced Rice Cake<span class="zh">Sliced Rice Cake 切片年糕</span><span class="spec">Frozen · sold by carton</span></div>
+                <div class="qty-control">
+                  <button class="qty-btn" onclick="changeQty(this,-1)">−</button>
+                  <input class="qty-input" type="number" value="0" min="0" data-product="Sliced Rice Cake Sliced Rice Cake 切片年糕" data-unit="carton" onchange="updateSummary()">
+                  <button class="qty-btn" onclick="changeQty(this,1)">+</button>
+                </div>
+                <span class="qty-unit">carton(s)</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="form-group full" style="margin-top:1.5rem;">
+          <label>Special requests or notes <span class="zh">Notes 备注</span></label>
+          <textarea id="notes" placeholder="Any special requirements, delivery instructions, or questions..."></textarea>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- RIGHT: Order Summary -->
+    <div class="order-summary" id="orderSummary">
+      <h3>Order summary <span class="item-count-badge" id="itemCount" style="display:none;">0</span></h3>
+      <div class="summary-items" id="summaryItems">
+        <p class="summary-empty">No items selected yet.<br><span style="font-size:12px;">Your selection will appear here 选择后显示在这里</span></p>
+      </div>
+      <div class="summary-footer">
+        <p class="summary-note">Prices are not shown here. After you submit, we will email you a full quote including shipping to your address within 1–2 business days.<br><br>After submitting, we'll email you a quote including shipping. 提交后我们将通过邮件发送含运费的报价。</p>
+        <button class="submit-btn" id="submitBtn" onclick="submitOrder()">Request a quote · 提交询价</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="success-page" id="successPage">
+  <div class="success-icon">✓</div>
+  <h2>Order request received!</h2>
+  <p>Thank you for your order inquiry. We will review your selection and send a full quote — including shipping to your address — to <strong id="confirmEmail"></strong> within 1–2 business days.<br><br>Thank you! We'll email you a full quote including shipping within 1–2 business days. 感谢您的订购申请！我们将在1-2个工作日内通过邮件发送报价单。</p>
+  <a href="index.html" class="back-btn">← Back to main site 返回主站</a>
+</div>
+
+<footer>
+  <p>© 2025 Sorghuman Holding LLC · 高仁控股国际有限公司 · <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
+</footer>
+
+<script>
+var customerType = 'individual';
+
+function setType(type) {
+  customerType = type;
+  document.getElementById('btn-individual').classList.toggle('active', type === 'individual');
+  document.getElementById('btn-business').classList.toggle('active', type === 'business');
+  document.getElementById('businessNameGroup').style.display = type === 'business' ? 'flex' : 'none';
+  document.getElementById('wholesaleNotice').style.display = type === 'business' ? 'block' : 'none';
+}
+
+function toggleCategory(header) {
+  var items = header.nextElementSibling;
+  var arrow = header.querySelector('.category-arrow');
+  items.classList.toggle('open');
+  arrow.classList.toggle('open');
+}
+
+function changeQty(btn, delta) {
+  var input = btn.parentElement.querySelector('.qty-input');
+  var val = Math.max(0, (parseInt(input.value) || 0) + delta);
+  input.value = val;
+  updateSummary();
+}
+
+function updateSummary() {
+  var inputs = document.querySelectorAll('.qty-input');
+  var items = [];
+  inputs.forEach(function(inp) {
+    var qty = parseInt(inp.value) || 0;
+    if (qty > 0) items.push({ name: inp.dataset.product, qty: qty, unit: inp.dataset.unit });
+  });
+  var container = document.getElementById('summaryItems');
+  var badge = document.getElementById('itemCount');
+  if (items.length === 0) {
+    container.innerHTML = '<p class="summary-empty">No items selected yet.<br><span style="font-size:12px;">Your selection will appear here 选择后显示在这里</span></p>';
+    badge.style.display = 'none';
+  } else {
+    badge.style.display = 'inline';
+    badge.textContent = items.length;
+    container.innerHTML = items.map(function(it) {
+      return '<div class="summary-item"><span class="summary-item-name">' + it.name + '</span><span class="summary-item-qty">' + it.qty + ' ' + it.unit + (it.qty > 1 ? 's' : '') + '</span></div>';
+    }).join('');
+  }
+}
+
+function submitOrder() {
+  var required = [
+    { id: 'name', label: 'Full name' },
+    { id: 'phone', label: 'Phone' },
+    { id: 'email', label: 'Email' },
+    { id: 'address1', label: 'Street address' },
+    { id: 'city', label: 'City' },
+    { id: 'state', label: 'State' },
+    { id: 'zip', label: 'ZIP code' }
+  ];
+  if (customerType === 'business') required.push({ id: 'businessName', label: 'Business name' });
+
+  var errors = [];
+  required.forEach(function(f) {
+    var el = document.getElementById(f.id);
+    el.classList.remove('error');
+    if (!el.value.trim()) { el.classList.add('error'); errors.push(f.label); }
+  });
+
+  var emailEl = document.getElementById('email');
+  if (emailEl.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
+    emailEl.classList.add('error'); errors.push('Valid email address');
+  }
+
+  var inputs = document.querySelectorAll('.qty-input');
+  var hasItems = false;
+  inputs.forEach(function(i) { if ((parseInt(i.value)||0) > 0) hasItems = true; });
+  if (!hasItems) errors.push('At least one product');
+
+  var banner = document.getElementById('errorBanner');
+  if (errors.length > 0) {
+    banner.style.display = 'block';
+    banner.textContent = 'Please complete: ' + errors.join(', ');
+    banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  banner.style.display = 'none';
+  document.getElementById('confirmEmail').textContent = document.getElementById('email').value;
+  document.getElementById('mainBody').style.display = 'none';
+  document.getElementById('successPage').style.display = 'block';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

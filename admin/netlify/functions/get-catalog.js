@@ -1,0 +1,123 @@
+// netlify/functions/get-catalog.js
+// 从 store_products 表读取每家店的商品（新架构）
+
+const SUPA_URL = process.env.SUPABASE_URL;
+const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
+
+const CORS = {
+  'Access-Control-Allow-Origin' : '*',
+  'Access-Control-Allow-Headers': 'Content-Type',
+  'Content-Type'                 : 'application/json',
+};
+
+async function sb(table, qs) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${qs}`, {
+    headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+  });
+  if (!res.ok) throw new Error(`Supabase ${table}: ${res.status}`);
+  return res.json();
+}
+
+exports.handler = async (event) => {
+  if (event.httpMethod === 'OPTIONS')
+    return { statusCode: 200, headers: CORS, body: '' };
+
+  let storeId = (event.queryStringParameters || {}).store;
+
+  try {
+    // 按域名查门店
+    if (!storeId) {
+      const host = (event.headers.host || '').replace(/^www\./, '');
+      const rows = await sb('stores', `domain=eq.${host}&select=store_id&limit=1`);
+      if (rows.length) storeId = rows[0].store_id;
+    }
+    if (!storeId) storeId = 'default';
+
+    // 并行读门店配置 + 该店商品（含商品详情）
+    const [storeRows, spRows] = await Promise.all([
+      sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
+      sb('store_products',
+        `store_id=eq.${storeId}&active=eq.true` +
+        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,image_url,sort_order,description_zh,description_en,ingredients_zh,ingredients_en,cooking_zh,cooking_en,nutrition,gallery,product_line,subscription_enabled,subscription_interval,subscription_interval_count,subscription_price)` +
+        `&order=sort_order.asc`),
+    ]);
+
+    // 单独查全局活动（不存在时不影响主流程）
+    let settingsRows = [];
+    try {
+      settingsRows = await sb('settings', `key=eq.global_promo&select=value&limit=1`);
+    } catch(e) {
+      console.log('settings 表未就绪，跳过全局活动');
+    }
+
+    if (!storeRows.length)
+      return { statusCode: 404, headers: CORS,
+               body: JSON.stringify({ error: `Store not found: ${storeId}` }) };
+
+    const store  = storeRows[0];
+    const markup = parseFloat(store.markup) || 1.0;
+
+    // 合并商品信息和门店价格
+    const storeProducts = spRows
+      .filter(sp => sp.products)
+      .map(sp => ({
+        sku       : sp.sku,
+        name_zh   : sp.products.name_zh,
+        name_en   : sp.products.name_en,
+        spec      : sp.products.spec,
+        category  : sp.products.category,
+        base_price: sp.price != null
+          ? parseFloat(sp.price)
+          : parseFloat((sp.products.base_price * markup).toFixed(2)),
+        common    : true,
+        image_url : sp.products.image_url,
+        featured  : sp.featured || false,  // 门店级爆品
+        // 详情页字段
+        description_zh : sp.products.description_zh || '',
+        description_en : sp.products.description_en || '',
+        ingredients_zh : sp.products.ingredients_zh || '',
+        ingredients_en : sp.products.ingredients_en || '',
+        cooking_zh     : sp.products.cooking_zh || '',
+        cooking_en     : sp.products.cooking_en || '',
+        nutrition      : sp.products.nutrition || null,
+        gallery        : sp.products.gallery || null,
+        // 非食品 / 订阅（Non-food / subscription）
+        product_line             : sp.products.product_line || 'food',
+        subscription_enabled     : !!sp.products.subscription_enabled,
+        subscription_interval    : sp.products.subscription_interval || 'month',
+        subscription_interval_count: sp.products.subscription_interval_count || 1,
+        subscription_price       : sp.products.subscription_price != null
+          ? parseFloat(sp.products.subscription_price)
+          : null,
+      }));
+
+    const globalPromo = settingsRows[0]?.value || null;
+
+    return {
+      statusCode: 200,
+      headers: { ...CORS, 'Cache-Control': 'no-cache' },
+      body: JSON.stringify({
+        store,
+        products: storeProducts,
+        globalPromo,
+        categories: {
+          frozen    : '冷冻食品 Frozen Foods',
+          grains    : '米面粮油 Rice, Flour & Oil',
+          condiments: '调味品 Condiments',
+          snacks    : '零食 Snacks',
+          beverages : '饮料 Beverages',
+          fresh     : '生鲜 Fresh Produce',
+          grocery   : '百货 Grocery',
+          // 非食品 · 餐厅耗材（Non-Food · Restaurant Supplies）
+          mealbox   : '一次性餐盒 Disposable Meal Boxes',
+          film      : '包装膜 Packaging Film',
+          tape      : '打包胶带辅料 Packing Tape & Supplies',
+        }
+      })
+    };
+
+  } catch (e) {
+    console.error('get-catalog error:', e.message);
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: e.message }) };
+  }
+};
