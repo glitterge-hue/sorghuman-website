@@ -34,13 +34,30 @@ exports.handler = async (event) => {
     if (!storeId) storeId = 'default';
 
     // 并行读门店配置 + 该店商品（含商品详情）
-    const [storeRows, spRows] = await Promise.all([
-      sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
-      sb('store_products',
-        `store_id=eq.${storeId}&active=eq.true` +
-        `&select=sku,price,sort_order,featured,products(name_zh,name_en,spec,category,base_price,units_per_case,image_url,sort_order,description_zh,description_en,ingredients_zh,ingredients_en,cooking_zh,cooking_en,nutrition,gallery,product_line,subscription_enabled,subscription_interval,subscription_interval_count,subscription_price)` +
-        `&order=sort_order.asc`),
-    ]);
+    const PRODUCT_FIELDS = 'name_zh,name_en,spec,category,base_price,units_per_case,image_url,sort_order,description_zh,description_en,ingredients_zh,ingredients_en,cooking_zh,cooking_en,nutrition,gallery,product_line,subscription_enabled,subscription_interval,subscription_interval_count,subscription_price';
+    let storeRows, spRows;
+    try {
+      [storeRows, spRows] = await Promise.all([
+        sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
+        sb('store_products',
+          `store_id=eq.${storeId}&active=eq.true` +
+          `&select=sku,price,sort_order,featured,products(${PRODUCT_FIELDS})` +
+          `&order=sort_order.asc`),
+      ]);
+    } catch (e) {
+      // 容错：如果 products 表还没跑过 units_per_case 迁移（新字段列不存在），
+      // 这里会先报错——自动去掉这个字段重试一次，保证真实商品目录还能正常显示，
+      // 不会因为一个新字段没迁移就整体降级成演示数据。
+      console.error('get-catalog primary query failed, retrying without units_per_case:', e.message);
+      const fallbackFields = PRODUCT_FIELDS.replace('units_per_case,', '');
+      [storeRows, spRows] = await Promise.all([
+        sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
+        sb('store_products',
+          `store_id=eq.${storeId}&active=eq.true` +
+          `&select=sku,price,sort_order,featured,products(${fallbackFields})` +
+          `&order=sort_order.asc`),
+      ]);
+    }
 
     // 单独查全局活动（不存在时不影响主流程）
     let settingsRows = [];
