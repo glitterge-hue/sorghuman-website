@@ -98,6 +98,38 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
+    // ── 门店新增商品时直接上传图片（不用再去外部图床/CDN贴链接回来）──
+    // 前端把图片文件读成 base64 传过来，这里用 service key 直传 Supabase Storage，
+    // 门店的 token 不是真正的 Supabase 账号，浏览器端没有权限直接传，所以经这里中转。
+    if (action === 'UPLOAD_IMAGE') {
+      const { filename, fileBase64, contentType } = body;
+      if (!filename || !fileBase64)
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '缺少图片数据' }) };
+      const ext = (filename.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
+      const safeStoreId = String(storeId).replace(/[^a-zA-Z0-9_-]/g, '');
+      const path = `${safeStoreId}/${Date.now()}-${Math.random().toString(36).slice(2, 7)}.${ext}`;
+      const buf = Buffer.from(fileBase64, 'base64');
+      const uploadRes = await fetch(
+        `${SUPA_URL}/storage/v1/object/product-photos/${path}`,
+        {
+          method: 'POST',
+          headers: {
+            'apikey': SUPA_KEY,
+            'Authorization': `Bearer ${SUPA_KEY}`,
+            'Content-Type': contentType || 'image/jpeg',
+            'x-upsert': 'false',
+          },
+          body: buf,
+        }
+      );
+      if (!uploadRes.ok) {
+        const t = await uploadRes.text();
+        return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: '上传失败 / Upload failed: ' + t }) };
+      }
+      const publicUrl = `${SUPA_URL}/storage/v1/object/public/product-photos/${path}`;
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, url: publicUrl }) };
+    }
+
     // ── 新增商品到总商品库（同时加入本店）─────────────────────
     if (action === 'ADD_NEW_PRODUCT') {
       const { sku, name_zh, name_en, spec, category, base_price, image_url, store_price, gallery } = body;
