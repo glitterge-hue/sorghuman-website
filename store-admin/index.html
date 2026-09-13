@@ -235,6 +235,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
             <div style="margin-top:6px;display:flex;align-items:center;gap:8px;">
               <input type="file" id="newImageFile" accept="image/*" style="font-size:12px;">
               <span id="newImageUpMsg" style="font-size:11px;color:#888;"></span>
+              <button type="button" id="newImageRemoveBtn" onclick="removeUploadedImage()" style="display:none;font-size:11px;color:#c0392b;background:none;border:1px solid #c0392b;border-radius:4px;padding:2px 8px;cursor:pointer;">✕ 移除</button>
             </div>
           </div>
           <div class="form-group full">
@@ -245,6 +246,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
               <input type="file" id="newGalleryFile" accept="image/*" multiple style="font-size:12px;">
               <span id="newGalleryUpMsg" style="font-size:11px;color:#888;"></span>
             </div>
+            <div id="newGalleryList" style="margin-top:4px;"></div>
           </div>
         </div>
         <div class="form-footer">
@@ -1128,17 +1130,58 @@ document.getElementById('newImageFile').addEventListener('change', async (e) => 
   const file = e.target.files[0];
   if(!file) return;
   const msg = document.getElementById('newImageUpMsg');
+  const removeBtn = document.getElementById('newImageRemoveBtn');
+  const prevUrl = document.getElementById('newImageUrl').value.trim();
   msg.style.color = '#888'; msg.textContent = '上传中…';
   try {
     const url = await uploadOneImage(file);
     document.getElementById('newImageUrl').value = url;
     msg.style.color = '#2A6B3A'; msg.textContent = '已上传 ✓';
+    removeBtn.style.display = '';
+    // 重新选了一张，说明上一张不要了——顺手把上一张也清掉，不然又是一个孤儿文件
+    if(prevUrl) deleteUploadedImage(prevUrl).catch(()=>{});
   } catch (err) {
     msg.style.color = '#c0392b'; msg.textContent = '上传失败: ' + err.message;
   } finally {
     e.target.value = '';
   }
 });
+async function deleteUploadedImage(url){
+  if(!url) return;
+  try { await api('DELETE_IMAGE', null, null, { url }); } catch(e){ /* 静默失败，不打扰用户 */ }
+}
+async function removeUploadedImage(){
+  const input = document.getElementById('newImageUrl');
+  const url = input.value.trim();
+  const msg = document.getElementById('newImageUpMsg');
+  const removeBtn = document.getElementById('newImageRemoveBtn');
+  if(!url) return;
+  msg.style.color = '#888'; msg.textContent = '移除中…';
+  await deleteUploadedImage(url);
+  input.value = '';
+  msg.textContent = '';
+  removeBtn.style.display = 'none';
+}
+
+let newGalleryUploaded = []; // 本次通过上传（而不是手动贴链接）新增的图，记下来才知道能删哪些
+function renderNewGalleryList(){
+  const box = document.getElementById('newGalleryList');
+  if(!newGalleryUploaded.length){ box.innerHTML = ''; return; }
+  box.innerHTML = newGalleryUploaded.map((u,i)=>
+    `<div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#888;margin-top:2px;">
+       <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:260px;">${u}</span>
+       <button type="button" onclick="removeUploadedGalleryImage(${i})" style="font-size:11px;color:#c0392b;background:none;border:1px solid #c0392b;border-radius:4px;padding:1px 6px;cursor:pointer;">✕ 移除</button>
+     </div>`).join('');
+}
+async function removeUploadedGalleryImage(i){
+  const url = newGalleryUploaded[i];
+  if(!url) return;
+  await deleteUploadedImage(url);
+  newGalleryUploaded.splice(i, 1);
+  renderNewGalleryList();
+  const ta = document.getElementById('newGallery');
+  ta.value = galleryToArr(ta.value).filter(u => u !== url).join('\n');
+}
 document.getElementById('newGalleryFile').addEventListener('change', async (e) => {
   const files = Array.from(e.target.files);
   if(!files.length) return;
@@ -1157,6 +1200,8 @@ document.getElementById('newGalleryFile').addEventListener('change', async (e) =
   }
   const ta = document.getElementById('newGallery');
   ta.value = ta.value.trim() ? ta.value.trim() + '\n' + urls.join('\n') : urls.join('\n');
+  newGalleryUploaded = newGalleryUploaded.concat(urls);
+  renderNewGalleryList();
   msg.style.color = '#2A6B3A'; msg.textContent = `已上传 ${urls.length} 张 ✓`;
   e.target.value = '';
 });
@@ -1187,6 +1232,9 @@ async function submitNewProduct(){
       .forEach(id=>document.getElementById(id).value='');
     document.getElementById('newImageUpMsg').textContent = '';
     document.getElementById('newGalleryUpMsg').textContent = '';
+    document.getElementById('newImageRemoveBtn').style.display = 'none';
+    newGalleryUploaded = []; // 已经提交成功、图片正式挂在商品上了，不再是"待清理的孤儿"
+    renderNewGalleryList();
     const r2 = await api('GET_STORE_PRODUCTS');
     myProducts = r2.products||[];
     buildMySkuSet();
