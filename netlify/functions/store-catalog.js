@@ -130,6 +130,30 @@ exports.handler = async (event) => {
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, url: publicUrl }) };
     }
 
+    // ── 撤销刚上传但决定不用的图片（比如选完图后又不想新增这个商品了）──
+    // 只允许删 product-photos 桶下、自己门店那个子目录里的文件，防止越权删别的门店/商品的图。
+    if (action === 'DELETE_IMAGE') {
+      const { url } = body;
+      if (!url) return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '缺少图片链接' }) };
+      const marker = '/object/public/product-photos/';
+      const idx = url.indexOf(marker);
+      if (idx === -1)
+        return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '不是本站图片链接 / Not a recognized image URL' }) };
+      const path = url.slice(idx + marker.length);
+      const safeStoreId = String(storeId).replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!path.startsWith(`${safeStoreId}/`))
+        return { statusCode: 403, headers: CORS, body: JSON.stringify({ error: '只能删除本店上传的图片 / Can only delete your own store\u2019s uploads' }) };
+      const delRes = await fetch(
+        `${SUPA_URL}/storage/v1/object/product-photos/${path}`,
+        { method: 'DELETE', headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }
+      );
+      if (!delRes.ok) {
+        const t = await delRes.text();
+        return { statusCode: 502, headers: CORS, body: JSON.stringify({ error: '删除失败 / Delete failed: ' + t }) };
+      }
+      return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
+    }
+
     // ── 新增商品到总商品库（同时加入本店）─────────────────────
     if (action === 'ADD_NEW_PRODUCT') {
       const { sku, name_zh, name_en, spec, category, base_price, image_url, store_price, gallery } = body;
