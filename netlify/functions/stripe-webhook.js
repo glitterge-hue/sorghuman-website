@@ -5,6 +5,12 @@ const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 const RESEND_KEY = process.env.RESEND_API_KEY;
+const crypto = require('crypto');
+
+function deliverySignature(orderId, expires) {
+  return crypto.createHmac('sha256', process.env.DELIVERY_LINK_SECRET || process.env.STRIPE_WEBHOOK_SECRET)
+    .update(`${orderId}.${expires}`).digest('base64url');
+}
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST')
@@ -63,7 +69,7 @@ exports.handler = async (event) => {
     const [orderRes, storeRes] = await Promise.all([
       fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${session.id}&select=*&limit=1`,
         { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }),
-      fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}&select=name_zh,name_en,contact_email&limit=1`,
+      fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}&select=name_zh,name_en,contact_email,contact_phone,drivers&limit=1`,
         { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }),
     ]);
 
@@ -72,8 +78,8 @@ exports.handler = async (event) => {
     const order  = orders[0];
     const store  = stores[0];
 
-    if (!store?.contact_email || !order) {
-      console.log('无法发邮件：门店无邮箱或订单不存在');
+    if (!store || !order) {
+      console.log('无法发送通知：门店或订单不存在');
       return { statusCode: 200, body: JSON.stringify({ received: true }) };
     }
 
@@ -88,21 +94,6 @@ exports.handler = async (event) => {
       );
       const prods = await prodRes.json();
       prods.forEach(p => { prodMap[p.sku] = p; });
-    }
-
-    // 对没有 SKU 的 item（local.html 旧格式），用 Stripe API 查商品名
-    for (const item of cart) {
-      if (!item.sku && item.price) {
-        try {
-          const priceData = await stripe.prices.retrieve(item.price, { expand: ['product'] });
-          const productName = priceData.product?.name || item.price.slice(-8);
-          prodMap[item.price] = { name_zh: productName, name_en: '' };
-          item._lookupKey = item.price; // 用 price 作为查询 key
-        } catch(e) {
-          prodMap[item.price] = { name_zh: item.price.slice(-8), name_en: '' };
-          item._lookupKey = item.price;
-        }
-      }
     }
 
     // ── 构建订单邮件 HTML ────────────────────────────────────────
@@ -257,7 +248,9 @@ exports.handler = async (event) => {
       ).catch(e => console.error('短信失败:', to, e.message));
 
       const siteBase = `https://sorghuman.com`;
-      const deliveryLink = `${siteBase}/delivery/?id=${session.id}`;
+      const deliveryExpires = Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60;
+      const deliverySig = deliverySignature(session.id, deliveryExpires);
+      const deliveryLink = `${siteBase}/delivery/?id=${encodeURIComponent(session.id)}&e=${deliveryExpires}&sig=${encodeURIComponent(deliverySig)}`;
 
       // 1. 通知顾客：订单已确认
       if (update.customer_phone) {
@@ -304,6 +297,10 @@ exports.handler = async (event) => {
     }
 
     // ── 通过 Resend 发送邮件 ──────────────────────────────────────
+    if (!store.contact_email || !RESEND_KEY) {
+      console.log('门店未配置通知邮箱或 Resend，跳过邮件');
+      return { statusCode: 200, body: JSON.stringify({ received: true }) };
+    }
     const emailRes = await fetch('https://api.resend.com/emails', {
       method : 'POST',
       headers: {

@@ -40,12 +40,14 @@ async function verifyStore(storeId, token, origin) {
     `&select=store_id,name_zh,name_en,domain,address,city,state,zip,contact_name,contact_phone`);
   const store = rows[0];
   if (!store) return null;
-  if (origin) {
-    const host     = origin.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '');
-    const isMaster = host.endsWith('sorghuman.com');
-    const isSelf   = store.domain && host.endsWith(store.domain.replace(/^www\./, ''));
-    if (!isMaster && !isSelf) return null;
-  }
+  if (!origin) return null;
+  let host;
+  try { host = new URL(origin).hostname.toLowerCase().replace(/^www\./, ''); }
+  catch { return null; }
+  const own = String(store.domain || '').toLowerCase().replace(/^www\./, '');
+  const isMaster = host === 'sorghuman.com' || host.endsWith('.sorghuman.com');
+  const isSelf = own && (host === own || host.endsWith('.' + own));
+  if (!isMaster && !isSelf) return null;
   return store;
 }
 

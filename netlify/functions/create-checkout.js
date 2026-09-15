@@ -48,32 +48,6 @@ exports.handler = async (event) => {
   // 'one_time'（默认，现金/单次付款）或 'subscription'（按月自动续订）
   const purchaseType = body.purchaseType === 'subscription' ? 'subscription' : 'one_time';
 
-  // ── 兼容 local.html 旧格式（直接传 Stripe lineItems + Price ID）──
-  if (body.lineItems && Array.isArray(body.lineItems)) {
-    try {
-      const session = await stripe.checkout.sessions.create({
-        payment_method_types : ['card'],
-        line_items           : body.lineItems,
-        mode                 : 'payment',
-        success_url          : 'https://sorghuman.com/local-success.html',
-        cancel_url           : 'https://sorghuman.com/local',
-        metadata             : { store_id: 'default' },
-        shipping_address_collection: { allowed_countries: ['US'] },
-        phone_number_collection    : { enabled: true },
-      });
-      // 写订单到 Supabase
-      const total = body.lineItems.reduce((s,li)=>s+(li.unit_amount||0)*(li.quantity||1),0)/100;
-      await sbInsert('orders',{
-        store_id:'default', stripe_session_id:session.id,
-        items:body.lineItems, subtotal:total, delivery_fee:0, total:total, status:'pending',
-        purchase_type:'one_time'
-      });
-      return { statusCode:200, headers:CORS, body:JSON.stringify({ url:session.url }) };
-    } catch(e) {
-      return { statusCode:500, headers:CORS, body:JSON.stringify({ error:e.message }) };
-    }
-  }
-
   if (!Array.isArray(cart) || cart.length === 0)
     return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Missing cart' }) };
 
@@ -182,7 +156,12 @@ exports.handler = async (event) => {
     }
 
     // ── 创建 Stripe 收银会话 ───────────────────────────────────
-    const base       = (origin || `https://${store.domain}`).replace(/\/$/, '');
+    let requestedHost = '';
+    try { requestedHost = new URL(origin).hostname.toLowerCase().replace(/^www\./, ''); } catch {}
+    const storeHost = String(store.domain || '').toLowerCase().replace(/^www\./, '');
+    const allowedHost = requestedHost === 'sorghuman.com' ||
+      (storeHost && (requestedHost === storeHost || requestedHost.endsWith('.' + storeHost)));
+    const base = allowedHost ? `https://${requestedHost}` : `https://${storeHost || 'sorghuman.com'}`;
     const successUrl = `${base}/shop/?order=success`;
     const cancelUrl  = `${base}/shop/`;
 

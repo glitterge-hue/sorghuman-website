@@ -585,15 +585,6 @@ function goFeatured(){
   if(el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
-function addPromoSku(sku){
-  qty[sku] = (qty[sku]||0) + 1;
-  var el = document.getElementById('q-'+sku);
-  if(el) el.textContent = qty[sku];
-  updateCart();
-  var prod = (catalog.products||[]).filter(function(x){ return x.sku===sku; })[0];
-  if(prod && prod.category && prod.category !== activeCat){ setCat(prod.category); }
-}
-
 async function boot(){
   if(new URLSearchParams(location.search).get('order')==='success'){
     var hdr = document.querySelector('.page-header');

@@ -3,6 +3,7 @@
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
+const crypto = require('crypto');
 const CORS = {
   'Access-Control-Allow-Origin' : '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -13,7 +14,15 @@ exports.handler = async (event) => {
   if(event.httpMethod==='OPTIONS') return { statusCode:200, headers:CORS, body:'' };
 
   const id = (event.queryStringParameters||{}).id;
-  if(!id) return { statusCode:400, headers:CORS, body: JSON.stringify({ error:'缺少 id' }) };
+  const expires = Number((event.queryStringParameters||{}).e);
+  const sig = (event.queryStringParameters||{}).sig || '';
+  if(!id || !expires || !sig) return { statusCode:401, headers:CORS, body: JSON.stringify({ error:'链接无效' }) };
+  const expected = crypto.createHmac('sha256', process.env.DELIVERY_LINK_SECRET || process.env.STRIPE_WEBHOOK_SECRET)
+    .update(`${id}.${expires}`).digest();
+  let supplied;
+  try { supplied = Buffer.from(sig, 'base64url'); } catch { supplied = Buffer.alloc(0); }
+  if (expires < Math.floor(Date.now()/1000) || supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected))
+    return { statusCode:401, headers:CORS, body: JSON.stringify({ error:'链接无效或已过期' }) };
 
   const headers = { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}` };
 

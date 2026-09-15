@@ -6,6 +6,7 @@ const SUPA_KEY    = process.env.SUPABASE_SERVICE_KEY;
 const TWILIO_SID  = process.env.TWILIO_SID;
 const TWILIO_TOKEN= process.env.TWILIO_TOKEN;
 const TWILIO_FROM = process.env.TWILIO_PHONE;
+const crypto       = require('crypto');
 const CORS = {
   'Access-Control-Allow-Origin' : '*',
   'Access-Control-Allow-Headers': 'Content-Type',
@@ -31,13 +32,24 @@ async function sendSms(to, body){
 
 exports.handler = async (event) => {
   if(event.httpMethod==='OPTIONS') return { statusCode:200, headers:CORS, body:'' };
+  if(event.httpMethod!=='POST') return { statusCode:405, headers:CORS, body:JSON.stringify({error:'Method not allowed'}) };
 
-  const params  = event.queryStringParameters || {};
+  let params;
+  try { params = JSON.parse(event.body || '{}'); }
+  catch { return { statusCode:400, headers:CORS, body:JSON.stringify({error:'Invalid JSON'}) }; }
   const orderId = params.id;   // stripe_session_id
-  const action  = params.a;    // 'pickup' 或 'delivered'
+  const action  = params.action;    // 'pickup' 或 'delivered'
+  const expires = Number(params.e);
+  const sig = params.sig || '';
 
-  if(!orderId || !action)
+  if(!orderId || !action || !expires || !sig)
     return { statusCode:400, headers:CORS, body: JSON.stringify({ error:'缺少参数' }) };
+  const expected = crypto.createHmac('sha256', process.env.DELIVERY_LINK_SECRET || process.env.STRIPE_WEBHOOK_SECRET)
+    .update(`${orderId}.${expires}`).digest();
+  let supplied;
+  try { supplied = Buffer.from(sig, 'base64url'); } catch { supplied = Buffer.alloc(0); }
+  if (expires < Math.floor(Date.now()/1000) || supplied.length !== expected.length || !crypto.timingSafeEqual(supplied, expected))
+    return { statusCode:401, headers:CORS, body:JSON.stringify({error:'链接无效或已过期'}) };
 
   // 查订单
   const orders = await sb(`orders?stripe_session_id=eq.${orderId}&select=*&limit=1`);
