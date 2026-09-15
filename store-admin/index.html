@@ -574,6 +574,7 @@ function showErr(msg){ document.getElementById('loginErr').textContent = msg; }
 window.addEventListener('load', async () => {
   const params = new URLSearchParams(location.search);
   const tok = params.get('token') || sessionStorage.getItem('token');
+  if(params.has('token')) history.replaceState(null, '', location.pathname);
 
   // 1. 从域名自动推断 store_id（查 Supabase stores 表，无需 stores/index.json）
   let autoStoreId = '';
@@ -1451,8 +1452,6 @@ async function rsApi(action, extra){
 }
 
 function rsMoney(n){ return '$'+(Number(n)||0).toFixed(2); }
-function rsKey(sid,sku){ return sid+'||'+sku; }
-
 async function loadRestock(){
   const res = await rsApi('GET_RESTOCK_CATALOG');
   if(res.error){ document.getElementById('rsList').innerHTML='<div class="empty">'+res.error+'</div>'; return; }

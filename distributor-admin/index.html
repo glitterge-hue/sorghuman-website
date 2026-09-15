@@ -197,6 +197,7 @@ window.addEventListener('load', ()=>{
   const p = new URLSearchParams(location.search);
   const a = p.get('supplier') || sessionStorage.getItem('supId');
   const b = p.get('token')    || sessionStorage.getItem('supTok');
+  if(p.has('token')) history.replaceState(null, '', location.pathname);
   if(a) document.getElementById('inSid').value = a;
   if(b) document.getElementById('inTok').value = b;
   if(a&&b) doLogin();

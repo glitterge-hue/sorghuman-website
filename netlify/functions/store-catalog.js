@@ -39,11 +39,14 @@ async function verifyToken(storeId, token, origin) {
   const store = rows[0];
   if (!store) return null;
   // 域名校验：只允许自家域名或 sorghuman.com 访问
-  if (origin) {
-    const isMaster = origin.includes('sorghuman.com');
-    const isOwn    = origin.includes(store.domain);
-    if (!isMaster && !isOwn) return null;
-  }
+  if (!origin) return null;
+  let host;
+  try { host = new URL(origin).hostname.toLowerCase().replace(/^www\./, ''); }
+  catch { return null; }
+  const own = String(store.domain || '').toLowerCase().replace(/^www\./, '');
+  const isMaster = host === 'sorghuman.com' || host.endsWith('.sorghuman.com');
+  const isOwn = own && (host === own || host.endsWith('.' + own));
+  if (!isMaster && !isOwn) return null;
   return store;
 }
 
@@ -58,6 +61,14 @@ exports.handler = async (event) => {
   catch { return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid JSON' }) }; }
 
   const { action, storeId, token } = body;
+
+  // 域名识别是公开的只读操作，必须在登录验证之前处理。
+  if (action === 'LOOKUP_DOMAIN') {
+    const domain = String(body.domain || '').toLowerCase().replace(/^www\./, '');
+    if (!domain) return { statusCode: 400, headers: CORS, body: JSON.stringify({ store_id: null }) };
+    const rows = await sb('GET', 'stores', `domain=eq.${encodeURIComponent(domain)}&select=store_id&limit=1`);
+    return { statusCode: 200, headers: CORS, body: JSON.stringify({ store_id: rows[0]?.store_id || null }) };
+  }
 
   // ── 验证 token ──────────────────────────────────────────────
   const origin = event.headers.origin || event.headers.referer || '';
@@ -274,14 +285,6 @@ exports.handler = async (event) => {
         body   : JSON.stringify(patch),
       });
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
-    }
-
-    // ── 按域名查门店 ID（无需认证，公开接口）──────────────────────
-    if (action === 'LOOKUP_DOMAIN') {
-      const { domain } = body;
-      if (!domain) return { statusCode: 400, headers: CORS, body: JSON.stringify({ store_id: null }) };
-      const rows = await sb('GET', 'stores', `domain=eq.${domain}&select=store_id&limit=1`);
-      return { statusCode: 200, headers: CORS, body: JSON.stringify({ store_id: rows[0]?.store_id || null }) };
     }
 
     // ── 保存门店活动配置 ──────────────────────────────────────────

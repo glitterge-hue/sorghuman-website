@@ -62,12 +62,15 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:#f0f4f0;min-height:10
 <script>
 const params  = new URLSearchParams(location.search);
 const orderId = params.get('id');
+const expires = params.get('e');
+const signature = params.get('sig');
 const API     = '/.netlify/functions/delivery-update';
 
 async function loadOrder(){
   if(!orderId){ showErr('链接无效 · Invalid link'); return; }
   try {
-    const res = await fetch(`/.netlify/functions/get-order?id=${orderId}`).then(r=>r.json());
+    const qs = new URLSearchParams({id:orderId, e:expires||'', sig:signature||''});
+    const res = await fetch(`/.netlify/functions/get-order?${qs}`).then(r=>r.json());
     if(res.error){ showErr('订单不存在 · Order not found'); return; }
     const o = res.order;
     document.getElementById('orderId').textContent   = 'Order #' + (o.id||'').slice(-8).toUpperCase();
@@ -91,7 +94,10 @@ async function update(action){
   btn.querySelector('.btn-zh').textContent = '处理中… Processing…';
 
   try {
-    const res = await fetch(`${API}?id=${orderId}&a=${action}`).then(r=>r.json());
+    const res = await fetch(API, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({id:orderId, action, e:expires, sig:signature})
+    }).then(r=>r.json());
     if(res.ok){
       if(action==='pickup'){
         btn.querySelector('.btn-zh').textContent = '✅ 已取货 Picked Up';
