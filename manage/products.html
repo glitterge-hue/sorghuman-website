@@ -6,6 +6,7 @@
 <title>商品管理 · Sorghuman Admin</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:#f0f4f0;color:#1a1a18;}
@@ -283,6 +284,7 @@ td{padding:10px 14px;vertical-align:middle;}
     <div class="csv-hint">
       上传 <code>.xlsx</code> Excel 文件（也支持 .csv）。第一行必须是表头。<br>
       必需列：<code>sku, name_zh, base_price</code>；可选列：<code>name_en, spec, category, common, image_url, gallery, showcase, showcase_category, description, sort_order, units_per_case</code><br>
+      <strong>商品图片：</strong>可直接把图片插入 Excel 对应商品所在行（普通 Excel 浮动图片或 WPS 单元格图片均可），导入时会自动上传到 Supabase 并写入该商品的 <code>image_url</code>。同一行有嵌入图片时，优先使用嵌入图片；没有嵌入图片时才读取 <code>image_url</code> 链接。<br>
       <code>units_per_case</code>（装箱数）：选填，填写后 base_price 视为单件价，网站同时提供单件/整箱购买，整箱价=单件价×装箱数×95%（所有门店统一）。<br>
       <code>gallery</code> 多图：一个单元格内每行一个链接（单元格内换行用 Alt+Enter），或用逗号分隔多个链接。<br>
       品类可选值：<code>frozen</code> / <code>grains</code> / <code>condiments</code> / <code>snacks</code> / <code>beverages</code> / <code>fresh</code> / <code>grocery</code><br>
@@ -337,9 +339,9 @@ async function logout() {
 // 该 bucket 已是 Public，但还需在 Policies 里给 authenticated 角色开 INSERT 权限。
 const IMAGE_BUCKET = 'product-photos';
 
-async function uploadOneImage(file) {
+async function uploadOneImage(file, skuForPath) {
   const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
-  const safeSku = (editingSku || 'new').replace(/[^a-zA-Z0-9_-]/g, '');
+  const safeSku = (skuForPath || editingSku || 'new').replace(/[^a-zA-Z0-9_-]/g, '') || 'product';
   const path = `${safeSku}/${Date.now()}-${Math.random().toString(36).slice(2,7)}.${ext}`;
   const { error } = await sb.storage.from(IMAGE_BUCKET).upload(path, file, {
     cacheControl: '31536000',
@@ -348,6 +350,151 @@ async function uploadOneImage(file) {
   if (error) throw error;
   const { data } = sb.storage.from(IMAGE_BUCKET).getPublicUrl(path);
   return data.publicUrl;
+}
+
+// ── Excel 内嵌图片提取 ────────────────────────────────────────
+// SheetJS Community Edition 负责读取单元格；JSZip 只负责读取 xlsx 包里的图片、
+// drawing 锚点和 WPS DISPIMG 关系。返回 Map：Excel 行号（1-based） -> File。
+function parseXml(text) {
+  return new DOMParser().parseFromString(text, 'application/xml');
+}
+
+function xmlChildrenByLocalName(node, name) {
+  return Array.from(node.getElementsByTagNameNS('*', name));
+}
+
+function zipResolve(baseFile, target) {
+  if (!target) return '';
+  if (target[0] === '/') return target.slice(1);
+  const parts = baseFile.split('/');
+  parts.pop();
+  target.split('/').forEach(part => {
+    if (!part || part === '.') return;
+    if (part === '..') parts.pop(); else parts.push(part);
+  });
+  return parts.join('/');
+}
+
+function relsPath(filePath) {
+  const parts = filePath.split('/');
+  const name = parts.pop();
+  return parts.concat(['_rels', name + '.rels']).join('/');
+}
+
+async function zipText(zip, path) {
+  const entry = zip.file(path);
+  return entry ? entry.async('string') : '';
+}
+
+async function relationshipMap(zip, ownerPath) {
+  const text = await zipText(zip, relsPath(ownerPath));
+  const result = new Map();
+  if (!text) return result;
+  xmlChildrenByLocalName(parseXml(text), 'Relationship').forEach(rel => {
+    result.set(rel.getAttribute('Id'), {
+      target: zipResolve(ownerPath, rel.getAttribute('Target')),
+      type: rel.getAttribute('Type') || ''
+    });
+  });
+  return result;
+}
+
+function mimeForImage(path) {
+  const ext = (path.split('.').pop() || '').toLowerCase();
+  return ({png:'image/png', jpg:'image/jpeg', jpeg:'image/jpeg', webp:'image/webp', gif:'image/gif', bmp:'image/bmp'})[ext] || 'application/octet-stream';
+}
+
+async function imageFileFromZip(zip, mediaPath) {
+  const entry = zip.file(mediaPath);
+  if (!entry) return null;
+  const blob = await entry.async('blob');
+  const ext = (mediaPath.split('.').pop() || 'jpg').toLowerCase();
+  return new File([blob], `excel-image.${ext}`, { type: mimeForImage(mediaPath) });
+}
+
+async function firstWorksheetPath(zip) {
+  const workbookPath = 'xl/workbook.xml';
+  const xml = await zipText(zip, workbookPath);
+  if (!xml) return '';
+  const sheet = xmlChildrenByLocalName(parseXml(xml), 'sheet')[0];
+  if (!sheet) return '';
+  const relId = sheet.getAttribute('r:id') || sheet.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'id');
+  const rels = await relationshipMap(zip, workbookPath);
+  return (rels.get(relId) || {}).target || '';
+}
+
+async function extractStandardExcelImages(zip, sheetPath, imagesByRow) {
+  const sheetRels = await relationshipMap(zip, sheetPath);
+  const drawingRel = Array.from(sheetRels.values()).find(rel => /\/drawing$/.test(rel.type));
+  if (!drawingRel) return;
+  const drawingPath = drawingRel.target;
+  const drawingText = await zipText(zip, drawingPath);
+  if (!drawingText) return;
+  const drawingXml = parseXml(drawingText);
+  const drawingRels = await relationshipMap(zip, drawingPath);
+  const anchors = [
+    ...xmlChildrenByLocalName(drawingXml, 'oneCellAnchor'),
+    ...xmlChildrenByLocalName(drawingXml, 'twoCellAnchor')
+  ];
+  for (const anchor of anchors) {
+    const from = xmlChildrenByLocalName(anchor, 'from')[0];
+    const rowNode = from && xmlChildrenByLocalName(from, 'row')[0];
+    const blip = xmlChildrenByLocalName(anchor, 'blip')[0];
+    if (!rowNode || !blip) continue;
+    const rowNo = Number(rowNode.textContent) + 1;
+    const embed = blip.getAttribute('r:embed') || blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
+    const mediaPath = (drawingRels.get(embed) || {}).target;
+    if (!imagesByRow.has(rowNo) && mediaPath) {
+      const file = await imageFileFromZip(zip, mediaPath);
+      if (file) imagesByRow.set(rowNo, file);
+    }
+  }
+}
+
+async function extractWpsCellImages(zip, sheetPath, imagesByRow) {
+  const cellImagesPath = 'xl/cellimages.xml';
+  const cellImagesText = await zipText(zip, cellImagesPath);
+  const sheetText = await zipText(zip, sheetPath);
+  if (!cellImagesText || !sheetText) return;
+
+  const cellImageRels = await relationshipMap(zip, cellImagesPath);
+  const imageIdToPath = new Map();
+  xmlChildrenByLocalName(parseXml(cellImagesText), 'pic').forEach(pic => {
+    const props = xmlChildrenByLocalName(pic, 'cNvPr')[0];
+    const blip = xmlChildrenByLocalName(pic, 'blip')[0];
+    if (!props || !blip) return;
+    const id = props.getAttribute('name');
+    const embed = blip.getAttribute('r:embed') || blip.getAttributeNS('http://schemas.openxmlformats.org/officeDocument/2006/relationships', 'embed');
+    const mediaPath = (cellImageRels.get(embed) || {}).target;
+    if (id && mediaPath) imageIdToPath.set(id, mediaPath);
+  });
+
+  const cells = xmlChildrenByLocalName(parseXml(sheetText), 'c');
+  for (const cell of cells) {
+    const ref = cell.getAttribute('r') || '';
+    const rowMatch = ref.match(/(\d+)$/);
+    const formulaNode = xmlChildrenByLocalName(cell, 'f')[0];
+    const formula = formulaNode ? formulaNode.textContent : '';
+    const idMatch = formula.match(/DISPIMG\(\s*"([^"]+)"/i);
+    if (!rowMatch || !idMatch) continue;
+    const rowNo = Number(rowMatch[1]);
+    const mediaPath = imageIdToPath.get(idMatch[1]);
+    if (!imagesByRow.has(rowNo) && mediaPath) {
+      const file = await imageFileFromZip(zip, mediaPath);
+      if (file) imagesByRow.set(rowNo, file);
+    }
+  }
+}
+
+async function extractEmbeddedImages(arrayBuffer, filename) {
+  const imagesByRow = new Map();
+  if (!/\.xlsx$/i.test(filename || '')) return imagesByRow;
+  const zip = await JSZip.loadAsync(arrayBuffer);
+  const sheetPath = await firstWorksheetPath(zip);
+  if (!sheetPath) return imagesByRow;
+  await extractStandardExcelImages(zip, sheetPath, imagesByRow);
+  await extractWpsCellImages(zip, sheetPath, imagesByRow);
+  return imagesByRow;
 }
 
 document.getElementById('fImgFile').addEventListener('change', async (e) => {
@@ -592,12 +739,14 @@ async function importXlsx() {
   const file = document.getElementById('csvFile').files[0];
   if (!file) { msg.style.color='#c0392b'; msg.textContent='请选择 Excel 文件'; return; }
 
-  let aoa;
+  let aoa, embeddedImages = new Map();
   try {
     const buf = await file.arrayBuffer();
     const wb  = XLSX.read(buf, { type:'array' });
     const ws  = wb.Sheets[wb.SheetNames[0]];
-    aoa = XLSX.utils.sheet_to_json(ws, { header:1, blankrows:false, defval:'' });
+    // 保留空行，确保数组下标始终和图片锚点中的真实 Excel 行号一致。
+    aoa = XLSX.utils.sheet_to_json(ws, { header:1, blankrows:true, defval:'' });
+    embeddedImages = await extractEmbeddedImages(buf, file.name);
   } catch (err) {
     msg.style.color='#c0392b'; msg.textContent='读取文件失败：'+err.message; return;
   }
@@ -630,6 +779,7 @@ async function importXlsx() {
       common    : has('common') ? str(val(r,'common')).toLowerCase() !== 'false' : true,
       image_url : str(val(r,'image_url')) || null,
       active    : true,
+      _excelRow : i + 1,
     };
     // 可选的新列，存在才写（不覆盖成空）
     if (has('showcase'))          row.showcase          = str(val(r,'showcase')).toLowerCase() === 'true';
@@ -644,14 +794,52 @@ async function importXlsx() {
   if (!rows.length) { msg.style.color='#c0392b'; msg.textContent='没有解析到有效数据（每行需有 sku、name_zh、base_price>0）'; return; }
 
   document.getElementById('importBtn').disabled = true;
-  msg.style.color='#888'; msg.textContent=`正在导入 ${rows.length} 条…`;
+  msg.style.color='#888';
+
+  // 先把 Excel 中的图片逐张上传到 Supabase Storage，再将公开地址随商品一起 upsert。
+  // 若某行没有新图片/链接，保留该 SKU 原有主图，避免普通资料更新意外清空图片。
+  const existingBySku = new Map((allProducts || []).map(p => [String(p.sku), p]));
+  const rowsWithImages = rows.filter(row => embeddedImages.has(row._excelRow));
+  const uploadedPaths = [];
+  try {
+    for (let i = 0; i < rowsWithImages.length; i++) {
+      const row = rowsWithImages[i];
+      msg.textContent = `正在上传图片 ${i+1}/${rowsWithImages.length}（SKU ${row.sku}）…`;
+      const imageFile = embeddedImages.get(row._excelRow);
+      row.image_url = await uploadOneImage(imageFile, row.sku);
+      // 仅记录本次新建对象；导入失败时可以清理，避免留下孤立文件。
+      const marker = `/object/public/${IMAGE_BUCKET}/`;
+      const markerAt = row.image_url.indexOf(marker);
+      if (markerAt >= 0) uploadedPaths.push(decodeURIComponent(row.image_url.slice(markerAt + marker.length)));
+    }
+  } catch (err) {
+    if (uploadedPaths.length) await sb.storage.from(IMAGE_BUCKET).remove(uploadedPaths);
+    document.getElementById('importBtn').disabled = false;
+    msg.style.color='#c0392b';
+    msg.textContent='图片上传失败，商品尚未导入：'+err.message;
+    return;
+  }
+
+  rows.forEach(row => {
+    const existing = existingBySku.get(String(row.sku));
+    if (!row.image_url && existing && existing.image_url) row.image_url = existing.image_url;
+    delete row._excelRow;
+  });
+
+  msg.textContent = rowsWithImages.length
+    ? `图片上传完成，正在导入 ${rows.length} 条商品…`
+    : `正在导入 ${rows.length} 条…`;
 
   const { error } = await sb.from('products').upsert(rows, { onConflict: 'sku' });
   document.getElementById('importBtn').disabled = false;
 
-  if (error) { msg.style.color='#c0392b'; msg.textContent='导入失败: '+error.message; }
+  if (error) {
+    if (uploadedPaths.length) await sb.storage.from(IMAGE_BUCKET).remove(uploadedPaths);
+    msg.style.color='#c0392b'; msg.textContent='导入失败: '+error.message;
+  }
   else {
-    msg.style.color='#2A6B3A'; msg.textContent=`✓ 成功导入 ${rows.length} 条商品`;
+    msg.style.color='#2A6B3A';
+    msg.textContent=`✓ 成功导入 ${rows.length} 条商品${rowsWithImages.length ? `，并上传 ${rowsWithImages.length} 张图片` : ''}`;
     setTimeout(() => { closeCsvDirect(); loadProducts(); }, 1200);
   }
 }
