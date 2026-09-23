@@ -39,6 +39,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .divider{width:48px;height:2px;background:var(--gold);margin-bottom:1.5rem;}
 .section-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,3vw,36px);color:var(--dark);margin-bottom:1.5rem;}
 .section-note{font-size:14px;color:var(--muted);margin-bottom:2rem;line-height:1.8;}
+.category-nav{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:2.5rem;}
+.category-link{display:inline-flex;align-items:center;gap:8px;padding:9px 16px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--dark);text-decoration:none;font-size:13px;}
+.category-link:hover{border-color:var(--green);color:var(--green);}
+.category-count{min-width:22px;padding:1px 7px;border-radius:999px;background:var(--cream);color:var(--muted);font-size:11px;text-align:center;}
+.product-section{scroll-margin-top:84px;margin-bottom:3.5rem;}
 
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:3rem;}
 .card{background:white;border:1px solid var(--border);border-radius:2px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s,box-shadow 0.2s;}
@@ -151,14 +156,14 @@ footer a{color:rgba(255,255,255,0.4);}
   <div class="page-header-inner">
     <p class="eyebrow">Our range &middot; 产品目录</p>
     <h1>Our Products</h1>
-    <p>Authentic frozen Chinese food &mdash; steamed buns, dim sum, beverages and more. Ready to cook straight from frozen.</p>
+    <p>Food and non-food products selected for supermarkets, restaurants and local customers.</p>
   </div>
 </div>
 
 <div class="page-body">
   <div class="page-body-inner">
 
-    <p class="section-note">No thawing needed — steam any bun for 8–10 min, or microwave for 4 min. 所有包子无需解冻，直接蒸8-10分钟或微波炉加热4分钟即可。</p>
+    <p class="section-note">Browse our current product range, organized using the same two primary categories as our ERP.<br>按照与 ERP 一致的两大类浏览当前商品。</p>
 
     <div id="productSections"><p style="color:var(--muted);padding:2rem 0;">加载中… Loading…</p></div>
 
@@ -198,11 +203,20 @@ document.addEventListener('click',function(e){
   if(m.classList.contains('open')&&!m.contains(e.target)&&!b.contains(e.target)){m.classList.remove('open');}
 });
 
-// ── 动态加载产品（从 get-products 接口，按分类分组，显示规格，不放价格）──
+// ── 动态加载产品（按 ERP 最新一级分类分组，显示规格，不放价格）──
 var PRODUCTS_API = '/.netlify/functions/get-products';
-var CAT_ORDER = ['buns','dumplings','frozen','beverages','rice','grocery','mealbox','film','tape'];
-var NONFOOD_CATS = ['mealbox','film','tape'];
+var CAT_ORDER = ['food','non_food'];
+var NONFOOD_CATS = ['non_food','food_contact','mealbox','film','tape'];
 function esc(s){ return (s==null?'':String(s)).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); }
+
+// 兼容官网与 ERP 历史数据：所有旧的细分类都收敛到 Food / Non-food。
+// 部分早期非食品记录的 product_line 被误写为 food，因此以 category 和 SKU 兜底判断。
+function primaryCategory(p){
+  var category = String(p.category || '').toLowerCase();
+  var sku = String(p.sku || '').toUpperCase();
+  if(NONFOOD_CATS.indexOf(category) !== -1 || /^ZN\d/.test(sku) || /^TEMP-/.test(sku)) return 'non_food';
+  return 'food';
+}
 
 function cardHtml(p){
   var desc = p.description ? '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>' : '';
@@ -231,29 +245,24 @@ async function loadProducts(){
     var labels = data.categories || {};
     if(!products.length){ box.innerHTML = '<p style="color:var(--muted);padding:2rem 0;">暂无产品 No products yet.</p>'; return; }
 
-    // 按分组归类（优先 showcase_category，退回 category）
+    // 无论数据库中仍保存何种旧细分类，顾客端只显示 ERP 规范的两大类。
     var groups = {};
     products.forEach(function(p){
-      var k = p.showcase_category || p.category || 'other';
+      var k = primaryCategory(p);
       (groups[k] = groups[k] || []).push(p);
     });
 
-    // 按预设顺序排列分组
-    var keys = Object.keys(groups).sort(function(a,b){
-      var ia = CAT_ORDER.indexOf(a), ib = CAT_ORDER.indexOf(b);
-      return (ia<0?99:ia) - (ib<0?99:ib);
-    });
+    var keys = CAT_ORDER.filter(function(k){ return groups[k] && groups[k].length; });
+    var nav = '<div class="category-nav">' + keys.map(function(k){
+      return '<a class="category-link" href="#category-'+k+'">'+esc(labels[k] || k)
+        + '<span class="category-count">'+groups[k].length+'</span></a>';
+    }).join('') + '</div>';
 
-    box.innerHTML = keys.map(function(k){
+    box.innerHTML = nav + keys.map(function(k){
       var title = labels[k] || k;
-      var isFirstNonfood = NONFOOD_CATS.indexOf(k)!==-1 && NONFOOD_CATS.indexOf(keys[keys.indexOf(k)-1])===-1;
-      var banner = isFirstNonfood
-        ? '<div class="divider"></div><h2 class="section-title">餐厅耗材 · Non-Food Restaurant Supplies</h2>'
-          + '<p class="section-note">一次性餐盒、包装膜、打包胶带等，可一次性购买，也可选择按月订阅自动配送。<br>'
-          + 'Meal boxes, packaging film and packing tape — order once, or subscribe for automatic monthly restocking.</p>'
-        : '';
-      return banner + '<div class="divider"></div><h2 class="section-title">'+esc(title)+'</h2>'
-           + '<div class="grid">'+groups[k].map(cardHtml).join('')+'</div>';
+      return '<section class="product-section" id="category-'+k+'">'
+           + '<div class="divider"></div><h2 class="section-title">'+esc(title)+'</h2>'
+           + '<div class="grid">'+groups[k].map(cardHtml).join('')+'</div></section>';
     }).join('');
   }catch(e){
     box.innerHTML = '<p style="color:var(--muted);padding:2rem 0;">加载失败 Load failed：'+esc(e.message)+'</p>';

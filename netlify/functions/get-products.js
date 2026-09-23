@@ -13,18 +13,11 @@ const CORS = {
   'Content-Type'                : 'application/json',
 };
 
-// 分类中英文标题（可按需增删）
+// 官网采用与 ERP 一致的最新一级分类。历史细分类仅用于兼容旧数据，
+// 不再直接显示给顾客。
 const CATEGORY_LABELS = {
-  buns      : '包子系列 Steamed Buns',
-  frozen    : '冷冻食品 Frozen',
-  dumplings : '水饺 Dumplings',
-  beverages : '饮品 Beverages',
-  rice      : '优质大米 Premium Rice',
-  grocery   : '百货 Grocery',
-  // 非食品 · 餐厅耗材（Non-Food · Restaurant Supplies）
-  mealbox   : '一次性餐盒 Disposable Meal Boxes',
-  film      : '包装膜 Packaging Film',
-  tape      : '打包胶带辅料 Packing Tape & Supplies',
+  food    : 'Food · 食品',
+  non_food: 'Non-food · 非食品',
 };
 
 exports.handler = async (event) => {
