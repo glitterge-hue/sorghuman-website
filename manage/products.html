@@ -7,6 +7,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+<script src="/assets/product-images.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:#f0f4f0;color:#1a1a18;}
@@ -340,7 +341,9 @@ async function logout() {
 const IMAGE_BUCKET = 'product-photos';
 
 async function uploadOneImage(file, skuForPath) {
-  const ext  = (file.name.split('.').pop() || 'jpg').toLowerCase();
+  // 先在浏览器里解码+重新编码成 JPEG：解不开的坏图直接报错，不让它进库（见 product-images.js 说明）。
+  file = await normalizeProductImage(file);
+  const ext  = 'jpg';
   const safeSku = (skuForPath || editingSku || 'new').replace(/[^a-zA-Z0-9_-]/g, '') || 'product';
   const path = `${safeSku}/${Date.now()}-${Math.random().toString(36).slice(2,7)}.${ext}`;
   const { error } = await sb.storage.from(IMAGE_BUCKET).upload(path, file, {
