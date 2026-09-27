@@ -4,6 +4,10 @@
 [functions]
   node_bundler = "esbuild"
 
+# Only the existing public product-photo bucket can be fetched by Image CDN.
+[images]
+  remote_images = ['https://uvvdyqmuxiupgyerxbep\.supabase\.co/storage/v1/object/public/product-photos/[^?#]+$']
+
 [[headers]]
   for = "/*"
   [headers.values]
