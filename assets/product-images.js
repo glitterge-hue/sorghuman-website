@@ -3,12 +3,12 @@
  */
 (function (root) {
   'use strict';
-  var origin = 'https://uvvdyqmuxiupgyerxbep.supabase.co';
+  var photoHost = 'uvvdyqmuxiupgyerxbep.supabase.co';
   root.productImageUrl = function (source, width) {
     if (!source) return '';
     var url;
     try { url = new URL(source); } catch (_) { return source; }
-    if (url.origin !== origin || url.username || url.password ||
+    if (url.protocol !== 'https:' || url.host !== photoHost || url.username || url.password ||
         url.search || url.hash ||
         !url.pathname.startsWith('/storage/v1/object/public/product-photos/')) return source;
     // A few fixed variants keep the CDN cache reusable across pages.

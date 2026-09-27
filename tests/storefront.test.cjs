@@ -4,7 +4,8 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const root = path.join(__dirname, '..');
-const photo = 'https://uvvdyqmuxiupgyerxbep.supabase.co/storage/v1/object/public/product-photos/quote-import/sample.jpg';
+const photoHost = 'uvvdyqmuxiupgyerxbep.supabase.co';
+const photo = new URL('/storage/v1/object/public/product-photos/quote-import/sample.jpg', `https://${photoHost}`).href;
 
 function page(file, marker, start) {
   const html = fs.readFileSync(path.join(root, file), 'utf8');
