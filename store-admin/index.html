@@ -531,6 +531,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
   </div><!-- main -->
 </div><!-- mainWrap -->
 
+<script src="/assets/product-images.js"></script>
 <script>
 const API = '/.netlify/functions/store-catalog';
 let storeId = '', token = '', storeInfo = null;
@@ -649,7 +650,7 @@ function renderMyProducts(){
 function myRow(r){
   const p = r.products || {};
   const img = p.image_url
-    ? `<img class="prod-img" src="${p.image_url.replace(/\/public$/,'/thumb')}" onerror="this.src='${p.image_url}'">`
+    ? productImgHtml(p.image_url,160,'class="prod-img"')
     : `<div class="prod-img-ph">🛍</div>`;
   const priceVal = r.price != null ? r.price : '';
   const basePrice = p.base_price ? '$'+Number(p.base_price).toFixed(2) : '';
@@ -1041,7 +1042,7 @@ function catalogRow(p){
   const inStore = (mySkuSet.has(p.sku) || pendingAdd.has(p.sku)) && !pendingRemove.has(p.sku);
   const checked = inStore ? 'checked' : '';
   const img = p.image_url
-    ? `<img class="prod-img" src="${p.image_url.replace(/\/public$/,'/thumb')}" onerror="this.src='${p.image_url}'">`
+    ? productImgHtml(p.image_url,160,'class="prod-img"')
     : `<div class="prod-img-ph">🛍</div>`;
   return `<div class="prod-row">
     <input type="checkbox" ${checked} onchange="toggleCatalog('${p.sku}',this.checked)">
@@ -1119,6 +1120,7 @@ function fileToBase64(file){
   });
 }
 async function uploadOneImage(file){
+  file = await normalizeProductImage(file);
   if(file.size > MAX_UPLOAD_MB * 1024 * 1024)
     throw new Error(`图片太大（超过 ${MAX_UPLOAD_MB}MB），请压缩后再传`);
   const fileBase64 = await fileToBase64(file);
@@ -1382,7 +1384,7 @@ function showcaseRow(p){
     return '<option value="'+k+'"'+(k===cat?' selected':'')+'>'+SHOWCASE_CATS[k]+'</option>';
   }).join('');
   const img = p.image_url
-    ? '<img src="'+p.image_url+'" style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#eee;">'
+    ? productImgHtml(p.image_url,160,'style="width:44px;height:44px;object-fit:cover;border-radius:6px;flex-shrink:0;background:#eee;"')
     : '<div style="width:44px;height:44px;border-radius:6px;background:#eee;flex-shrink:0;"></div>';
   return '<div class="prod-row" style="display:flex;align-items:center;gap:12px;padding:10px 6px;border-bottom:1px solid #f0f0ea;">'
     + img
@@ -1508,7 +1510,7 @@ function rsRow(i){
   const out   = i.stock_status==='out';
   const stock = out ? '<span class="badge" style="background:#fbe9e7;color:#c0392b;">缺货</span>'
               : i.stock_status==='low' ? '<span class="badge" style="background:#fff4e0;color:#b57500;">少量</span>' : '';
-  const img = i.image_url ? `<img class="prod-img" src="${i.image_url}">` : '<div class="prod-img-ph">📦</div>';
+  const img = i.image_url ? productImgHtml(i.image_url,160,'class="prod-img"') : '<div class="prod-img-ph">📦</div>';
   return `
   <div class="prod-row ${out?'oos':''}">
     ${img}
