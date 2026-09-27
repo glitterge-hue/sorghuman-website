@@ -40,27 +40,59 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(250,247,242,
 .section-title{font-family:'DM Serif Display',serif;font-size:clamp(24px,3vw,36px);color:var(--dark);margin-bottom:1.5rem;}
 .section-note{font-size:14px;color:var(--muted);margin-bottom:2rem;line-height:1.8;}
 
-.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-bottom:3rem;}
-.card{background:white;border:1px solid var(--border);border-radius:2px;overflow:hidden;display:flex;flex-direction:column;transition:transform 0.2s,box-shadow 0.2s;}
-.card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(0,0,0,0.08);}
+/* ── 分类导航（吸顶）── */
+.cat-bar{position:sticky;top:64px;z-index:50;background:rgba(250,247,242,0.96);backdrop-filter:blur(8px);border-bottom:1px solid var(--border);margin:0 -5%;padding:12px 5%;}
+.cat-bar-inner{max-width:1100px;margin:0 auto;display:flex;gap:10px;overflow-x:auto;scrollbar-width:none;}
+.cat-bar-inner::-webkit-scrollbar{display:none;}
+.cat-chip{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border:1px solid var(--border);border-radius:999px;background:#fff;color:var(--dark);font:500 13px 'DM Sans',sans-serif;text-decoration:none;cursor:pointer;white-space:nowrap;transition:all .2s;}
+.cat-chip .n{font-size:11px;color:var(--muted);}
+.cat-chip:hover{border-color:var(--green);color:var(--green);}
+.cat-chip.active{background:var(--green);border-color:var(--green);color:#fff;}
+.cat-chip.active .n{color:rgba(255,255,255,.75);}
 
-/* 实拍照片高度调高，背景色与照片背景一致 */
-.card img{width:100%;height:240px;object-fit:cover;object-position:center;display:block;background:#e8e0d4;}
+/* ── 分类区块 ── */
+.cat-section{padding-top:3rem;scroll-margin-top:130px;}
+.cat-head{display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap;margin-bottom:.4rem;}
+.cat-head .section-title{margin-bottom:0;}
+.cat-count{font-size:13px;color:var(--muted);}
+.cat-intro{font-size:14px;color:var(--muted);margin:.6rem 0 1.6rem;line-height:1.8;max-width:760px;}
+.nonfood-banner{margin-top:4rem;padding:2rem 2rem 1.6rem;background:#fff;border:1px solid var(--border);border-left:4px solid var(--gold);}
+.nonfood-banner h2{font-family:'DM Serif Display',serif;font-size:clamp(22px,2.6vw,30px);margin-bottom:.4rem;}
+.nonfood-banner p{font-size:14px;color:var(--muted);line-height:1.8;}
 
-.card-body{padding:1rem 1.25rem 1.25rem;flex:1;display:flex;flex-direction:column;}
-.card-body h3{font-family:'DM Serif Display',serif;font-size:16px;margin-bottom:3px;}
-.card-body .zh{font-size:12px;color:var(--muted);margin-bottom:8px;}
-.tag{display:inline-block;font-size:11px;padding:3px 10px;border:1px solid var(--green);color:var(--green);border-radius:20px;margin-top:auto;}
-.card-body .desc{font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6;}
+/* ── 产品卡 ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:20px;}
+.card{background:#fff;border:1px solid var(--border);border-radius:4px;overflow:hidden;display:flex;flex-direction:column;transition:transform .2s,box-shadow .2s;}
+.card:hover{transform:translateY(-3px);box-shadow:0 10px 28px rgba(0,0,0,.08);}
+.card-media{position:relative;aspect-ratio:4/3;background:#EDE6DA;overflow:hidden;}
+.card-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .4s;}
+.card:hover .card-media img{transform:scale(1.03);}
+.card-media.contain img{object-fit:contain;padding:14px;background:#fff;}
+.ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--green);text-align:center;padding:1rem;}
+.ph .ph-zh{font-family:'DM Serif Display',serif;font-size:26px;line-height:1.2;}
+.ph .ph-note{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);}
+.badge{position:absolute;top:10px;left:10px;background:rgba(26,26,24,.72);color:#fff;font-size:11px;padding:3px 9px;border-radius:999px;}
+.card-body{padding:1rem 1.2rem 1.2rem;flex:1;display:flex;flex-direction:column;}
+.card-body h3{font-family:'DM Serif Display',serif;font-size:17px;line-height:1.3;margin-bottom:2px;}
+.card-body .zh{font-size:13px;color:var(--muted);margin-bottom:10px;}
+.card-body .desc{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.6;}
+.specs{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;}
+.tag{display:inline-block;font-size:11px;padding:3px 10px;border:1px solid var(--green);color:var(--green);border-radius:20px;}
+.tag.sub{background:var(--gold);border-color:var(--gold);color:#fff;}
+.card .more{display:block;margin-top:12px;font-size:12px;font-weight:500;color:var(--green);}
+.card:hover .more{text-decoration:underline;}
+.grid.compact{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px;}
+.grid.compact .card-media{aspect-ratio:1/1;}
+.grid.compact .card-body h3{font-size:14px;}
+.status{color:var(--muted);padding:2rem 0;}
+.status button{margin-left:8px;padding:6px 14px;border:1px solid var(--green);background:#fff;color:var(--green);border-radius:2px;cursor:pointer;}
+
 .erp-btn{display:inline-block;background:var(--green);color:#fff;text-decoration:none;padding:12px 28px;border-radius:2px;font-size:14px;font-weight:500;margin-bottom:2rem;}
 .erp-btn:hover{background:var(--green-light);}
 
 .buy-btn{display:block;text-align:center;background:var(--gold);color:white;text-decoration:none;padding:14px 36px;border-radius:2px;font-size:15px;font-weight:500;margin:2rem auto 0;max-width:300px;}
 
-/* 可点击的产品卡 */
 a.card{text-decoration:none;color:inherit;}
-.card .more{display:block;margin-top:10px;font-size:12px;font-weight:500;color:var(--green);}
-.card:hover .more{text-decoration:underline;}
 
 /* 底部下单入口 */
 .order-cta{margin:3rem auto 0;padding-top:2rem;border-top:1px solid var(--border);text-align:center;}
@@ -81,8 +113,8 @@ a.card{text-decoration:none;color:inherit;}
 footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:20px 5%;font-size:13px;margin-top:40px;}
 footer a{color:rgba(255,255,255,0.4);}
 
-@media(max-width:768px){.nav-links{display:none;}.hamburger{display:flex;}.grid{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:400px){.grid{grid-template-columns:1fr;}}
+@media(max-width:768px){.nav-links{display:none;}.hamburger{display:flex;}.grid,.grid.compact{grid-template-columns:repeat(2,1fr);gap:12px;}.card-body{padding:.8rem .9rem 1rem;}.card-body h3{font-size:15px;}.nonfood-banner{padding:1.4rem 1.2rem;}}
+@media(max-width:380px){.grid,.grid.compact{grid-template-columns:1fr;}}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Q99SSTBGE8"></script>
@@ -152,16 +184,16 @@ footer a{color:rgba(255,255,255,0.4);}
   <div class="page-header-inner">
     <p class="eyebrow">Our range &middot; 产品目录</p>
     <h1>Our Products</h1>
-    <p>Authentic frozen Chinese food &mdash; steamed buns, dim sum, beverages and more. Ready to cook straight from frozen.</p>
+    <p>Authentic Chinese frozen food, beverages and premium rice &mdash; plus restaurant supplies, delivered along the East Coast.<br>正宗中式冷冻食品、饮品、优质大米与餐厅耗材，覆盖美东地区。</p>
   </div>
 </div>
 
 <div class="page-body">
   <div class="page-body-inner">
 
-    <p class="section-note">No thawing needed — steam any bun for 8–10 min, or microwave for 4 min. 所有包子无需解冻，直接蒸8-10分钟或微波炉加热4分钟即可。</p>
+    <div class="cat-bar" id="catBar" hidden><div class="cat-bar-inner" id="catBarInner"></div></div>
 
-    <div id="productSections"><p style="color:var(--muted);padding:2rem 0;">加载中… Loading…</p></div>
+    <div id="productSections"><p class="status">加载中… Loading…</p></div>
 
     <a href="/shop/" class="buy-btn">&#128722; 立即购买 &middot; Shop now（本地配送 Local delivery）</a>
 
@@ -199,68 +231,137 @@ document.addEventListener('click',function(e){
   if(m.classList.contains('open')&&!m.contains(e.target)&&!b.contains(e.target)){m.classList.remove('open');}
 });
 
-// ── 动态加载产品（从 get-products 接口，按分类分组，显示规格，不放价格）──
+// ── 动态加载产品（get-products 接口）──────────────────────────────
+// 数据库里的分类比较杂（frozen / frozen_food / buns / 大米 / food_contact …），
+// 这里统一归并成 4 个对外分组；同一款商品的整箱 / 单袋等多个 SKU 合并成一张卡。
 var PRODUCTS_API = '/.netlify/functions/get-products';
-var CAT_ORDER = ['buns','dumplings','frozen','beverages','rice','grocery','mealbox','film','tape'];
-var NONFOOD_CATS = ['mealbox','film','tape'];
-function esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+var GROUPS = [
+  { key:'frozen', zh:'冷冻食品', en:'Frozen Foods',
+    intro:'包子、烧卖、饺子等冷冻点心。无需解冻，蒸 8–10 分钟或微波 4 分钟即可。<br>Buns, dim sum and dumplings — no thawing needed: steam 8–10 min or microwave 4 min.',
+    cats:['buns','frozen','frozen_food','dumplings'] },
+  { key:'beverages', zh:'饮品', en:'Beverages', intro:'', cats:['beverages','dry_food','none'] },
+  { key:'rice', zh:'优质大米', en:'Premium Rice', intro:'', cats:['rice','grains','大米'] },
+  { key:'nonfood', zh:'餐厅耗材', en:'Restaurant Supplies', nonfood:true, cats:['food_contact','non_food','mealbox','film','tape','supplies'] }
+];
+var OTHER = { key:'other', zh:'更多商品', en:'More Products', intro:'' };
 
-function cardHtml(p){
-  var desc = p.description ? '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>' : '';
-  var spec = p.spec ? '<span class="tag">'+esc(p.spec)+'</span>' : '';
-  var sub  = p.subscription_enabled ? '<span class="tag" style="background:#C8922A;color:#fff;border-color:#C8922A;">📅 可订阅 Subscribe available</span>' : '';
-  // 有 SKU 就把整张卡做成链接，点进各自的详情页
-  var href = p.sku ? '/shop/?p='+encodeURIComponent(p.sku) : '';
-  var open = href ? '<a class="card" href="'+href+'">' : '<div class="card">';
-  var close = href ? '</a>' : '</div>';
-  var more = href ? '<span class="more">查看详情 · View details →</span>' : '';
-  return open
-    + '<img src="'+esc(productImageUrl(p.image_url,640))+'" alt="'+esc(p.name_zh||p.name_en||'')+'" loading="lazy" decoding="async">'
+function esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
+function clean(v){ v = v==null ? '' : String(v).trim(); return (v==='None'||v==='null') ? '' : v; }
+function groupOf(p){
+  var cats = [clean(p.showcase_category), clean(p.category) || 'none'].map(function(c){ return c.toLowerCase(); });
+  for (var i=0;i<GROUPS.length;i++) for (var j=0;j<cats.length;j++) if (GROUPS[i].cats.indexOf(cats[j])!==-1) return GROUPS[i];
+  return OTHER;
+}
+function baseSku(sku){ return clean(sku).replace(/-single$/i,''); }
+// 食品按中文品名合并（如「荠菜包」整箱与单袋）；耗材按 SKU，不合并不同尺寸的餐盒。
+function mergeKey(p, g){
+  if (g.nonfood) return 'sku:' + baseSku(p.sku);
+  var m = clean(p.name_zh).match(/[一-鿿]{2,}/);
+  return m ? 'zh:' + m[0] : 'sku:' + baseSku(p.sku);
+}
+function titleCase(s){ return s.replace(/(^|[\s(\-])([a-z])/g,function(m,a,c){return a+c.toUpperCase();}); }
+function displayNames(p){
+  var en = clean(p.name_en), zh = clean(p.name_zh);
+  var zhOnly = (zh.match(/[一-鿿][一-鿿\w（）()·、，\s]*/)||[''])[0].trim();
+  return { en: titleCase(en || zh), zh: zhOnly && zhOnly !== en ? zhOnly : '' };
+}
+
+function buildGroups(products){
+  var bySku = {}, out = {};
+  products.forEach(function(p){ if (clean(p.image_url)) bySku[baseSku(p.sku)] = p.image_url; });
+  products.forEach(function(p){
+    var g = groupOf(p), k = mergeKey(p, g);
+    var bucket = out[g.key] = out[g.key] || { g:g, items:{}, order:[] };
+    var item = bucket.items[k];
+    // 单袋 SKU 没图时，借用同款整箱 SKU 的图
+    var img = clean(p.image_url) || bySku[baseSku(p.sku)] || '';
+    var spec = clean(p.spec);
+    if (!item) {
+      item = bucket.items[k] = { p:p, img:img, specs:[], sub:false };
+      bucket.order.push(k);
+    } else if (!item.img && img) { item.img = img; item.p = p; }
+    else if (img && /-single$/i.test(clean(item.p.sku)) && !/-single$/i.test(clean(p.sku))) { item.p = p; item.img = img; }
+    if (spec && item.specs.indexOf(spec) === -1) item.specs.push(spec);
+    if (p.subscription_enabled) item.sub = true;
+  });
+  return GROUPS.concat([OTHER]).filter(function(g){ return out[g.key]; }).map(function(g){
+    var b = out[g.key];
+    var items = b.order.map(function(k){ return b.items[k]; });
+    // 有图的排前面，其余保持原顺序
+    items.sort(function(a,b){ return (b.img?1:0) - (a.img?1:0); });
+    return { g:g, items:items };
+  });
+}
+
+function cardHtml(item){
+  var p = item.p, n = displayNames(p);
+  var href = clean(p.sku) ? '/shop/?p='+encodeURIComponent(p.sku) : '';
+  var external = item.img && !/supabase\.co|imagedelivery\.net/.test(item.img);
+  var media = item.img
+    ? productImgHtml(item.img, 640, 'alt="'+esc(n.zh||n.en)+'"')
+    : '<div class="ph"><span class="ph-zh">'+esc(n.zh||n.en)+'</span><span class="ph-note">Photo coming soon · 图片更新中</span></div>';
+  var specs = item.specs.slice(0,3).map(function(s){ return '<span class="tag">'+esc(s)+'</span>'; }).join('');
+  if (item.sub) specs += '<span class="tag sub">📅 可订阅 Subscribe</span>';
+  var desc = clean(p.description) ? '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>' : '';
+  return (href ? '<a class="card" href="'+href+'">' : '<div class="card">')
+    + '<div class="card-media'+(external?' contain':'')+'">'+media+'</div>'
     + '<div class="card-body">'
-    +   '<h3>'+esc(p.name_en||p.name_zh||'')+'</h3>'
-    +   (p.name_zh ? '<p class="zh">'+esc(p.name_zh)+'</p>' : '')
-    +   desc + spec + sub + more
-    + '</div>' + close;
+    +   '<h3>'+esc(n.en)+'</h3>'
+    +   (n.zh ? '<p class="zh">'+esc(n.zh)+'</p>' : '')
+    +   desc + '<div class="specs">'+specs+'</div>'
+    +   (href ? '<span class="more">查看详情 · View details →</span>' : '')
+    + '</div>' + (href ? '</a>' : '</div>');
+}
+
+function sectionHtml(sec){
+  var g = sec.g, banner = '';
+  if (g.nonfood) {
+    banner = '<div class="nonfood-banner"><h2>餐厅耗材 · Restaurant Supplies</h2>'
+      + '<p>一次性餐盒、包装膜、纸袋、打包胶带等，可一次性购买，也可按月订阅自动补货。<br>'
+      + 'Meal boxes, film, paper bags and packing supplies — order once, or subscribe for automatic monthly restocking.</p></div>';
+  }
+  return banner + '<section class="cat-section" id="cat-'+g.key+'">'
+    + (g.nonfood ? '' :
+       '<div class="divider"></div><div class="cat-head"><h2 class="section-title">'+esc(g.zh)+' '+esc(g.en)+'</h2>'
+       + '<span class="cat-count">'+sec.items.length+' 款 items</span></div>'
+       + (g.intro ? '<p class="cat-intro">'+g.intro+'</p>' : '<div style="height:1.4rem"></div>'))
+    + '<div class="grid'+(g.nonfood?' compact':'')+'">'+sec.items.map(cardHtml).join('')+'</div></section>';
+}
+
+function renderBar(sections){
+  var bar = document.getElementById('catBar'), inner = document.getElementById('catBarInner');
+  inner.innerHTML = sections.map(function(sec){
+    return '<a class="cat-chip" href="#cat-'+sec.g.key+'" data-k="'+sec.g.key+'">'+esc(sec.g.zh)+' '+esc(sec.g.en)
+      +' <span class="n">'+sec.items.length+'</span></a>';
+  }).join('');
+  bar.hidden = sections.length < 2;
+  // 滚动时高亮当前分类
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if (!e.isIntersecting) return;
+        var k = e.target.id.replace('cat-','');
+        inner.querySelectorAll('.cat-chip').forEach(function(c){ c.classList.toggle('active', c.getAttribute('data-k')===k); });
+      });
+    }, { rootMargin:'-140px 0px -60% 0px' });
+    sections.forEach(function(sec){ var el=document.getElementById('cat-'+sec.g.key); if(el) io.observe(el); });
+  }
 }
 
 async function loadProducts(){
   var box = document.getElementById('productSections');
-  box.textContent = '加载中… Loading…';
+  box.innerHTML = '<p class="status">加载中… Loading…</p>';
   try{
     var res = await fetch(PRODUCTS_API);
     if(!res.ok) throw new Error('Products unavailable');
     var data = await res.json();
     if(data.error || !Array.isArray(data.products)) throw new Error('Invalid product catalog');
-    var products = data.products;
-    var labels = data.categories || {};
-    if(!products.length){ box.innerHTML = '<p style="color:var(--muted);padding:2rem 0;">暂无产品 No products yet.</p>'; return; }
-
-    // 按分组归类（优先 showcase_category，退回 category）
-    var groups = {};
-    products.forEach(function(p){
-      var k = p.showcase_category || p.category || 'other';
-      (groups[k] = groups[k] || []).push(p);
-    });
-
-    // 按预设顺序排列分组
-    var keys = Object.keys(groups).sort(function(a,b){
-      var ia = CAT_ORDER.indexOf(a), ib = CAT_ORDER.indexOf(b);
-      return (ia<0?99:ia) - (ib<0?99:ib);
-    });
-
-    box.innerHTML = keys.map(function(k){
-      var title = labels[k] || k;
-      var isFirstNonfood = NONFOOD_CATS.indexOf(k)!==-1 && NONFOOD_CATS.indexOf(keys[keys.indexOf(k)-1])===-1;
-      var banner = isFirstNonfood
-        ? '<div class="divider"></div><h2 class="section-title">餐厅耗材 · Non-Food Restaurant Supplies</h2>'
-          + '<p class="section-note">一次性餐盒、包装膜、打包胶带等，可一次性购买，也可选择按月订阅自动配送。<br>'
-          + 'Meal boxes, packaging film and packing tape — order once, or subscribe for automatic monthly restocking.</p>'
-        : '';
-      return banner + '<div class="divider"></div><h2 class="section-title">'+esc(title)+'</h2>'
-           + '<div class="grid">'+groups[k].map(cardHtml).join('')+'</div>';
-    }).join('');
+    if(!data.products.length){ box.innerHTML = '<p class="status">暂无产品 No products yet.</p>'; return; }
+    var sections = buildGroups(data.products);
+    box.innerHTML = sections.map(sectionHtml).join('');
+    renderBar(sections);
   }catch(e){
-    box.innerHTML = '<p role="alert">商品暂时无法加载，请稍后重试。 Products are temporarily unavailable.</p><button type="button" id="retryProducts">重试 Retry</button>';
+    box.innerHTML = '<p class="status" role="alert">商品暂时无法加载，请稍后重试。 Products are temporarily unavailable.<button type="button" id="retryProducts">重试 Retry</button></p>';
     document.getElementById('retryProducts').onclick = loadProducts;
   }
 }
