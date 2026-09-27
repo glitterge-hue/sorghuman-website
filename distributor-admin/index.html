@@ -167,6 +167,7 @@ input[type=checkbox]{width:16px;height:16px;accent-color:#2A6B3A;cursor:pointer;
   </div>
 </div>
 
+<script src="/assets/product-images.js"></script>
 <script>
 const API = '/.netlify/functions/distributor-portal';
 let sid='', tok='', sup=null, items=[], catalog=[], pos=[];
@@ -226,7 +227,7 @@ function renderItems(){
   document.getElementById('itemList').innerHTML = list.length ? list.map(i=>{
     const p = i.products;
     const unit = i.units_per_case>0 ? i.case_price/i.units_per_case : i.case_price;
-    const img = p.image_url ? `<img class="prod-img" src="${p.image_url}">` : '<div class="prod-img-ph">📦</div>';
+    const img = p.image_url ? productImgHtml(p.image_url,160,'class="prod-img"') : '<div class="prod-img-ph">📦</div>';
     return `<div class="prod-row">
       ${img}
       <div class="prod-info">
@@ -280,7 +281,7 @@ function renderCatalog(){
   const list = catalog.filter(p=>!have.has(p.sku) && (!q || (p.name_zh+p.sku).toLowerCase().includes(q)));
   document.getElementById('catList').innerHTML = list.length ? list.map(p=>`
     <div class="prod-row">
-      ${p.image_url?`<img class="prod-img" src="${p.image_url}">`:'<div class="prod-img-ph">📦</div>'}
+      ${p.image_url?productImgHtml(p.image_url,160,'class="prod-img"'):'<div class="prod-img-ph">📦</div>'}
       <div class="prod-info">
         <div class="zh">${p.name_zh}</div>
         <div class="en">${p.name_en||''} <span class="spec">${p.spec||''}</span></div>
