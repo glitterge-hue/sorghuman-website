@@ -111,6 +111,7 @@ footer a{color:rgba(255,255,255,0.4);}
     .hamburger { display: flex !important; }
   }
 </style>
+<script src="/assets/product-images.js"></script>
 </head>
 <body>
 
@@ -202,7 +203,7 @@ document.addEventListener('click',function(e){
 var PRODUCTS_API = '/.netlify/functions/get-products';
 var CAT_ORDER = ['buns','dumplings','frozen','beverages','rice','grocery','mealbox','film','tape'];
 var NONFOOD_CATS = ['mealbox','film','tape'];
-function esc(s){ return (s==null?'':String(s)).replace(/[<>&]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;'}[c];}); }
+function esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
 
 function cardHtml(p){
   var desc = p.description ? '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>' : '';
@@ -214,7 +215,7 @@ function cardHtml(p){
   var close = href ? '</a>' : '</div>';
   var more = href ? '<span class="more">查看详情 · View details →</span>' : '';
   return open
-    + '<img src="'+esc(p.image_url||'')+'" alt="'+esc(p.name_zh||p.name_en||'')+'" loading="lazy">'
+    + '<img src="'+esc(productImageUrl(p.image_url,640))+'" alt="'+esc(p.name_zh||p.name_en||'')+'" loading="lazy" decoding="async">'
     + '<div class="card-body">'
     +   '<h3>'+esc(p.name_en||p.name_zh||'')+'</h3>'
     +   (p.name_zh ? '<p class="zh">'+esc(p.name_zh)+'</p>' : '')
@@ -224,10 +225,13 @@ function cardHtml(p){
 
 async function loadProducts(){
   var box = document.getElementById('productSections');
+  box.textContent = '加载中… Loading…';
   try{
     var res = await fetch(PRODUCTS_API);
+    if(!res.ok) throw new Error('Products unavailable');
     var data = await res.json();
-    var products = data.products || [];
+    if(data.error || !Array.isArray(data.products)) throw new Error('Invalid product catalog');
+    var products = data.products;
     var labels = data.categories || {};
     if(!products.length){ box.innerHTML = '<p style="color:var(--muted);padding:2rem 0;">暂无产品 No products yet.</p>'; return; }
 
@@ -256,7 +260,8 @@ async function loadProducts(){
            + '<div class="grid">'+groups[k].map(cardHtml).join('')+'</div>';
     }).join('');
   }catch(e){
-    box.innerHTML = '<p style="color:var(--muted);padding:2rem 0;">加载失败 Load failed：'+esc(e.message)+'</p>';
+    box.innerHTML = '<p role="alert">商品暂时无法加载，请稍后重试。 Products are temporarily unavailable.</p><button type="button" id="retryProducts">重试 Retry</button>';
+    document.getElementById('retryProducts').onclick = loadProducts;
   }
 }
 loadProducts();

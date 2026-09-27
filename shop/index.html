@@ -216,6 +216,7 @@ footer a{color:var(--brand);}
 .nutri-row.bold{font-weight:700;}
 .nutri-row .dv{font-weight:700;}
 </style>
+<script src="/assets/product-images.js"></script>
 </head>
 <body>
 
@@ -318,6 +319,7 @@ footer a{color:var(--brand);}
   </div>
 </div>
 
+<div id="catalogStatus" role="status" style="padding:20px 5%;">正在加载商品… Loading products…</div>
 <div class="shop-body" id="shopBody">
   <div class="products-col" id="productsCol"></div>
   <div class="cart-col">
@@ -585,7 +587,16 @@ function goFeatured(){
   if(el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
+function setCatalogReady(ready){
+  document.getElementById('searchBox').disabled = !ready;
+  document.querySelectorAll('.cat-tab').forEach(function(b){ b.disabled = !ready; });
+}
+
 async function boot(){
+  setCatalogReady(false);
+  var status = document.getElementById('catalogStatus');
+  status.style.display = 'block';
+  status.textContent = '正在加载商品… Loading products…';
   if(new URLSearchParams(location.search).get('order')==='success'){
     var hdr = document.querySelector('.page-header');
     hdr.style.background = 'var(--brand-dark)';
@@ -599,18 +610,24 @@ async function boot(){
 
   // 从 Supabase（经 get-catalog 函数）拉取门店商品目录
   // 不传 store 参数时，服务端自动按域名识别门店，无需 stores/index.json
-  var storeParam = forced ? '?store='+forced : '';
+  var storeParam = forced ? '?store='+encodeURIComponent(forced) : '';
   var data = await tryFetch('/.netlify/functions/get-catalog'+storeParam);
-  if(data && data.store && data.products){
+  if(data && !data.error && data.store && Array.isArray(data.products)){
     store   = data.store;
     if(data.globalPromo) window._globalPromo = data.globalPromo;
     catalog = { currency:'USD', categories: data.categories, products: data.products };
   } else {
-    catalog = FALLBACK_CATALOG;
-    store   = FALLBACK_STORES[storeId] || FALLBACK_STORES['default'];
-    isDemo  = true;
+    // An unavailable backend must not turn into a purchasable demo catalog.
+    catalog = null;
+    store = null;
+    status.innerHTML = '商品暂时无法加载，请稍后重试。 Products are temporarily unavailable. '
+      + '<button type="button" id="retryCatalog">重试 Retry</button>';
+    document.getElementById('retryCatalog').onclick = boot;
+    return;
   }
 
+  status.style.display = 'none';
+  setCatalogReady(true);
   applyStore();
   loadPromo();
   renderProducts();
@@ -751,6 +768,7 @@ function renderHours(){
 }
 
 function setCat(cat){
+  if(!catalog) return;
   activeCat = (activeCat===cat) ? null : cat;
   document.querySelectorAll('.cat-tab').forEach(function(b){
     b.classList.toggle('active', b.dataset.cat===activeCat);
@@ -825,6 +843,7 @@ document.addEventListener('click', function(e){
 });
 
 function onSearch(q){
+  if(!catalog) return;
   q = q.trim().toLowerCase();
   var label   = document.getElementById('searchLabel');
   var catSec  = document.querySelector('.cat-tabs-section');
@@ -873,7 +892,7 @@ function esc(s){ return String(s==null?'':s).replace(/"/g,'&quot;'); }
 
 function imgTag(p, cls){
   return p.image_url
-    ? '<img class="'+cls+'" src="'+esc(p.image_url)+'" alt="'+esc(p.name_en)+'" loading="lazy" data-detail="'+esc(p.sku)+'">'
+    ? '<img class="'+cls+'" src="'+esc(productImageUrl(p.image_url,160))+'" width="72" height="72" decoding="async" alt="'+esc(p.name_en)+'" loading="lazy" data-detail="'+esc(p.sku)+'">'
     : '<div class="prod-img-placeholder" data-detail="'+esc(p.sku)+'">🛍</div>';
 }
 
@@ -965,11 +984,11 @@ function biSec(title, zh, en){
 function renderDetail(p){
   var imgs = detailImages(p);
   var hero = imgs.length
-    ? '<img class="detail-hero" id="detailHero" src="'+esc(imgs[0])+'" alt="'+esc(p.name_en)+'">'
+    ? '<img class="detail-hero" id="detailHero" src="'+esc(productImageUrl(imgs[0],960))+'" decoding="async" alt="'+esc(p.name_en)+'">'
     : '<div class="detail-hero-ph">🛍</div>';
   var thumbs = imgs.length>1
     ? '<div class="detail-thumbs">'+imgs.map(function(u,i){
-        return '<img class="detail-thumb'+(i===0?' active':'')+'" src="'+esc(u)+'" data-swap="'+esc(u)+'">';
+        return '<img class="detail-thumb'+(i===0?' active':'')+'" src="'+esc(productImageUrl(u,160))+'" loading="lazy" decoding="async" data-swap="'+esc(u)+'">';
       }).join('')+'</div>'
     : '';
   var html =
@@ -1047,7 +1066,7 @@ document.addEventListener('click', function(e){
   var s = e.target.closest('[data-share]');  if(s){ shareProduct(s.getAttribute('data-share')); return; }
   var sw = e.target.closest('[data-swap]');
   if(sw){
-    var hero = document.getElementById('detailHero'); if(hero) hero.src = sw.getAttribute('data-swap');
+    var hero = document.getElementById('detailHero'); if(hero) hero.src = productImageUrl(sw.getAttribute('data-swap'),960);
     document.querySelectorAll('.detail-thumb').forEach(function(t){ t.classList.remove('active'); });
     sw.classList.add('active'); return;
   }
@@ -1192,6 +1211,7 @@ function updateCart(){
 }
 
 function collectCart(kind){
+  if(!catalog || !store) return [];
   // kind: 'one_time' 或 'subscription'
   var cart = [];
   catalog.products.forEach(function(p){
@@ -1248,6 +1268,7 @@ document.addEventListener('keydown', function(e){
 });
 
 function submitCheckout(cart, purchaseType, btnId, restoreLabel){
+  if(!catalog || !store) return;
   var btn = document.getElementById(btnId);
   btn.disabled=true; btn.textContent='跳转中 Redirecting…';
   fetch(CHECKOUT_URL, {
