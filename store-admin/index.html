@@ -1504,6 +1504,16 @@ function rsFiltered(){
   });
 }
 
+function sidAttr(value){
+  return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+function rsSyncQuantities(){
+  document.querySelectorAll('#rsList [data-restock-sku]').forEach(row=>{
+    const input = row.querySelector('.qty-box input');
+    if(input) input.value = (rsCart[row.dataset.restockSupplier] || {})[row.dataset.restockSku] || 0;
+  });
+  rsUpdateCount();
+}
 function rsRow(i){
   const sup   = rsDistributors.find(s=>s.distributor_id===i.distributor_id);
   const cases = (rsCart[i.distributor_id]||{})[i.sku] || 0;
@@ -1512,7 +1522,7 @@ function rsRow(i){
               : i.stock_status==='low' ? '<span class="badge" style="background:#fff4e0;color:#b57500;">少量</span>' : '';
   const img = i.image_url ? productImgHtml(i.image_url,160,'class="prod-img"') : '<div class="prod-img-ph">📦</div>';
   return `
-  <div class="prod-row ${out?'oos':''}">
+  <div class="prod-row ${out?'oos':''}" data-restock-supplier="${sidAttr(i.distributor_id)}" data-restock-sku="${sidAttr(i.sku)}">
     ${img}
     <div class="prod-info">
       <div class="zh">${i.name_zh} ${stock} ${!i.on_shelf?'<span class="badge">未上架</span>':''}</div>
@@ -1553,13 +1563,13 @@ function rsSet(sid, sku, val){
   rsCart[sid] = rsCart[sid] || {};
   if(n>0) rsCart[sid][sku] = n; else delete rsCart[sid][sku];
   if(!Object.keys(rsCart[sid]).length) delete rsCart[sid];
-  renderRestock();
+  rsSyncQuantities();
 }
 function rsAdd(sid, sku, d){
   const cur = (rsCart[sid]||{})[sku] || 0;
   rsSet(sid, sku, cur + d);
 }
-function rsClearCart(){ rsCart = {}; renderRestock(); rsRenderCart(); }
+function rsClearCart(){ rsCart = {}; rsSyncQuantities(); rsRenderCart(); }
 
 function rsCartLines(){
   const out = [];
@@ -1772,3 +1782,4 @@ function rsSub(v){
 </script>
 </body>
 </html>
+
