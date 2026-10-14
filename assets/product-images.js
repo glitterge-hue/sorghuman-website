@@ -8,6 +8,8 @@
  */
 (function (root) {
   'use strict';
+  // Failed addresses stay failed across list redraws for this page load.
+  var failedImages = new Set();
   var photoHost = 'uvvdyqmuxiupgyerxbep.supabase.co';
   root.productImageUrl = function (source, width) {
     if (!source) return '';
@@ -33,7 +35,11 @@
     img.removeAttribute('onerror');
     var orig = img.getAttribute('data-orig');
     img.removeAttribute('data-orig');
-    if (orig && img.src !== orig && img.getAttribute('src') !== orig) {
+    var src = img.getAttribute('src');
+    if (src) failedImages.add(src);
+    if (orig && img.src !== orig && src !== orig && !failedImages.has(orig)) {
+      // Reserve the fallback before setting src; other image nodes must not retry it.
+      failedImages.add(orig);
       img.src = orig;
     } else {
       img.style.visibility = 'hidden';
@@ -44,6 +50,7 @@
   root.productImgHtml = function (source, width, extraAttrs) {
     if (!source) return '';
     var src = root.productImageUrl(source, width);
+    if (failedImages.has(src)) return '<span ' + (extraAttrs || '') + ' aria-label="Image unavailable"></span>';
     return '<img ' + (extraAttrs || '') + ' src="' + escAttr(src) + '"' +
       (src !== source ? ' data-orig="' + escAttr(source) + '"' : '') +
       ' loading="lazy" decoding="async" onerror="productImgFallback(this)">';
@@ -84,3 +91,4 @@
     });
   };
 })(typeof window !== 'undefined' ? window : globalThis);
+
