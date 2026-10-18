@@ -48,12 +48,17 @@ input[type=checkbox]{width:18px;height:18px;accent-color:#2A6B3A;cursor:pointer;
 .msg{font-size:13px;}
 /* 说明 */
 .info-box{background:#f0f7f2;border:1px solid #c0ddc8;border-radius:6px;padding:12px 16px;font-size:13px;color:#2A6B3A;margin:0 22px 16px;}
+.admin-home{display:inline-block;color:inherit;text-decoration:none;}
+.admin-home span{display:block;font-size:12px;font-weight:400;line-height:1.5;}
+.admin-home:hover span{text-decoration:underline;}
+.admin-home:focus-visible{outline:2px solid currentColor;outline-offset:4px;}
+.topbar h1{flex-shrink:0;}
 </style>
 </head>
 <body>
 
 <div class="topbar">
-  <h1>🌾 Sorghuman Admin</h1>
+  <h1><a class="admin-home" href="/">🌾 Sorghuman Admin<span>← 返回官网 · Home</span></a></h1>
   <nav>
     <a href="products.html">商品管理</a>
     <a href="stores.html">门店管理</a>
