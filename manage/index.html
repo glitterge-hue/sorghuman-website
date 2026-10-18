@@ -117,7 +117,14 @@ window.addEventListener('load', async () => {
 
   // 4) 已登录直接进产品页
   const { data: { session } } = await sb.auth.getSession();
-  if (session) location.href = 'products.html';
+  if (session) {
+    if ((await sb.rpc('is_admin')).data) { location.href = 'products.html'; return; }
+    await sb.auth.signOut();
+  }
+  if (query.get('denied')) {
+    showMsg(loginMsg, '该账号没有后台权限，请联系管理员授权。', 'err');
+    history.replaceState(null, '', location.pathname);
+  }
 });
 
 async function login() {
@@ -129,6 +136,11 @@ async function login() {
   btn.disabled = true; btn.textContent = '登录中…';
   const { error } = await sb.auth.signInWithPassword({ email, password: pwd });
   if (error) { showMsg(msg, error.message, 'err'); btn.disabled=false; btn.textContent='登录 Sign In'; }
+  else if (!(await sb.rpc('is_admin')).data) {
+    await sb.auth.signOut();
+    showMsg(msg, '该账号没有后台权限，请联系管理员授权。', 'err');
+    btn.disabled=false; btn.textContent='登录 Sign In';
+  }
   else location.href = 'products.html';
 }
 
