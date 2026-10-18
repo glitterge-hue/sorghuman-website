@@ -8,6 +8,7 @@
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
+const { inheritMissingImages } = require('./_lib/product-images');
 
 async function sb(table, qs) {
   const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${qs}`, {
@@ -76,6 +77,8 @@ exports.handler = async (event) => {
     const row = rows[0];
     const p   = row && row.products;
     if (!p) return fallback();
+    const [withImage] = await inheritMissingImages([{ ...p, sku }], qs => sb('products', qs));
+    p.image_url = withImage.image_url;
 
     const price = row.price != null
       ? parseFloat(row.price)

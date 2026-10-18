@@ -126,3 +126,49 @@ test('list, gallery thumbnails and switched hero use appropriate image sizes', (
   assert.match(hero.src, /w=960/);
   assert.equal(new URL(hero.src, 'https://sorghuman.com').searchParams.get('url'), p.gallery[1]);
 });
+
+test('retail images inherit only from exact case SKU and preserve retail data', async () => {
+  const { inheritMissingImages } = require('../netlify/functions/_lib/product-images');
+  const products = [
+    { sku: '4650-single', image_url: null, base_price: 2.50 },
+    { sku: 'other-single', image_url: 'own.jpg' },
+    { sku: '4650-random', image_url: null },
+    { image_url: null }
+  ];
+  let calls = 0;
+  const result = await inheritMissingImages(products, async qs => {
+    calls++;
+    assert.equal(decodeURIComponent(qs), 'sku=in.("4650")&select=sku,image_url');
+    return [{ sku: '4650', image_url: photo }];
+  });
+  assert.equal(calls, 1);
+  assert.equal(result[0].image_url, photo);
+  assert.equal(result[0].base_price, 2.50);
+  assert.equal(result[1].image_url, 'own.jpg');
+  assert.equal(result[2], products[2]);
+  assert.equal(result[3], products[3]);
+  assert.equal(products[0].image_url, null);
+  await inheritMissingImages([products[1]], () => assert.fail('unnecessary lookup'));
+});
+
+test('detail purchase controls add one unit and synchronize cart quantity', () => {
+  const { context: c, elements } = page('shop/index.html', 'var CHECKOUT_URL', 'boot');
+  const p = { sku: '4650-single', name_en: 'Rice shaomai', name_zh: '糯米烧卖', price: 2.50 };
+  c.catalog = { products: [p] };
+  c.store = {};
+  let updates = 0;
+  c.updateCart = () => updates++;
+  c.renderDetail(p);
+  assert.match(elements.get('detailBuy').innerHTML, /data-add-cart="4650-single"/);
+  assert.match(elements.get('detailBuy').innerHTML, /data-cart-checkout="4650-single"/);
+  c.zipConfirmed = true;
+  c.addDetailToCart(p.sku);
+  assert.equal(c.qty[p.sku], 1);
+  assert.equal(elements.get('dq-' + p.sku).textContent, 1);
+  assert.equal(c.zipConfirmed, false);
+  c.addDetailToCart(p.sku);
+  assert.equal(c.qty[p.sku], 2);
+  assert.equal(updates, 2);
+  c.addDetailToCart('missing');
+  assert.equal(updates, 2);
+});

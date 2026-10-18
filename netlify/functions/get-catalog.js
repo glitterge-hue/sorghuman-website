@@ -3,6 +3,7 @@
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
+const { inheritMissingImages } = require('./_lib/product-images');
 
 const CORS = {
   'Access-Control-Allow-Origin' : '*',
@@ -75,7 +76,7 @@ exports.handler = async (event) => {
     const markup = parseFloat(store.markup) || 1.0;
 
     // 合并商品信息和门店价格
-    const storeProducts = spRows
+    let storeProducts = spRows
       .filter(sp => sp.products)
       .map(sp => ({
         sku       : sp.sku,
@@ -111,6 +112,7 @@ exports.handler = async (event) => {
           : null,
       }));
 
+    storeProducts = await inheritMissingImages(storeProducts, qs => sb('products', qs));
     const globalPromo = settingsRows[0]?.value || null;
 
     return {
