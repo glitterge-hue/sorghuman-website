@@ -105,11 +105,6 @@ footer #footStore:hover{color:var(--brand);}
 .search-section input{width:100%;max-width:560px;display:block;margin:0 auto;border:1.5px solid var(--border);border-radius:24px;padding:10px 20px;font-size:14px;font-family:inherit;outline:none;background:#faf9f7;}
 .search-section input:focus{border-color:var(--brand);}
 .search-label{text-align:center;font-size:13px;color:var(--muted);padding:8px 0 4px;}
-.cat-tabs-section{background:#fff;border-bottom:1px solid var(--border);padding:16px 5%;}
-.cat-tabs{max-width:920px;margin:0 auto;display:flex;gap:10px;flex-wrap:wrap;}
-.cat-tab{padding:9px 18px;border:1.5px solid var(--brand);border-radius:30px;font-size:13px;font-weight:500;cursor:pointer;background:#fff;color:var(--brand);font-family:inherit;transition:background .15s,color .15s;white-space:nowrap;}
-.cat-tab.nonfood{border-color:var(--gold);color:var(--gold);}
-.cat-tab.nonfood:hover,.cat-tab.nonfood.active{background:var(--gold);color:#fff;}
 /* 一次性 / 订阅 切换（Purchase-type toggle：仅支持订阅的商品显示）*/
 .ptype-toggle{display:flex;gap:6px;margin:6px 0;flex-wrap:wrap;}
 .ptype-btn{border:1.5px solid var(--border);background:#fff;color:var(--muted);font-family:inherit;font-size:11.5px;font-weight:500;padding:4px 10px;border-radius:14px;cursor:pointer;white-space:nowrap;transition:border-color .15s,color .15s,background .15s;}
@@ -120,17 +115,19 @@ footer #footStore:hover{color:var(--brand);}
 .case-btn.active{border-color:var(--brand);background:var(--brand);color:#fff;}
 .cart-sub-heading{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin:14px 0 6px;padding-top:12px;border-top:1px dashed var(--border);}
 .cart-sub-heading:first-child{border-top:none;padding-top:0;margin-top:0;}
-.cat-tab:hover,.cat-tab.active{background:var(--brand);color:#fff;}
 /* 品类卡片：电脑端三个一行，手机两个一行，等高对齐 */
 .cat-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;padding:4px 0;}
 @media(max-width:820px){.cat-cards{grid-template-columns:repeat(2,1fr);}}
-.cat-card{background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:22px 12px 18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s,color .15s;min-height:124px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.cat-card{font-family:inherit;color:var(--dark);width:100%;background:#fff;border:1.5px solid var(--border);border-radius:8px;padding:22px 12px 18px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s,color .15s;min-height:124px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
 .cat-card:hover{border-color:var(--brand);background:var(--brand);color:#fff;}
 .cat-card:hover .cat-card-en{color:rgba(255,255,255,.72);}
 .cat-card-icon{font-size:30px;margin-bottom:8px;}
 .cat-card-zh{font-size:14px;font-weight:600;}
 .cat-card-en{font-size:11px;color:var(--muted);margin-top:3px;}
-.cat-back{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--brand);cursor:pointer;margin-bottom:14px;font-weight:500;}
+.cat-count{font-size:11px;color:var(--muted);margin-top:8px;}
+.cat-card:focus-visible{outline:3px solid var(--brand);outline-offset:3px;}
+.cat-card:hover .cat-count{color:#fff;}
+.cat-back{border:0;background:none;font-family:inherit;display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--brand);cursor:pointer;margin-bottom:14px;font-weight:500;}
 .cat-back:hover{text-decoration:underline;}
 .empty-cat{padding:48px 0;text-align:center;color:var(--muted);font-size:14px;line-height:2.2;}
 /* 商品区 */
@@ -307,21 +304,6 @@ footer a{color:var(--brand);}
   <input id="searchBox" type="search" placeholder="🔍 搜索商品 Search products…" oninput="onSearch(this.value)" autocomplete="off">
   <div id="searchLabel" class="search-label" style="display:none;"></div>
 </div>
-<div class="cat-tabs-section">
-  <div class="cat-tabs" id="catTabs">
-    <button class="cat-tab" data-cat="frozen"     onclick="setCat('frozen')">冷冻食品 Frozen</button>
-    <button class="cat-tab" data-cat="grains"     onclick="setCat('grains')">米面粮油 Pantry</button>
-    <button class="cat-tab" data-cat="condiments" onclick="setCat('condiments')">调味品 Condiments</button>
-    <button class="cat-tab" data-cat="snacks"     onclick="setCat('snacks')">零食 Snacks</button>
-    <button class="cat-tab" data-cat="beverages"  onclick="setCat('beverages')">饮料 Beverages</button>
-    <button class="cat-tab" data-cat="fresh"      onclick="setCat('fresh')">生鲜 Fresh</button>
-    <button class="cat-tab" data-cat="grocery"    onclick="setCat('grocery')">百货 Grocery</button>
-    <button class="cat-tab nonfood" data-cat="mealbox" onclick="setCat('mealbox')">🍱 一次性餐盒 Meal Boxes</button>
-    <button class="cat-tab nonfood" data-cat="film"    onclick="setCat('film')">🧻 包装膜 Film</button>
-    <button class="cat-tab nonfood" data-cat="tape"    onclick="setCat('tape')">📦 打包耗材 Tape &amp; Supplies</button>
-  </div>
-</div>
-
 <div id="catalogStatus" role="status" style="padding:20px 5%;">正在加载商品… Loading products…</div>
 <div class="shop-body" id="shopBody">
   <div class="products-col" id="productsCol"></div>
@@ -447,11 +429,16 @@ var CAT_INFO = [
   {cat:'snacks',     icon:'🍿', zh:'零食',     en:'Snacks'},
   {cat:'beverages',  icon:'🧃', zh:'饮料',     en:'Beverages'},
   {cat:'fresh',      icon:'🥬', zh:'生鲜',     en:'Fresh Produce'},
-  {cat:'grocery',    icon:'🛒', zh:'百货',     en:'Grocery'},
+  {cat:'grocery',    icon:'🛒', zh:'食品杂货', en:'Grocery'},
+  {cat:'dry_food', icon:'🍄', zh:'干货', en:'Dried Foods'},
+  {cat:'food_contact', icon:'🥡', zh:'餐饮用品', en:'Food Service Supplies'},
+  {cat:'non_food', icon:'🧹', zh:'日用百货', en:'Household Goods'},
+  {cat:'supplies', icon:'📦', zh:'餐厅耗材', en:'Restaurant Supplies'},
   // 非食品 · 餐厅耗材（可订阅按月配送）
   {cat:'mealbox',    icon:'🍱', zh:'一次性餐盒', en:'Meal Boxes'},
   {cat:'film',       icon:'🧻', zh:'包装膜',     en:'Packaging Film'},
-  {cat:'tape',       icon:'📦', zh:'打包胶带辅料', en:'Tape & Supplies'}
+  {cat:'tape',       icon:'📦', zh:'打包胶带辅料', en:'Tape & Supplies'},
+  {cat:'other', icon:'🛍', zh:'其他商品', en:'Other Products'}
 ];
 
 var catalog = null, store = null, qty = {}, isDemo = false;
@@ -587,13 +574,13 @@ async function loadPromo(){
 
 function goFeatured(){
   setCat('featured');
-  var el = document.querySelector('.cat-tab[data-cat="featured"]');
+  var el = document.getElementById('productsCol');
   if(el) el.scrollIntoView({ behavior:'smooth', block:'nearest' });
 }
 
 function setCatalogReady(ready){
   document.getElementById('searchBox').disabled = !ready;
-  document.querySelectorAll('.cat-tab').forEach(function(b){ b.disabled = !ready; });
+  document.querySelectorAll('.cat-card').forEach(function(b){ b.disabled = !ready; });
 }
 
 async function boot(){
@@ -774,9 +761,8 @@ function renderHours(){
 function setCat(cat){
   if(!catalog) return;
   activeCat = (activeCat===cat) ? null : cat;
-  document.querySelectorAll('.cat-tab').forEach(function(b){
-    b.classList.toggle('active', b.dataset.cat===activeCat);
-  });
+  document.getElementById('searchBox').value = '';
+  document.getElementById('searchLabel').style.display = 'none';
   renderProducts();
 }
 
@@ -848,13 +834,10 @@ function onSearch(q){
   if(!catalog) return;
   q = q.trim().toLowerCase();
   var label   = document.getElementById('searchLabel');
-  var catSec  = document.querySelector('.cat-tabs-section');
   if(q){
-    catSec.style.display = 'none';
     label.style.display  = 'block';
     renderSearch(q);
   } else {
-    catSec.style.display = '';
     label.style.display  = 'none';
     renderProducts();
   }
@@ -869,7 +852,7 @@ function fuzzyMatch(text, q){
   }
 
   function renderSearch(q){
-  var matches = (catalog ? catalog.products : []).filter(function(p){
+  var matches = (catalog ? catalog.products : []).filter(carries).filter(function(p){
     var haystack = (p.name_zh + ' ' + p.name_en + ' ' + p.sku).toLowerCase();
     return fuzzyMatch(haystack, q);
   });
@@ -1106,39 +1089,66 @@ document.addEventListener('click', function(e){
 });
 document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeDetail(); });
 
+// Normalize known legacy values without changing ERP or stored product data.
+function categoryOf(p){
+  var raw = String(p.category || '').trim();
+  var aliases = {frozen_food:'frozen', rice:'grains', '大米':'grains', '食品杂货':'grocery'};
+  var cat = aliases[raw] || raw;
+  return CAT_INFO.some(function(c){ return c.cat===cat && c.cat!=='featured'; }) ? cat : 'other';
+}
+function categoryCards(){
+  var products = catalog ? catalog.products.filter(carries) : [];
+  var counts = {all:products.length, featured:0};
+  products.forEach(function(p){
+    var cat = categoryOf(p);
+    counts[cat] = (counts[cat]||0)+1;
+    if(p.featured) counts.featured++;
+  });
+  return [{cat:'all',icon:'🛍',zh:'全部商品',en:'All Products'}].concat(CAT_INFO)
+    .filter(function(c){ return counts[c.cat]>0; })
+    .map(function(c){ return Object.assign({},c,{count:counts[c.cat]}); });
+}
 function renderProducts(){
   var col = document.getElementById('productsCol');
   col.innerHTML = '';
   col.classList.remove('cat-cards');
-
   if(!activeCat){
-    col.classList.add('cat-cards');   // 只有品类卡片页才用网格布局
-    CAT_INFO.forEach(function(c){
-      var card = document.createElement('div');
+    col.classList.add('cat-cards');
+    categoryCards().forEach(function(c){
+      var card = document.createElement('button');
+      card.type = 'button';
       card.className = 'cat-card';
+      card.setAttribute('data-cat', c.cat);
       card.onclick = function(){ setCat(c.cat); };
-      card.innerHTML = '<div class="cat-card-icon">'+c.icon+'</div>' +
-                       '<div class="cat-card-zh">'+c.zh+'</div>' +
-                       '<div class="cat-card-en">'+c.en+'</div>';
+      [['cat-card-icon',c.icon],['cat-card-zh',c.zh],['cat-card-en',c.en],
+       ['cat-count',c.count+' 件商品 · '+c.count+' items']].forEach(function(part){
+        var span = document.createElement('span');
+        span.className = part[0]; span.textContent = part[1]; card.appendChild(span);
+      });
       col.appendChild(card);
     });
+    if(!categoryCards().length){
+      var empty = document.createElement('div');
+      empty.className = 'empty-cat'; empty.textContent = '商品即将上架 · Coming Soon';
+      col.appendChild(empty);
+    }
     return;
   }
-
-  var back = document.createElement('div');
+  var back = document.createElement('button');
+  back.type = 'button';
   back.className = 'cat-back';
-  back.textContent = '\u2190 所有品类 All Categories';
-  back.onclick = function(){
-    activeCat = null;
-    document.querySelectorAll('.cat-tab').forEach(function(b){ b.classList.remove('active'); });
-    renderProducts();
-  };
+  back.textContent = '← 所有品类 All Categories';
+  back.onclick = function(){ activeCat = null; renderProducts(); };
   col.appendChild(back);
-
+  var heading = document.createElement('h2');
+  var selected = categoryCards().find(function(c){ return c.cat===activeCat; });
+  heading.style.fontSize = '18px';
+  heading.textContent = selected ? selected.zh+' · '+selected.en+' ('+selected.count+')' : '商品 Products';
+  col.appendChild(heading);
   var count = 0;
   catalog.products.forEach(function(p){
     if(!carries(p)) return;
-    if(activeCat === 'featured' ? !p.featured : p.category !== activeCat) return;
+    if(activeCat !== 'all' && (activeCat === 'featured' ? !p.featured : categoryOf(p) !== activeCat)) return;
     count++;
     var row = document.createElement('div');
     row.className = 'product-row';

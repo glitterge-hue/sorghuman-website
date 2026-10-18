@@ -24,7 +24,7 @@ function page(file, marker, start) {
     document: {
       addEventListener(type, fn) { listeners.push({ type, fn }); },
       getElementById(id) { if (!elements.has(id)) elements.set(id, element()); return elements.get(id); },
-      querySelectorAll(selector) { return selector === '.cat-tab' ? tabs : []; },
+      querySelectorAll(selector) { return selector === '.cat-card' ? tabs : []; },
       querySelector() { return element(); }, createElement: element,
       documentElement: { style: { setProperty() {} } }
     }
@@ -171,4 +171,47 @@ test('detail purchase controls add one unit and synchronize cart quantity', () =
   assert.equal(updates, 2);
   c.addDetailToCart('missing');
   assert.equal(updates, 2);
+});
+
+
+test('card categories cover legacy, missing and future category values without empty categories', () => {
+  const { context: c } = page('shop/index.html', 'var CHECKOUT_URL', 'boot');
+  c.store = { drop:['hidden'] };
+  c.catalog = {products:[
+    {sku:'A',category:'frozen_food',common:true,featured:true},
+    {sku:'B',category:'frozen',common:true},
+    {sku:'C',category:'rice',common:true},
+    {sku:'D',category:'大米',common:true},
+    {sku:'E',category:'食品杂货',common:true},
+    {sku:'F',category:null,common:true},
+    {sku:'G',category:'new-category',common:true},
+    {sku:'H',category:'food_contact',common:true},
+    {sku:'hidden',category:'snacks',common:true},
+    {sku:'unlisted',category:'beverages',common:false}
+  ]};
+  const cards = c.categoryCards();
+  const count = key => cards.find(x => x.cat===key)?.count;
+  assert.equal(count('all'),8);
+  assert.equal(count('frozen'),2);
+  assert.equal(count('grains'),2);
+  assert.equal(count('grocery'),1);
+  assert.equal(count('other'),2);
+  assert.equal(count('food_contact'),1);
+  assert.equal(count('featured'),1);
+  assert.equal(count('snacks'),undefined);
+  assert.equal(count('beverages'),undefined);
+  assert.equal(cards.filter(x=>!['featured','all'].includes(x.cat)).reduce((n,x)=>n+x.count,0),8);
+  c.setCat('frozen');
+  assert.equal(c.activeCat,'frozen');
+  c.onSearch('rice');
+  c.onSearch('');
+  c.setCat('all');
+  assert.equal(c.activeCat,'all');
+});
+
+test('shop has one card navigation and responsive desktop/mobile grids', () => {
+  const html = fs.readFileSync(path.join(root,'shop/index.html'),'utf8');
+  assert.doesNotMatch(html,/cat-tab/);
+  assert.match(html,/grid-template-columns:repeat\(3,1fr\)/);
+  assert.match(html,/@media\(max-width:820px\)\{\.cat-cards\{grid-template-columns:repeat\(2,1fr\)/);
 });
