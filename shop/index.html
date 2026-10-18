@@ -184,12 +184,15 @@ footer a{color:var(--brand);}
 /* 详情浮层 */
 .detail-mask{position:fixed;inset:0;z-index:200;background:rgba(20,20,18,.55);opacity:0;pointer-events:none;transition:opacity .2s;}
 .detail-mask.open{opacity:1;pointer-events:auto;}
-.detail-sheet{position:fixed;z-index:201;right:0;top:0;bottom:0;width:min(480px,100%);background:#fff;transform:translateX(100%);transition:transform .25s ease;overflow-y:auto;-webkit-overflow-scrolling:touch;box-shadow:-8px 0 40px rgba(0,0,0,.18);}
+.detail-sheet{position:fixed;z-index:201;right:0;top:0;bottom:0;width:min(480px,100%);background:#fff;transform:translateX(100%);transition:transform .25s ease;display:flex;flex-direction:column;overflow:hidden;box-shadow:-8px 0 40px rgba(0,0,0,.18);}
 .detail-sheet.open{transform:translateX(0);}
 .detail-close{position:sticky;top:0;z-index:3;display:flex;justify-content:flex-end;background:linear-gradient(#fff,rgba(255,255,255,.85));padding:10px 14px 4px;}
 .detail-close button{width:34px;height:34px;border:none;background:rgba(0,0,0,.06);border-radius:50%;font-size:20px;line-height:1;cursor:pointer;color:var(--dark);}
 .detail-close button:hover{background:rgba(0,0,0,.12);}
-.detail-body{padding:0 22px 40px;}
+.detail-body{padding:0 22px 24px;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.detail-buy{flex-shrink:0;padding:12px 22px calc(12px + env(safe-area-inset-bottom));border-top:1px solid var(--border);background:#fff;display:flex;gap:10px;}
+.detail-buy button{flex:1;min-height:46px;border-radius:8px;border:1px solid var(--brand);background:#fff;color:var(--brand);font:inherit;font-size:13px;cursor:pointer;}
+.detail-buy button:first-child{background:var(--brand);color:#fff;}
 .detail-hero{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:10px;background:#f5f5f0;display:block;}
 .detail-hero-ph{width:100%;aspect-ratio:4/3;border-radius:10px;background:#f0f0ea;display:flex;align-items:center;justify-content:center;font-size:60px;}
 .detail-thumbs{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
@@ -368,6 +371,7 @@ footer a{color:var(--brand);}
 <aside class="detail-sheet" id="detailSheet" aria-hidden="true">
   <div class="detail-close"><button type="button" id="detailCloseBtn" aria-label="Close">&times;</button></div>
   <div class="detail-body" id="detailBody"></div>
+  <div class="detail-buy" id="detailBuy"></div>
 </aside>
 
 <footer>
@@ -811,10 +815,9 @@ function subDiscountPct(p){
 }
 function setCaseMode(sku, mode){
   caseMode[sku] = mode;
-  var row = document.querySelector('[data-case-row="'+sku+'"]');
-  if(row){
+  document.querySelectorAll('[data-case-row="'+sku+'"]').forEach(function(row){
     row.querySelectorAll('.case-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.mode===mode); });
-  }
+  });
   var priceEls = document.querySelectorAll('[data-price-for="'+sku+'"]');
   var p = findProduct(sku);
   if(p) priceEls.forEach(function(el){ el.textContent = fmt(priceOf(p)); });
@@ -827,10 +830,9 @@ document.addEventListener('click', function(e){
 });
 function setPtype(sku, pt){
   ptype[sku] = pt;
-  var row = document.querySelector('[data-ptype-row="'+sku+'"]');
-  if(row){
+  document.querySelectorAll('[data-ptype-row="'+sku+'"]').forEach(function(row){
     row.querySelectorAll('.ptype-btn').forEach(function(b){ b.classList.toggle('active', b.dataset.pt===pt); });
-  }
+  });
   var priceEls = document.querySelectorAll('[data-price-for="'+sku+'"]');
   var p = findProduct(sku);
   if(p) priceEls.forEach(function(el){ el.textContent = fmt(priceOf(p)); });
@@ -1000,6 +1002,7 @@ function renderDetail(p){
     caseToggleHTML(p)+
     (p.subscription_enabled ? ptypeToggleHTML(p) : '')+
     '<div class="detail-actions">'+
+      '<span style="font-size:12px">购物车数量</span>'+
       '<div class="qty-control">'+
         '<button class="qty-btn" data-sku="'+esc(p.sku)+'" data-d="-1">\u2212</button>'+
         '<div class="qty-num" id="dq-'+esc(p.sku)+'">'+(qty[p.sku]||0)+'</div>'+
@@ -1012,7 +1015,36 @@ function renderDetail(p){
     biSec('配料表 · Ingredients', p.ingredients_zh, p.ingredients_en)+
     (p.nutrition ? '<div class="detail-sec"><div class="detail-sec-title">营养成分 · Nutrition</div>'+nutriPanel(p.nutrition)+'</div>' : '');
   document.getElementById('detailBody').innerHTML = html;
+  document.getElementById('detailBuy').innerHTML = '<button data-add-cart="'+esc(p.sku)+'">加入购物车 · Add to cart</button><button data-cart-checkout="'+esc(p.sku)+'">去结账 · Checkout</button>';
+  document.getElementById('detailBody').scrollTop = 0;
 }
+
+function addDetailToCart(sku){
+  if(!findProduct(sku)) return;
+  qty[sku] = (qty[sku]||0) + 1;
+  ['q-','dq-'].forEach(function(prefix){
+    var el = document.getElementById(prefix+sku);
+    if(el) el.textContent = qty[sku];
+  });
+  updateCart();
+  zipConfirmed = false;
+  document.getElementById('zipInline').style.display = 'none';
+  document.getElementById('zipCartMsg').style.display = 'none';
+}
+document.addEventListener('click', function(e){
+  var add = e.target.closest('[data-add-cart]');
+  if(add){ addDetailToCart(add.dataset.addCart); toast('已加入购物车 · Added to cart'); return; }
+  var checkout = e.target.closest('[data-cart-checkout]');
+  if(!checkout) return;
+  var sku = checkout.dataset.cartCheckout;
+  var p = findProduct(sku);
+  if(!p) return;
+  if(!qty[sku]) addDetailToCart(sku);
+  closeDetail();
+  var button = document.getElementById(p.subscription_enabled && ptype[sku]==='subscription' ? 'checkoutBtnSub' : 'checkoutBtn');
+  button.scrollIntoView({behavior:'smooth', block:'center'});
+  button.focus({preventScroll:true});
+});
 
 function openDetail(sku){
   var p = findProduct(sku);

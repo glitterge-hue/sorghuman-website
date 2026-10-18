@@ -6,6 +6,7 @@
 
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
+const { inheritMissingImages } = require('./_lib/product-images');
 
 const CORS = {
   'Access-Control-Allow-Origin' : '*',
@@ -43,7 +44,13 @@ exports.handler = async (event) => {
       const t = await res.text();
       throw new Error(`Supabase products: ${t}`);
     }
-    const products = await res.json();
+    const products = await inheritMissingImages(await res.json(), async qs => {
+      const images = await fetch(`${SUPA_URL}/rest/v1/products?${qs}`, {
+        headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` }
+      });
+      if (!images.ok) throw new Error('Product image lookup failed');
+      return images.json();
+    });
 
     return {
       statusCode: 200,
