@@ -75,6 +75,7 @@ async function init(){
   sb = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseKey);
   const { data:{ session } } = await sb.auth.getSession();
   if(!session){ location.href = 'index.html'; return; }
+  if (!(await sb.rpc('is_admin')).data) { await sb.auth.signOut(); location.href = 'index.html?denied=1'; return; }
   document.getElementById('userEmail').textContent = session.user.email + ' · 退出';
   load();
 }
