@@ -546,7 +546,7 @@ async function doLogin(){
 
   // 从 URL 参数读取（书签方式）
   const res = await api('GET_STORE_PRODUCTS', sid, tok);
-  if(res.error){ showErr('登录失败：'+res.error); return; }
+  if(res.error){ showErr('登录失败：'+res.error+'。请确认使用的是当前门店的访问令牌；平台账号密码不能用于此处。'); return; }
 
   storeId = sid; token = tok;
   storeInfo = res.store;
@@ -554,8 +554,12 @@ async function doLogin(){
   buildMySkuSet();
 
   // 保存到 sessionStorage
-  sessionStorage.setItem('storeId', sid);
-  sessionStorage.setItem('token', tok);
+  sessionStorage.setItem('storeAdmin:lastStore', sid);
+  sessionStorage.setItem('storeAdmin:token:' + sid, tok);
+  if(sessionStorage.getItem('storeId') === sid){
+    sessionStorage.removeItem('storeId');
+    sessionStorage.removeItem('token');
+  }
 
   document.getElementById('loginWrap').style.display = 'none';
   document.getElementById('mainWrap').style.display  = 'block';
@@ -565,7 +569,11 @@ async function doLogin(){
 }
 
 function doLogout(){
-  sessionStorage.clear();
+  sessionStorage.removeItem('storeAdmin:token:' + storeId);
+  if(sessionStorage.getItem('storeAdmin:lastStore') === storeId) sessionStorage.removeItem('storeAdmin:lastStore');
+  if(sessionStorage.getItem('storeId') === storeId){
+    sessionStorage.removeItem('storeId'); sessionStorage.removeItem('token');
+  }
   location.reload();
 }
 
@@ -574,8 +582,11 @@ function showErr(msg){ document.getElementById('loginErr').textContent = msg; }
 // 自动登录（域名识别 + URL 参数 + sessionStorage）
 window.addEventListener('load', async () => {
   const params = new URLSearchParams(location.search);
-  const tok = params.get('token') || sessionStorage.getItem('token');
-  if(params.has('token')) history.replaceState(null, '', location.pathname);
+  const urlToken = params.get('token');
+  if(params.has('token')){
+    params.delete('token');
+    history.replaceState(null, '', location.pathname + (params.toString() ? '?' + params.toString() : '') + location.hash);
+  }
 
   // 1. 从域名自动推断 store_id（查 Supabase stores 表，无需 stores/index.json）
   let autoStoreId = '';
@@ -588,7 +599,10 @@ window.addEventListener('load', async () => {
     autoStoreId = res.store_id || '';
   } catch(e){}
 
-  const sid = params.get('store') || sessionStorage.getItem('storeId') || autoStoreId;
+  const sid = params.get('store') || autoStoreId || sessionStorage.getItem('storeAdmin:lastStore') || sessionStorage.getItem('storeId');
+  // A saved token belongs only to its store. Legacy credentials migrate only as a matching pair.
+  const tok = urlToken || (sid && sessionStorage.getItem('storeAdmin:token:' + sid)) ||
+    (sid && sessionStorage.getItem('storeId') === sid ? sessionStorage.getItem('token') : null);
 
   if(autoStoreId && !params.get('store')){
     // 域名识别成功：隐藏 store_id 输入框，只显示 token
