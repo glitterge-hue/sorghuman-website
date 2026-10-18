@@ -72,7 +72,8 @@ exports.handler = async (event) => {
       return { statusCode: 404, headers: CORS,
                body: JSON.stringify({ error: `Store not found: ${storeId}` }) };
 
-    const store  = storeRows[0];
+    // 这是顾客端公开接口：门店后台令牌、配送员联系方式、定价上下限绝不能返回给浏览器
+    const { admin_token, drivers, price_min_ratio, price_max_ratio, ...store } = storeRows[0];
     const markup = parseFloat(store.markup) || 1.0;
 
     // 合并商品信息和门店价格
