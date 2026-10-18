@@ -143,6 +143,15 @@
   .contact-map { background: rgba(255,255,255,0.08); border-radius: 2px; padding: 2rem; border: 1px solid rgba(255,255,255,0.15); }
   .contact-map p { color: rgba(255,255,255,0.7); font-size: 14px; line-height: 1.9; }
 
+  .contact-map .profile-label{font-size:12px;letter-spacing:.08em;color:rgba(255,255,255,.65);margin-bottom:16px;}
+  .profile-title{font-family:'DM Serif Display',serif;font-size:25px;line-height:1.4;font-weight:400;margin-bottom:20px;}
+  .profile-title span{font-family:inherit;font-size:17px;}
+  .contact-map p + p{margin-top:16px;}
+  .profile-link{display:inline-block;color:#fff;margin-top:24px;text-underline-offset:4px;}
+  .supply-operations{border-top:1px solid var(--border);margin-top:24px;padding-top:18px;}
+  .supply-operations h4{font-size:13px;margin-bottom:10px;color:var(--dark);}
+  .supply-operations p{font-size:13px;line-height:1.8;margin-top:10px;}
+  .supply-operations span{color:var(--muted);font-size:12px;}
   /* FOOTER */
 
   footer { background: var(--dark); color: rgba(255,255,255,0.45); text-align: center; padding: 24px 5%; font-size: 13px; }
@@ -346,6 +355,11 @@
           <li><span class="flow-step">Wholesale</span><span class="flow-text"><span class="flow-en">Direct to Asian supermarkets, restaurants &amp; wholesalers</span><span class="flow-zh">直供亚洲超市 · 超市 / 餐厅 / 批发商采购</span></span></li>
           <li><span class="flow-step">Retail</span><span class="flow-text"><span class="flow-en">Order online &middot; home delivery</span><span class="flow-zh">网上商城下单 · 送货到家</span></span></li>
         </ul>
+        <div class="supply-operations">
+          <h4>Service &amp; distribution · 服务与配送</h4>
+          <p>New York · New Jersey · Pennsylvania · Connecticut · Massachusetts · Rhode Island<br><span>服务纽约、新泽西、宾夕法尼亚、康涅狄格、马萨诸塞及罗德岛</span></p>
+          <p>Cold storage &amp; distribution via Philly Cold Storage<br><span>通过 Philly Cold Storage 提供冷库仓储与配送支持</span></p>
+        </div>
         <div class="pillar-links">
           <a class="pillar-link solid gold lg" href="https://erp.sorghuman.com/" target="_blank" rel="noopener">Supply Chain Portal 供应链门户 &rarr;</a>
           <a class="pillar-link ghost" href="distributor-apply.html">Distributors 分销商入驻</a>
@@ -395,20 +409,24 @@
         </div>
         <div class="contact-detail">
           <div class="label">Company</div>
-          <div class="val">Sorghuman Holding LLC<br>Sorghuman Holding LLC &middot; 高仁控股国际有限公司</div>
+          <div class="val">Sorghuman Holding LLC<br>高仁控股国际有限公司</div>
         </div>
       </div>
       <div class="contact-map">
-        <p style="font-size:13px;color:rgba(255,255,255,0.5);margin-bottom:1rem;letter-spacing:0.08em;text-transform:uppercase;">Service area</p>
-        <p>&#128205; New York &middot; New Jersey<br>Pennsylvania &middot; Connecticut<br>Massachusetts &middot; Rhode Island<br><br>Cold storage &amp; distribution via Philly Cold Storage<br><br>Licensed importer &middot; FDA registered<br>CBP IOR certified</p>
+        <p class="profile-label">About Sorghuman · 公司简介</p>
+        <h3 class="profile-title">Connecting food, people &amp; opportunity<br><span>连接食品、客户与成长机会</span></h3>
+        <p>Sorghuman Holding LLC is a New York-registered company with two connected businesses: food supply chains and digital storefronts for traditional Asian supermarkets.</p>
+        <p>高仁控股国际有限公司注册于纽约，以食品供应链与数字化门店为两大业务方向。我们推广更安全、更健康的食品，也帮助传统亚洲超市开展线上业务，与客户共同成长。</p>
+        <a class="profile-link" href="#business">Explore our businesses · 了解我们的业务 &rarr;</a>
       </div>
     </div>
   </div>
 </section>
 
 <footer>
-  <p>&copy; 2026 Sorghuman Holding LLC &middot; Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &middot; <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
+  <p>&copy; 2026 Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &middot; <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
   <p style="margin-top:6px;"><a href="privacy.html">Privacy Policy</a> &middot; <a href="terms.html">Terms of Service</a></p>
+  <p style="margin-top:12px;"><a href="/manage/" style="display:inline-block;padding:10px 12px;color:inherit;">后台管理 · Admin Login</a></p>
 </footer>
 
 <script>

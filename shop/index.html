@@ -359,6 +359,7 @@ footer a{color:var(--brand);}
 <footer>
   <p><a id="footStore" href="https://sorghuman.com/">远东超市</a></p>
   <p id="footContact"></p>
+  <p><a id="footAdmin" href="https://sorghuman.com/store-admin/" style="display:inline-block;padding:10px 12px;color:inherit;">门店后台 · Store Admin</a></p>
   <p id="footLegal"><a href="/shop/privacy.html">Privacy Policy</a> &middot; <a href="/shop/terms.html">Terms of Service</a></p>
 </footer>
 
@@ -666,6 +667,9 @@ function applyStore(){
   document.getElementById('heroSub').textContent    = '选择品类，开始购物。 Browse by category.';
   document.getElementById('footStore').textContent  = store.name_zh + (store.name_en ? ' · '+store.name_en : '');
   document.getElementById('footStore').href = homeUrl;
+  var adminLink = document.getElementById('footAdmin');
+  adminLink.href = store.store_id === 'default' ? 'https://sorghuman.com/manage/' : 'https://sorghuman.com/store-admin/?store=' + encodeURIComponent(store.store_id);
+  adminLink.textContent = store.store_id === 'default' ? '后台管理 · Admin Login' : '门店后台 · Store Admin';
   var parts = [];
   if(store.contact_phone) parts.push(store.contact_phone);
   if(store.contact_email) parts.push('<a href="mailto:'+store.contact_email+'">'+store.contact_email+'</a>');
