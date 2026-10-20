@@ -215,3 +215,56 @@ test('shop has one card navigation and responsive desktop/mobile grids', () => {
   assert.match(html,/grid-template-columns:repeat\(3,1fr\)/);
   assert.match(html,/@media\(max-width:820px\)\{\.cat-cards\{grid-template-columns:repeat\(2,1fr\)/);
 });
+
+test('explicit store promotion opt-out hides a previously visible banner without global fallback', async () => {
+  const { context: c, elements } = page('shop/index.html', 'var CHECKOUT_URL', 'boot');
+  c._globalPromo = { active: true, title_zh: '父亲节' };
+  c.store = { promo: { active: true, title_zh: '门店活动' } };
+  await c.loadPromo();
+  assert.equal(elements.get('promoSection').style.display, 'block');
+  assert.equal(elements.get('promoTitleZh').textContent, '门店活动');
+  c.store.promo.active = false;
+  await c.loadPromo();
+  assert.equal(elements.get('promoSection').style.display, 'none');
+  assert.equal(elements.get('promoTitleZh').textContent, '门店活动');
+});
+
+test('only unconfigured stores inherit global promotions; empty configured campaigns stay hidden', async () => {
+  const { context: c, elements } = page('shop/index.html', 'var CHECKOUT_URL', 'boot');
+  c._globalPromo = { active: true, title_zh: '全局活动' };
+  for (const promo of [undefined, null, {}]) {
+    c.store = { promo };
+    await c.loadPromo();
+    assert.equal(elements.get('promoSection').style.display, 'block');
+    assert.equal(elements.get('promoTitleZh').textContent, '全局活动');
+  }
+  c.store.promo = { active: true, title_zh: '', title_en: '' };
+  await c.loadPromo();
+  assert.equal(elements.get('promoSection').style.display, 'none');
+  c.store.promo = null;
+  c._globalPromo.active = false;
+  await c.loadPromo();
+  assert.equal(elements.get('promoSection').style.display, 'none');
+});
+
+test('enabled store photo and video campaigns still override the global campaign', async () => {
+  const { context: c, elements } = page('shop/index.html', 'var CHECKOUT_URL', 'boot');
+  const promo = { active: true, title_zh: '本周特惠', image: 'recipe.jpg', video: 'https://youtu.be/example' };
+  c.store = { promo };
+  c._globalPromo = { active: true, title_zh: '全局活动' };
+  let rendered;
+  c.applyPromoPhoto = p => { rendered = p; };
+  await c.loadPromo();
+  assert.equal(rendered, promo);
+  assert.equal(elements.get('promoSection').style.display, 'block');
+});
+
+test('catalog reload clears a removed global promotion instead of retaining an old holiday', async () => {
+  const { context: c, elements } = page('shop/index.html', 'var CHECKOUT_URL', 'boot');
+  c._globalPromo = { active: true, title_zh: '父亲节' };
+  c.applyStore = c.renderProducts = () => {};
+  c.fetch = async () => ({ ok: true, json: async () => ({ store: { store_id: 'default' }, products: [], globalPromo: null }) });
+  await c.boot();
+  assert.equal(c._globalPromo, null);
+  assert.equal(elements.get('promoSection').style.display, 'none');
+});
