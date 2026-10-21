@@ -531,9 +531,12 @@ function scrollToShop(){
 }
 
 async function loadPromo(){
-  // 优先用门店自己的活动，没有则用全局活动
+  // 明确关闭门店活动时隐藏横幅；仅未设置门店开关时继承全局活动。
+  var sec = document.getElementById('promoSection');
+  sec.style.display = 'none';
   var sp = store && store.promo;
-  if(sp && sp.active && (sp.title_zh || sp.title_en)){
+  if(sp && typeof sp.active === 'boolean'){
+    if(!sp.active || (!sp.title_zh && !sp.title_en)) return;
     var sec = document.getElementById('promoSection');
     sec.style.display = 'block';
     if(sp.video || sp.image){ applyPromoPhoto(sp, sec); return; }   // 整屏视频 / 图片模式
@@ -606,7 +609,7 @@ async function boot(){
   var data = await tryFetch('/.netlify/functions/get-catalog'+storeParam);
   if(data && !data.error && data.store && Array.isArray(data.products)){
     store   = data.store;
-    if(data.globalPromo) window._globalPromo = data.globalPromo;
+    window._globalPromo = data.globalPromo || null;
     catalog = { currency:'USD', categories: data.categories, products: data.products };
   } else {
     // An unavailable backend must not turn into a purchasable demo catalog.
