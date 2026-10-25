@@ -128,6 +128,24 @@
   .client-item:hover { border-color: var(--green); background: #f0f7f2; }
   .client-item .state { font-size: 11px; color: var(--muted); font-weight: 400; margin-top: 2px; }
 
+  /* Olivenie brand feature */
+  .olivenie { background: #eef1e5; border-top: 1px solid #dce2cf; }
+  .olivenie-grid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 64px; align-items: center; }
+  .olivenie .section-label { color: #596b35; }
+  .olivenie h2 { color: #344922; }
+  .olivenie-tagline { font-size: clamp(20px, 2.6vw, 30px); color: #344922; margin-bottom: 20px; line-height: 1.5; }
+  .olivenie-copy { max-width: 600px; color: #525c46; font-size: 15px; margin-bottom: 14px; line-height: 1.85; }
+  .olivenie .hero-cta { margin-top: 14px; background: #455b2e; }
+  .olivenie .hero-cta:hover { background: #344922; }
+  .olivenie-art { display: flex; justify-content: center; }
+  .olivenie-art img { display: block; width: 100%; max-width: 300px; height: auto; }
+  .olivenie a:focus-visible { outline: 3px solid var(--gold); outline-offset: 5px; }
+  @media (max-width: 768px) {
+    .olivenie-grid { grid-template-columns: 1fr; gap: 32px; }
+    .olivenie-art { grid-row: 1; }
+    .olivenie-art img { max-width: 200px; }
+  }
+
   /* CONTACT */
   .contact { background: var(--green); color: white; }
   .contact .section-label { color: rgba(255,255,255,0.6); }
@@ -387,6 +405,23 @@
       </div>
 
     </div>
+  </div>
+</section>
+
+<!-- OLIVENIE -->
+<section class="olivenie" id="olivenie" aria-labelledby="olivenie-title">
+  <div class="section-inner olivenie-grid">
+    <div>
+      <p class="section-label">Our food brand · <span lang="zh-Hans">旗下食品品牌</span></p>
+      <h2 class="section-title" id="olivenie-title">Healthier oils. Healthier food.</h2>
+      <p class="olivenie-tagline" lang="zh-Hans">更健康的油脂，成就更健康的食品。</p>
+      <p class="olivenie-copy">Meet Olivenie, Sorghuman&rsquo;s premium frozen food brand. We choose olive oil for our upcoming frozen rice and flour foods, bringing thoughtful ingredients to the familiar flavors you love.</p>
+      <p class="olivenie-copy" lang="zh-Hans">认识 Olivenie 榄源，Sorghuman 旗下的高端冷冻食品品牌。我们以橄榄油为油脂原料，打造即将推出的冷冻米面制品，用用心甄选的食材，传承熟悉的美味。</p>
+      <a class="hero-cta" href="https://olivenie.com/">Discover Olivenie · <span lang="zh-Hans">探索榄源</span> &rarr;</a>
+    </div>
+    <a class="olivenie-art" href="https://olivenie.com/" aria-label="Olivenie 榄源 — visit our brand website">
+      <img src="assets/olivenie-logo.webp" width="900" height="862" loading="lazy" alt="Olivenie 榄源 — olive tree brand logo">
+    </a>
   </div>
 </section>
 
