@@ -2,6 +2,7 @@
 // 分销商后台 API —— 与 store-catalog.js 完全同构，只是主体换成 distributors
 // 分销商能做：选品、定箱价、设起送/服务范围、看补货单、确认/发货
 
+const { q, inList } = require('./_lib/safe');
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 
@@ -28,15 +29,18 @@ async function sb(method, table, qs, body) {
   return t ? JSON.parse(t) : [];
 }
 
-async function verifySupplier(distributorId, token) {
-  if (!distributorId || !token) return null;
-  // ★ 必须已批准（status=approved）且启用 —— pending/rejected/suspended 一律登不进
-  const rows = await sb('GET', 'distributors',
-    `distributor_id=eq.${distributorId}&admin_token=eq.${token}` +
-    `&status=eq.approved&active=eq.true&select=*`);
-  if (!rows[0]) return null;
-  const { admin_token, ...safe } = rows[0];
-  return safe;
+const { verifyToken: checkToken } = require('./_lib/auth');
+
+// 供货商 token 校验（SHA-256 哈希比对 + 失败限速，见 _lib/auth.js）。
+// ★ 必须已批准（status=approved）且启用 —— pending/rejected/suspended 一律登不进
+// 返回：供货商对象 | null | { __locked: true }
+async function verifySupplier(distributorId, token, event) {
+  const r = await checkToken({
+    table: 'distributors', idCol: 'distributor_id', id: distributorId, token, event, scope: 'distributor-portal',
+    select: '*', extraFilter: '&status=eq.approved&active=eq.true',
+  });
+  if (!r.ok) return r.locked ? { __locked: true } : null;
+  return r.row;
 }
 
 const num = v => (v === '' || v === null || v === undefined) ? null : Number(v);
@@ -50,14 +54,16 @@ exports.handler = async (event) => {
     const p = JSON.parse(event.body || '{}');
     const { action, distributorId, token } = p;
 
-    const sup = await verifySupplier(distributorId, token);
+    const sup = await verifySupplier(distributorId, token, event);
+    if (sup && sup.__locked)
+      return { statusCode: 429, headers: CORS, body: JSON.stringify({ error: '尝试次数过多，请稍后再试 / Too many attempts' }) };
     if (!sup)
       return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: '令牌无效 / Invalid token' }) };
 
     // ── 我的供货商品 ────────────────────────────────────────────
     if (action === 'GET_MY_ITEMS') {
       const items = await sb('GET', 'distributor_products',
-        `distributor_id=eq.${distributorId}` +
+        `distributor_id=eq.${q(distributorId)}` +
         `&select=sku,case_price,units_per_case,moq,stock_status,note,active,` +
         `products(name_zh,name_en,spec,category,base_price,image_url)`);
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, supplier: sup, items }) };
@@ -87,7 +93,7 @@ exports.handler = async (event) => {
 
       const rm = p.remove || [];
       if (rm.length) {
-        await fetch(`${SUPA_URL}/rest/v1/distributor_products?distributor_id=eq.${distributorId}&sku=in.(${rm.join(',')})`,
+        await fetch(`${SUPA_URL}/rest/v1/distributor_products?distributor_id=eq.${q(distributorId)}&sku=in.${inList(rm)}`,
           { method: 'DELETE', headers: { apikey: SUPA_KEY, Authorization: `Bearer ${SUPA_KEY}` } });
       }
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, saved: rows.length }) };
@@ -133,7 +139,7 @@ exports.handler = async (event) => {
       if (!Object.keys(patch).length)
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '无可保存字段' }) };
 
-      await sb('PATCH', 'distributors', `distributor_id=eq.${distributorId}`, patch);
+      await sb('PATCH', 'distributors', `distributor_id=eq.${q(distributorId)}`, patch);
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true }) };
     }
 
@@ -141,12 +147,12 @@ exports.handler = async (event) => {
     // 列出申请我这里开户的门店（含待审 / 已开 / 已停）
     if (action === 'GET_STORE_ACCOUNTS') {
       const rows = await sb('GET', 'store_distributors',
-        `distributor_id=eq.${distributorId}&order=applied_at.desc` +
+        `distributor_id=eq.${q(distributorId)}&order=applied_at.desc` +
         `&select=*,stores(name_zh,name_en,address,city,state,zip,contact_name,contact_phone,domain)`);
 
       // 每家店的未结金额（帮你判断要不要继续放账）
       const owedRows = await sb('GET', 'purchase_orders',
-        `distributor_id=eq.${distributorId}&status=in.(submitted,confirmed,shipped,received)&select=store_id,total`);
+        `distributor_id=eq.${q(distributorId)}&status=in.(submitted,confirmed,shipped,received)&select=store_id,total`);
       const owed = {};
       owedRows.forEach(o => { owed[o.store_id] = (owed[o.store_id] || 0) + Number(o.total || 0); });
 
@@ -167,10 +173,10 @@ exports.handler = async (event) => {
 
       // 分销商也可以主动给一家从没申请过的店开户（比如线下已经在供货的老客户）
       const exist = await sb('GET', 'store_distributors',
-        `distributor_id=eq.${distributorId}&store_id=eq.${store_id}&select=store_id`);
+        `distributor_id=eq.${q(distributorId)}&store_id=eq.${q(store_id)}&select=store_id`);
       if (exist.length) {
         await sb('PATCH', 'store_distributors',
-          `distributor_id=eq.${distributorId}&store_id=eq.${store_id}`, patch);
+          `distributor_id=eq.${q(distributorId)}&store_id=eq.${q(store_id)}`, patch);
       } else {
         await sb('POST', 'store_distributors', null,
           [{ distributor_id: distributorId, store_id, ...patch }]);
@@ -183,7 +189,7 @@ exports.handler = async (event) => {
       const stores = await sb('GET', 'stores',
         `select=store_id,name_zh,name_en,city,state,zip`);
       const rel = await sb('GET', 'store_distributors',
-        `distributor_id=eq.${distributorId}&select=store_id`);
+        `distributor_id=eq.${q(distributorId)}&select=store_id`);
       const have = new Set(rel.map(r => r.store_id));
       const zips   = Array.isArray(sup.service_zips)   ? sup.service_zips   : [];
       const states = Array.isArray(sup.service_states) ? sup.service_states : [];
@@ -200,7 +206,7 @@ exports.handler = async (event) => {
     // ── 收到的补货单（带门店收货信息）────────────────────────────
     // since=ISO 时间 → 增量；unsynced=true → 只取 ERP 还没导过的（给 Sorghuman 自己的 ERP 用）
     if (action === 'GET_POS') {
-      let qs = `distributor_id=eq.${distributorId}&order=created_at.desc&limit=200` +
+      let qs = `distributor_id=eq.${q(distributorId)}&order=created_at.desc&limit=200` +
                `&select=*,stores(name_zh,name_en,address,city,state,zip,contact_name,contact_phone)`;
       if (p.since)    qs += `&created_at=gte.${p.since}`;
       if (p.unsynced) qs += `&erp_synced_at=is.null`;
@@ -214,7 +220,7 @@ exports.handler = async (event) => {
       if (!ids.length)
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '缺少 poIds' }) };
       await sb('PATCH', 'purchase_orders',
-        `distributor_id=eq.${distributorId}&id=in.(${ids.join(',')})`,
+        `distributor_id=eq.${q(distributorId)}&id=in.${inList(ids)}`,
         { erp_synced_at: new Date().toISOString() });
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, synced: ids.length }) };
     }
@@ -230,8 +236,8 @@ exports.handler = async (event) => {
       if (distributor_note !== undefined) patch.distributor_note = distributor_note || null;
       if (expected_date) patch.expected_date = expected_date;
 
-      let qs = `id=eq.${poId}&distributor_id=eq.${distributorId}`;
-      if (flow[status]) qs += `&status=eq.${flow[status]}`;                       // 不能跳状态
+      let qs = `id=eq.${q(poId)}&distributor_id=eq.${q(distributorId)}`;
+      if (flow[status]) qs += `&status=eq.${q(flow[status])}`;                       // 不能跳状态
       else qs += `&status=in.(submitted,confirmed)`;                              // 已发货的不能取消
 
       const upd = await sb('PATCH', 'purchase_orders', qs, patch);

@@ -7,6 +7,7 @@
 //  3. 不显示毛利率，只显示箱价 / 单件成本
 //  4. 分销商可给单店设账期额度，超额自动拒单
 
+const { q, inList } = require('./_lib/safe');
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 
@@ -33,21 +34,25 @@ async function sb(method, table, qs, body) {
   return t ? JSON.parse(t) : [];
 }
 
-async function verifyStore(storeId, token, origin) {
-  if (!storeId || !token) return null;
-  const rows = await sb('GET', 'stores',
-    `store_id=eq.${storeId}&admin_token=eq.${token}` +
-    `&select=store_id,name_zh,name_en,domain,address,city,state,zip,contact_name,contact_phone`);
-  const store = rows[0];
-  if (!store) return null;
+const { verifyToken: checkToken } = require('./_lib/auth');
+
+// token 校验（SHA-256 哈希比对 + 失败限速，见 _lib/auth.js）。
+// origin 请求头可被脚本伪造，下面的域名检查只是浏览器场景的额外一层，不是认证。
+async function verifyStore(storeId, token, origin, event) {
+  const r = await checkToken({
+    table: 'stores', idCol: 'store_id', id: storeId, token, event, scope: 'restock',
+    select: 'store_id,name_zh,name_en,domain,address,city,state,zip,contact_name,contact_phone',
+  });
+  if (!r.ok) return r.locked ? { __locked: true } : null;
+  const store = r.row;
   if (!origin) return null;
   let host;
   try { host = new URL(origin).hostname.toLowerCase().replace(/^www\./, ''); }
   catch { return null; }
   const own = String(store.domain || '').toLowerCase().replace(/^www\./, '');
   const isMaster = host === 'sorghuman.com' || host.endsWith('.sorghuman.com');
-  const isSelf = own && (host === own || host.endsWith('.' + own));
-  if (!isMaster && !isSelf) return null;
+  const isOwn = own && (host === own || host.endsWith('.' + own));
+  if (!isMaster && !isOwn) return null;
   return store;
 }
 
@@ -63,7 +68,7 @@ function inRange(sup, store) {
 
 async function myAccounts(storeId) {
   const rows = await sb('GET', 'store_distributors',
-    `store_id=eq.${storeId}&select=distributor_id,status,payment_terms,credit_limit,applied_at,reviewed_at`);
+    `store_id=eq.${q(storeId)}&select=distributor_id,status,payment_terms,credit_limit,applied_at,reviewed_at`);
   return new Map(rows.map(r => [r.distributor_id, r]));
 }
 
@@ -87,7 +92,9 @@ exports.handler = async (event) => {
     const payload = JSON.parse(event.body || '{}');
     const { action, storeId, token } = payload;
 
-    const store = await verifyStore(storeId, token, origin);
+    const store = await verifyStore(storeId, token, origin, event);
+    if (store && store.__locked)
+      return { statusCode: 429, headers: CORS, body: JSON.stringify({ error: '尝试次数过多，请稍后再试 / Too many attempts' }) };
     if (!store)
       return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: '令牌无效 / Invalid token' }) };
 
@@ -119,7 +126,7 @@ exports.handler = async (event) => {
     // ═══ 2. 申请开户 ═══════════════════════════════════════════════
     if (action === 'APPLY_DISTRIBUTOR') {
       const { distributorId, note } = payload;
-      const supRows = await sb('GET', 'distributors', `distributor_id=eq.${distributorId}&active=eq.true&status=eq.approved&select=*`);
+      const supRows = await sb('GET', 'distributors', `distributor_id=eq.${q(distributorId)}&active=eq.true&status=eq.approved&select=*`);
       const sup = supRows[0];
       if (!sup || !inRange(sup, store))
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '该分销商不服务本店区域' }) };
@@ -150,7 +157,7 @@ exports.handler = async (event) => {
         return { statusCode: 200, headers: CORS, body: JSON.stringify(empty) };
 
       const rowsSup = await sb('GET', 'distributors',
-        `distributor_id=in.(${okIds.join(',')})&active=eq.true&status=eq.approved&select=*`);
+        `distributor_id=in.${inList(okIds)}&active=eq.true&status=eq.approved&select=*`);
       const distributors = rowsSup.filter(s => inRange(s, store)).map(s => {
         const a = acct.get(s.distributor_id);
         return { ...pub(s),
@@ -160,14 +167,14 @@ exports.handler = async (event) => {
       if (!distributors.length)
         return { statusCode: 200, headers: CORS, body: JSON.stringify(empty) };
 
-      const ids  = distributors.map(s => s.distributor_id).join(',');
+      const ids  = distributors.map(s => s.distributor_id);
       const rows = await sb('GET', 'distributor_products',
-        `distributor_id=in.(${ids})&active=eq.true` +
+        `distributor_id=in.${inList(ids)}&active=eq.true` +
         `&select=distributor_id,sku,case_price,units_per_case,moq,stock_status,note,` +
         `products(name_zh,name_en,spec,category,image_url)`);
 
       // 只用来标"这个我店里在不在卖"，不回传零售价、不算毛利
-      const mine  = await sb('GET', 'store_products', `store_id=eq.${storeId}&select=sku,active`);
+      const mine  = await sb('GET', 'store_products', `store_id=eq.${q(storeId)}&select=sku,active`);
       const shelf = new Set(mine.filter(m => m.active !== false).map(m => m.sku));
 
       const items = rows.filter(r => r.products).map(r => ({
@@ -211,7 +218,7 @@ exports.handler = async (event) => {
         }
 
         const supRows = await sb('GET', 'distributors',
-          `distributor_id=eq.${cart.distributor_id}&active=eq.true&status=eq.approved&select=*`);
+          `distributor_id=eq.${q(cart.distributor_id)}&active=eq.true&status=eq.approved&select=*`);
         const sup = supRows[0];
         if (!sup || !inRange(sup, store)) {
           rejected.push({ distributor_id: cart.distributor_id, reason: '分销商暂停服务本区域' });
@@ -222,7 +229,7 @@ exports.handler = async (event) => {
         if (!skus.length) continue;
 
         const priced = await sb('GET', 'distributor_products',
-          `distributor_id=eq.${cart.distributor_id}&sku=in.(${skus.join(',')})&active=eq.true` +
+          `distributor_id=eq.${q(cart.distributor_id)}&sku=in.${inList(skus)}&active=eq.true` +
           `&select=sku,case_price,units_per_case,moq,stock_status,products(name_zh,spec)`);
         const pMap = new Map(priced.map(p => [p.sku, p]));
 
@@ -257,7 +264,7 @@ exports.handler = async (event) => {
         // ★ 账期额度：未结清金额 + 本单 不得超限
         if (a.credit_limit != null) {
           const open = await sb('GET', 'purchase_orders',
-            `store_id=eq.${storeId}&distributor_id=eq.${sup.distributor_id}` +
+            `store_id=eq.${q(storeId)}&distributor_id=eq.${q(sup.distributor_id)}` +
             `&status=in.(submitted,confirmed,shipped,received)&select=total`);
           const owed = open.reduce((s, o) => s + Number(o.total || 0), 0);
           if (owed + subtotal > Number(a.credit_limit)) {
@@ -296,7 +303,7 @@ exports.handler = async (event) => {
     // ═══ 5. 我的补货单 ═════════════════════════════════════════════
     if (action === 'GET_MY_POS') {
       const pos = await sb('GET', 'purchase_orders',
-        `store_id=eq.${storeId}&order=created_at.desc&limit=60` +
+        `store_id=eq.${q(storeId)}&order=created_at.desc&limit=60` +
         `&select=*,distributors(name_zh,name_en,phone,contact_name)`);
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ ok: true, pos }) };
     }
@@ -307,7 +314,7 @@ exports.handler = async (event) => {
       const want = action === 'CANCEL_PO' ? 'cancelled' : 'received';
       const from = action === 'CANCEL_PO' ? 'submitted' : 'shipped';
       const upd = await sb('PATCH', 'purchase_orders',
-        `id=eq.${poId}&store_id=eq.${storeId}&status=eq.${from}`,
+        `id=eq.${q(poId)}&store_id=eq.${q(storeId)}&status=eq.${q(from)}`,
         { status: want, updated_at: new Date().toISOString() });
       if (!upd.length)
         return { statusCode: 409, headers: CORS, body: JSON.stringify({

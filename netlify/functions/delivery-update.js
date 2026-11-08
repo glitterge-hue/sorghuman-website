@@ -1,6 +1,7 @@
 // netlify/functions/delivery-update.js
 // 司机点"已到店"或"已送达"时更新订单状态并通知顾客
 
+const { q } = require('./_lib/safe');
 const SUPA_URL    = process.env.SUPABASE_URL;
 const SUPA_KEY    = process.env.SUPABASE_SERVICE_KEY;
 const TWILIO_SID  = process.env.TWILIO_SID;
@@ -52,12 +53,12 @@ exports.handler = async (event) => {
     return { statusCode:401, headers:CORS, body:JSON.stringify({error:'链接无效或已过期'}) };
 
   // 查订单
-  const orders = await sb(`orders?stripe_session_id=eq.${orderId}&select=*&limit=1`);
+  const orders = await sb(`orders?stripe_session_id=eq.${q(orderId)}&select=*&limit=1`);
   const order  = orders[0];
   if(!order) return { statusCode:404, headers:CORS, body: JSON.stringify({ error:'订单不存在' }) };
 
   // 查门店名
-  const stores = await sb(`stores?store_id=eq.${order.store_id}&select=name_zh,name_en&limit=1`);
+  const stores = await sb(`stores?store_id=eq.${q(order.store_id)}&select=name_zh,name_en&limit=1`);
   const storeName = stores[0]?.name_zh || order.store_id;
 
   const customerPhone = order.customer_phone;
@@ -65,7 +66,7 @@ exports.handler = async (event) => {
 
   if(action === 'pickup'){
     // 更新订单状态
-    await fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${orderId}`,{
+    await fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${q(orderId)}`,{
       method:'PATCH',
       headers:{ 'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json' },
       body: JSON.stringify({ status:'delivering' })
@@ -82,7 +83,7 @@ exports.handler = async (event) => {
 
   if(action === 'delivered'){
     // 更新订单状态
-    await fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${orderId}`,{
+    await fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${q(orderId)}`,{
       method:'PATCH',
       headers:{ 'apikey':SUPA_KEY,'Authorization':`Bearer ${SUPA_KEY}`,'Content-Type':'application/json' },
       body: JSON.stringify({ status:'delivered' })
