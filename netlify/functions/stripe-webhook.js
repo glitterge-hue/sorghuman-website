@@ -1,6 +1,7 @@
 // netlify/functions/stripe-webhook.js
 // Stripe 付款成功 → 更新订单状态 → 发邮件给门店
 
+const { q, inList, esc } = require('./_lib/safe');
 const stripe   = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
@@ -10,6 +11,79 @@ const crypto = require('crypto');
 function deliverySignature(orderId, expires) {
   return crypto.createHmac('sha256', process.env.DELIVERY_LINK_SECRET || process.env.STRIPE_WEBHOOK_SECRET)
     .update(`${orderId}.${expires}`).digest('base64url');
+}
+
+const DB_HEADERS = () => ({
+  'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}`, 'Content-Type': 'application/json',
+});
+
+// tax 列是后加的：迁移还没跑时，去掉它重试一次，不让整个订单更新失败
+const withoutTax = (o) => { const { tax, ...rest } = o; return rest; };
+const isColumnError = (status, text) => status === 400 && /tax|column/i.test(text);
+
+// pending → paid，且只在订单仍是 pending 时生效（幂等）。返回 { ok, row } ；row 为空表示 0 行被更新
+async function patchPaid(sid, update) {
+  const url = `${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${sid}&status=eq.pending`;
+  const opts = (body) => ({ method: 'PATCH', headers: { ...DB_HEADERS(), Prefer: 'return=representation' }, body: JSON.stringify(body) });
+  let res = await fetch(url, opts(update));
+  if (!res.ok) {
+    const t = await res.text();
+    if (!isColumnError(res.status, t)) { console.error('order update failed', res.status, t.slice(0, 300)); return { ok: false }; }
+    res = await fetch(url, opts(withoutTax(update)));
+    if (!res.ok) { console.error('order update failed', res.status, (await res.text()).slice(0, 300)); return { ok: false }; }
+  }
+  const rows = await res.json();
+  return { ok: true, row: rows[0] || null };
+}
+
+// 从会话 metadata（create-checkout 写入的 cart_0.. 分段）还原购物车；失败返回 null
+function parseCartMeta(meta) {
+  if (!meta || meta.cart_truncated) return null;
+  let json = '';
+  for (let n = 0; meta['cart_' + n] !== undefined; n++) json += meta['cart_' + n];
+  if (!json) return null;
+  try {
+    const arr = JSON.parse(json);
+    if (!Array.isArray(arr)) return null;
+    return arr.map(([sku, qty, m]) => ({ sku, qty, mode: m === 'c' ? 'case' : 'unit' }));
+  } catch { return null; }
+}
+
+const cents = (v) => (Number(v) || 0) / 100;
+
+// 订单行不存在（创建订单时写库失败）→ 用会话数据补建一条已付款订单
+// 返回 { row } | { duplicate: true } | null（补建失败，调用方应返回 500 让 Stripe 重试）
+async function rebuildOrder(session, update, storeId) {
+  const meta = session.metadata || {};
+  let items = parseCartMeta(meta);
+  if (!items) {
+    try {
+      const li = await stripe.checkout.sessions.listLineItems(session.id, { limit: 100 });
+      items = li.data.map(l => ({ _lookupKey: l.description, qty: l.quantity }));
+    } catch (e) { console.error('listLineItems failed:', e.message); items = []; }
+  }
+  const row = {
+    store_id: storeId, stripe_session_id: session.id, items,
+    subtotal: cents(meta.subtotal_cents), delivery_fee: cents(meta.delivery_cents),
+    ...update, status: 'paid',
+  };
+  const post = (body) => fetch(`${SUPA_URL}/rest/v1/orders`, {
+    method: 'POST', headers: { ...DB_HEADERS(), Prefer: 'return=representation' }, body: JSON.stringify(body),
+  });
+  let res = await post(row);
+  if (!res.ok) {
+    const t = await res.text();
+    if (res.status === 409) return { duplicate: true };          // 并发重发：另一次已建好
+    if (!isColumnError(res.status, t)) { console.error('order rebuild failed', res.status, t.slice(0, 300)); return null; }
+    res = await post(withoutTax(row));
+    if (!res.ok) {
+      if (res.status === 409) return { duplicate: true };
+      console.error('order rebuild failed', res.status, (await res.text()).slice(0, 300)); return null;
+    }
+  }
+  console.warn('订单行缺失，已根据 Stripe 会话补建:', session.id);
+  const rows = await res.json();
+  return { row: rows[0] };
 }
 
 exports.handler = async (event) => {
@@ -47,35 +121,40 @@ exports.handler = async (event) => {
     shipping_name         : session.shipping_details?.name 
                             || session.customer_details?.name || null,
     total                 : session.amount_total ? session.amount_total / 100 : null,
+    // 税费（启用 Stripe Tax 时才有值；需要 orders.tax 列，见迁移脚本）
+    tax                   : cents(session.total_details?.amount_tax),
     // 订阅（session.mode==='subscription'）会带上 stripe 的订阅 ID，
     // 用于后续自动续订、取消或客户自助管理。
     purchase_type          : session.mode === 'subscription' ? 'subscription' : 'one_time',
     stripe_subscription_id : session.subscription || null,
   };
 
-  await fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${session.id}`, {
-    method : 'PATCH',
-    headers: {
-      'apikey'       : SUPA_KEY,
-      'Authorization': `Bearer ${SUPA_KEY}`,
-      'Content-Type' : 'application/json',
-      'Prefer'       : 'return=minimal',
-    },
-    body: JSON.stringify(update),
-  });
+  // 1) 只在订单仍为 pending 时改成 paid（幂等）。写库失败 → 返回 500，Stripe 会自动重试。
+  const paid = await patchPaid(q(session.id), update);
+  if (!paid.ok) return { statusCode: 500, body: 'order update failed' };
 
-  // ── 读取订单详情、门店信息、商品名称 ─────────────────────────
+  let order = paid.row;
+  if (!order) {
+    // 0 行被更新：要么是 Stripe 重发的重复事件，要么订单行根本不存在
+    const ex = await fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${q(session.id)}&select=id&limit=1`,
+      { headers: DB_HEADERS() });
+    if (!ex.ok) return { statusCode: 500, body: 'order lookup failed' };
+    if ((await ex.json())[0]) {
+      console.log('重复的 checkout.session.completed，订单已处理，跳过通知:', session.id);
+      return { statusCode: 200, body: JSON.stringify({ received: true, duplicate: true }) };
+    }
+    const rebuilt = await rebuildOrder(session, update, storeId);
+    if (!rebuilt) return { statusCode: 500, body: 'order rebuild failed' };
+    if (rebuilt.duplicate) return { statusCode: 200, body: JSON.stringify({ received: true, duplicate: true }) };
+    order = rebuilt.row;
+  }
+
+  // ── 读取门店信息、商品名称（通知用；失败不影响订单已记账）─────────
   try {
-    const [orderRes, storeRes] = await Promise.all([
-      fetch(`${SUPA_URL}/rest/v1/orders?stripe_session_id=eq.${session.id}&select=*&limit=1`,
-        { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }),
-      fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}&select=name_zh,name_en,contact_email,contact_phone,drivers&limit=1`,
-        { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }),
-    ]);
-
-    const orders = await orderRes.json();
+    const storeRes = await fetch(
+      `${SUPA_URL}/rest/v1/stores?store_id=eq.${q(storeId)}&select=name_zh,name_en,contact_email,contact_phone,drivers&limit=1`,
+      { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } });
     const stores = await storeRes.json();
-    const order  = orders[0];
     const store  = stores[0];
 
     if (!store || !order) {
@@ -89,7 +168,7 @@ exports.handler = async (event) => {
     let prodMap = {};
     if (skus.length > 0) {
       const prodRes = await fetch(
-        `${SUPA_URL}/rest/v1/products?sku=in.(${skus.join(',')})&select=sku,name_zh,name_en`,
+        `${SUPA_URL}/rest/v1/products?sku=in.${inList(skus)}&select=sku,name_zh,name_en`,
         { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }
       );
       const prods = await prodRes.json();
@@ -119,7 +198,7 @@ exports.handler = async (event) => {
       const name = p.name_zh ? `${p.name_zh} ${p.name_en || ''}`.trim() : (key || '?');
       const qty  = i.qty || i.quantity || 1;
       return `<tr>
-        <td style="padding:8px 12px;border-bottom:1px solid #f0f0ea;">${name}</td>
+        <td style="padding:8px 12px;border-bottom:1px solid #f0f0ea;">${esc(name)}</td>
         <td style="padding:8px 12px;border-bottom:1px solid #f0f0ea;text-align:center;">${qty}</td>
       </tr>`;
     }).join('');
@@ -147,7 +226,7 @@ exports.handler = async (event) => {
         <div style="font-size:22px;font-weight:700;color:#1A4A28;margin-bottom:4px;">
           🛒 新订单 New Order
         </div>
-        <div style="color:#888;font-size:13px;">${storeName}</div>
+        <div style="color:#888;font-size:13px;">${esc(storeName)}</div>
         <div style="margin-top:16px;display:flex;gap:24px;">
           <span style="background:#f0f7f2;color:#1A4A28;padding:4px 14px;border-radius:20px;font-size:12px;font-weight:600;">
             已付款 PAID
@@ -168,15 +247,15 @@ exports.handler = async (event) => {
           </tr>
           <tr style="border-top:1px solid #eee;">
             <td style="padding:10px 16px;font-size:12px;color:#888;">顾客电话 Phone</td>
-            <td style="padding:10px 16px;font-size:13px;font-weight:600;">${update.customer_phone || 'N/A'}</td>
+            <td style="padding:10px 16px;font-size:13px;font-weight:600;">${esc(update.customer_phone || 'N/A')}</td>
           </tr>
           <tr style="border-top:1px solid #eee;">
             <td style="padding:10px 16px;font-size:12px;color:#888;">顾客邮箱 Email</td>
-            <td style="padding:10px 16px;font-size:13px;">${update.customer_email || 'N/A'}</td>
+            <td style="padding:10px 16px;font-size:13px;">${esc(update.customer_email || 'N/A')}</td>
           </tr>
           <tr style="border-top:1px solid #eee;">
             <td style="padding:10px 16px;font-size:12px;color:#888;">配送地址 Address</td>
-            <td style="padding:10px 16px;font-size:13px;font-weight:600;">${addrStr}</td>
+            <td style="padding:10px 16px;font-size:13px;font-weight:600;">${esc(addrStr)}</td>
           </tr>
         </table>
       </td></tr>
@@ -205,7 +284,11 @@ exports.handler = async (event) => {
           <tr>
             <td style="padding:4px 0;font-size:13px;color:#888;">配送费 Delivery</td>
             <td style="padding:4px 0;font-size:13px;text-align:right;">$${deliveryFee}</td>
-          </tr>
+          </tr>${Number(update.tax) > 0 ? `
+          <tr>
+            <td style="padding:4px 0;font-size:13px;color:#888;">税费 Tax</td>
+            <td style="padding:4px 0;font-size:13px;text-align:right;">$${Number(update.tax).toFixed(2)}</td>
+          </tr>` : ''}
           <tr style="border-top:2px solid #1A4A28;">
             <td style="padding:10px 0 4px;font-size:16px;font-weight:700;color:#1A4A28;">合计 Total</td>
             <td style="padding:10px 0 4px;font-size:16px;font-weight:700;color:#1A4A28;text-align:right;">$${total}</td>

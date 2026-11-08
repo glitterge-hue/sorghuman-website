@@ -6,6 +6,7 @@
 // 访问方式（配合 _redirects）：  https://门店域名/p/SKU
 // 或直接：                       /.netlify/functions/product-share?p=SKU[&store=xxx]
 
+const { q } = require('./_lib/safe');
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 const { inheritMissingImages } = require('./_lib/product-images');
@@ -58,19 +59,19 @@ exports.handler = async (event) => {
     // 定位门店（按域名，与 get-catalog 一致），用于取本店价格
     let storeId = params.store;
     if (!storeId) {
-      const rows = await sb('stores', `domain=eq.${host}&select=store_id,name_zh,name_en&limit=1`);
+      const rows = await sb('stores', `domain=eq.${q(host)}&select=store_id,name_zh,name_en&limit=1`);
       if (rows.length) storeId = rows[0].store_id;
     }
     if (!storeId) storeId = 'default';
 
-    const storeRows = await sb('stores', `store_id=eq.${storeId}&select=name_zh,name_en,markup&limit=1`);
+    const storeRows = await sb('stores', `store_id=eq.${q(storeId)}&select=name_zh,name_en,markup&limit=1`);
     const store  = storeRows[0] || {};
     const markup = parseFloat(store.markup) || 1.0;
 
     // 取该店该商品（含详情字段）
     const rows = await sb(
       'store_products',
-      `store_id=eq.${storeId}&sku=eq.${encodeURIComponent(sku)}&active=eq.true` +
+      `store_id=eq.${q(storeId)}&sku=eq.${encodeURIComponent(sku)}&active=eq.true` +
       `&select=price,products(name_zh,name_en,spec,base_price,image_url,description_zh,description_en,gallery)` +
       `&limit=1`
     );

@@ -1,6 +1,7 @@
 // netlify/functions/store-catalog.js
 // 店主端商品管理 API（token 验证，不需要 Supabase 账号）
 
+const { q, inList } = require('./_lib/safe');
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 const CORS = {
@@ -31,14 +32,18 @@ async function sb(method, table, qs, body) {
 
 // token 验证：返回 store 对象或 null
 // origin = 请求来源域名（用于校验只能从自家或 sorghuman.com 访问）
-async function verifyToken(storeId, token, origin) {
-  if (!storeId || !token) return null;
-  const rows = await sb('GET', 'stores',
-    `store_id=eq.${storeId}&admin_token=eq.${token}` +
-    `&select=store_id,name_zh,name_en,domain,markup,delivery_zips,drivers,promo,free_delivery_threshold,delivery_fee,hours,holiday_notice,holiday_notice_active`);
-  const store = rows[0];
-  if (!store) return null;
-  // 域名校验：只允许自家域名或 sorghuman.com 访问
+const { verifyToken: checkToken } = require('./_lib/auth');
+
+// token 校验（SHA-256 哈希比对 + 失败限速，见 _lib/auth.js）。
+// origin 请求头可被脚本伪造，下面的域名检查只是浏览器场景的额外一层，不是认证。
+// 返回：store 对象 | null（无效）| { __locked: true }（失败次数过多）
+async function verifyToken(storeId, token, origin, event) {
+  const r = await checkToken({
+    table: 'stores', idCol: 'store_id', id: storeId, token, event, scope: 'store-catalog',
+    select: 'store_id,name_zh,name_en,domain,markup,delivery_zips,drivers,promo,free_delivery_threshold,delivery_fee,hours,holiday_notice,holiday_notice_active',
+  });
+  if (!r.ok) return r.locked ? { __locked: true } : null;
+  const store = r.row;
   if (!origin) return null;
   let host;
   try { host = new URL(origin).hostname.toLowerCase().replace(/^www\./, ''); }
@@ -72,7 +77,9 @@ exports.handler = async (event) => {
 
   // ── 验证 token ──────────────────────────────────────────────
   const origin = event.headers.origin || event.headers.referer || '';
-  const store = await verifyToken(storeId, token, origin);
+  const store = await verifyToken(storeId, token, origin, event);
+  if (store && store.__locked)
+    return { statusCode: 429, headers: CORS, body: JSON.stringify({ error: '尝试次数过多，请稍后再试 / Too many attempts' }) };
   if (!store)
     return { statusCode: 401, headers: CORS, body: JSON.stringify({ error: '无效的访问令牌' }) };
 
@@ -80,7 +87,7 @@ exports.handler = async (event) => {
     // ── 获取该店商品（含商品详情）──────────────────────────────
     if (action === 'GET_STORE_PRODUCTS') {
       const rows = await sb('GET', 'store_products',
-        `store_id=eq.${storeId}&active=eq.true` +
+        `store_id=eq.${q(storeId)}&active=eq.true` +
         `&select=sku,price,sort_order,products(name_zh,name_en,spec,category,base_price,image_url)` +
         `&order=sort_order.asc`);
       return { statusCode: 200, headers: CORS, body: JSON.stringify({ store, products: rows }) };
@@ -102,7 +109,7 @@ exports.handler = async (event) => {
       }
       if (toRemove?.length) {
         await fetch(
-          `${SUPA_URL}/rest/v1/store_products?store_id=eq.${storeId}&sku=in.(${toRemove.join(',')})`,
+          `${SUPA_URL}/rest/v1/store_products?store_id=eq.${q(storeId)}&sku=in.${inList(toRemove)}`,
           { method:'DELETE', headers:{ 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}` } }
         );
       }
@@ -195,7 +202,7 @@ exports.handler = async (event) => {
     if (action === 'UPDATE_PRICE') {
       const { sku, price } = body;
       await fetch(
-        `${SUPA_URL}/rest/v1/store_products?store_id=eq.${storeId}&sku=eq.${sku}`,
+        `${SUPA_URL}/rest/v1/store_products?store_id=eq.${q(storeId)}&sku=eq.${q(sku)}`,
         {
           method: 'PATCH',
           headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
@@ -211,7 +218,7 @@ exports.handler = async (event) => {
       if (!Array.isArray(drivers))
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '格式错误' }) };
       const valid = drivers.filter(d=>d.phone).slice(0,5); // 最多5个
-      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${q(storeId)}`, {
         method : 'PATCH',
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
         body   : JSON.stringify({ drivers: valid }),
@@ -224,7 +231,7 @@ exports.handler = async (event) => {
       const { zips } = body;
       if (!Array.isArray(zips))
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '格式错误' }) };
-      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${q(storeId)}`, {
         method : 'PATCH',
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
         body   : JSON.stringify({ delivery_zips: zips }),
@@ -252,7 +259,7 @@ exports.handler = async (event) => {
       }
       if (!Object.keys(patch).length)
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '无可保存字段' }) };
-      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${q(storeId)}`, {
         method : 'PATCH',
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
         body   : JSON.stringify(patch),
@@ -279,7 +286,7 @@ exports.handler = async (event) => {
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: '缺少 sku' }) };
       const patch = { showcase: !!showcase };
       if (showcase_category !== undefined) patch.showcase_category = showcase_category || null;
-      await fetch(`${SUPA_URL}/rest/v1/products?sku=eq.${sku}`, {
+      await fetch(`${SUPA_URL}/rest/v1/products?sku=eq.${q(sku)}`, {
         method : 'PATCH',
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
         body   : JSON.stringify(patch),
@@ -290,7 +297,7 @@ exports.handler = async (event) => {
     // ── 保存门店活动配置 ──────────────────────────────────────────
     if (action === 'SAVE_PROMO') {
       const { promo } = body;
-      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+      await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${q(storeId)}`, {
         method : 'PATCH',
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
         body   : JSON.stringify({ promo }),
@@ -301,7 +308,7 @@ exports.handler = async (event) => {
     // ── 保存营业时间 + 节假日通知 ────────────────────────────────
     if (action === 'SAVE_HOURS') {
       const { hours, holiday_notice, holiday_notice_active } = body;
-      const r = await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${storeId}`, {
+      const r = await fetch(`${SUPA_URL}/rest/v1/stores?store_id=eq.${q(storeId)}`, {
         method : 'PATCH',
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },
         body   : JSON.stringify({
@@ -324,7 +331,7 @@ exports.handler = async (event) => {
     if (action === 'TOGGLE_FEATURED') {
       const { sku, featured } = body;
       await fetch(
-        `${SUPA_URL}/rest/v1/store_products?store_id=eq.${storeId}&sku=eq.${sku}`,
+        `${SUPA_URL}/rest/v1/store_products?store_id=eq.${q(storeId)}&sku=eq.${q(sku)}`,
         {
           method : 'PATCH',
           headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json' },

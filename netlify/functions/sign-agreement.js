@@ -4,6 +4,7 @@
 //
 // 环境变量（你项目里已有）：SUPABASE_URL, SUPABASE_SERVICE_KEY, RESEND_API_KEY
 
+const { q } = require('./_lib/safe');
 const SUPA_URL   = process.env.SUPABASE_URL;
 const SUPA_KEY   = process.env.SUPABASE_SERVICE_KEY;
 const RESEND_KEY = process.env.RESEND_API_KEY;
@@ -329,7 +330,7 @@ exports.handler = async (event) => {
     });
 
     if (driveLink) {
-      await fetch(`${SUPA_URL}/rest/v1/signed_agreements?agreement_id=eq.${record.agreement_id}`, {
+      await fetch(`${SUPA_URL}/rest/v1/signed_agreements?agreement_id=eq.${q(record.agreement_id)}`, {
         method : 'PATCH',
         headers: { 'apikey':SUPA_KEY, 'Authorization':`Bearer ${SUPA_KEY}`, 'Content-Type':'application/json', 'Prefer':'return=minimal' },
         body   : JSON.stringify({ pdf_url: driveLink }),

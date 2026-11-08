@@ -3,6 +3,7 @@
 // 名称/主题色/图标都来自该门店在 stores 表里的配置。
 // 经 _redirects 挂到 /shop/manifest.webmanifest。
 
+const { q } = require('./_lib/safe');
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 
@@ -35,12 +36,12 @@ exports.handler = async (event) => {
   try {
     let storeId = p.store;
     if (!storeId) {
-      const rows = await sb('stores', `domain=eq.${host}&select=store_id&limit=1`);
+      const rows = await sb('stores', `domain=eq.${q(host)}&select=store_id&limit=1`);
       if (rows.length) storeId = rows[0].store_id;
     }
     if (!storeId) storeId = 'default';
 
-    const rows = await sb('stores', `store_id=eq.${storeId}&select=name_zh,name_en,theme&limit=1`);
+    const rows = await sb('stores', `store_id=eq.${q(storeId)}&select=name_zh,name_en,theme&limit=1`);
     const s = rows[0];
     if (!s) return { statusCode: 200, headers: H, body: JSON.stringify(fallback) };
 

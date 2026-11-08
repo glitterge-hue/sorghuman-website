@@ -1,6 +1,7 @@
 // netlify/functions/get-catalog.js
 // 从 store_products 表读取每家店的商品（新架构）
 
+const { q } = require('./_lib/safe');
 const SUPA_URL = process.env.SUPABASE_URL;
 const SUPA_KEY = process.env.SUPABASE_SERVICE_KEY;
 const { inheritMissingImages } = require('./_lib/product-images');
@@ -29,7 +30,7 @@ exports.handler = async (event) => {
     // 按域名查门店
     if (!storeId) {
       const host = (event.headers.host || '').replace(/^www\./, '');
-      const rows = await sb('stores', `domain=eq.${host}&select=store_id&limit=1`);
+      const rows = await sb('stores', `domain=eq.${q(host)}&select=store_id&limit=1`);
       if (rows.length) storeId = rows[0].store_id;
     }
     if (!storeId) storeId = 'default';
@@ -39,9 +40,9 @@ exports.handler = async (event) => {
     let storeRows, spRows;
     try {
       [storeRows, spRows] = await Promise.all([
-        sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
+        sb('stores', `store_id=eq.${q(storeId)}&select=*&limit=1`),
         sb('store_products',
-          `store_id=eq.${storeId}&active=eq.true` +
+          `store_id=eq.${q(storeId)}&active=eq.true` +
           `&select=sku,price,sort_order,featured,products(${PRODUCT_FIELDS})` +
           `&order=sort_order.asc`),
       ]);
@@ -52,9 +53,9 @@ exports.handler = async (event) => {
       console.error('get-catalog primary query failed, retrying without units_per_case:', e.message);
       const fallbackFields = PRODUCT_FIELDS.replace('units_per_case,', '');
       [storeRows, spRows] = await Promise.all([
-        sb('stores', `store_id=eq.${storeId}&select=*&limit=1`),
+        sb('stores', `store_id=eq.${q(storeId)}&select=*&limit=1`),
         sb('store_products',
-          `store_id=eq.${storeId}&active=eq.true` +
+          `store_id=eq.${q(storeId)}&active=eq.true` +
           `&select=sku,price,sort_order,featured,products(${fallbackFields})` +
           `&order=sort_order.asc`),
       ]);
