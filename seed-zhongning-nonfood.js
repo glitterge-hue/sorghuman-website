@@ -26,37 +26,37 @@ if (!SUPA_URL || !SUPA_KEY) {
 const PRODUCTS = [
   {
     sku: 'ZN124', name_zh: '一次性餐盒（圆形，带盖）', name_en: 'Round Disposable Meal Box w/ Lid',
-    spec: '18.8×15×5.7cm，49只/箱', category: 'mealbox', showcase_category: 'mealbox',
+    spec: '18.8×15×5.7cm，49只/箱', category: 'supplies', showcase_category: 'supplies',
     base_price: 26.90, subscription_price: 24.90,
     description: '圆形一次性餐盒，带盖密封，适合外卖打包。Round disposable meal box with lid, ideal for takeout.',
   },
   {
     sku: 'ZN148', name_zh: '五格分隔餐盒（带盖）', name_en: '5-Compartment Meal Box w/ Lid',
-    spec: '43.6g，250只/箱', category: 'mealbox', showcase_category: 'mealbox',
+    spec: '43.6g，250只/箱', category: 'supplies', showcase_category: 'supplies',
     base_price: 54.90, subscription_price: 49.90,
     description: '五格分隔设计，适合套餐/自助餐分装。5-compartment tray, ideal for combo meals & buffet packaging.',
   },
   {
     sku: 'ZN130', name_zh: '圆形碗（带盖）', name_en: 'Round Bowl w/ Lid',
-    spec: '16.3×11.4×9.3cm，300只/箱', category: 'mealbox', showcase_category: 'mealbox',
+    spec: '16.3×11.4×9.3cm，300只/箱', category: 'supplies', showcase_category: 'supplies',
     base_price: 59.90, subscription_price: 54.90,
     description: '深型圆碗带盖，适合汤类、面食、盖浇饭外带。Deep round bowl with lid, ideal for soups, noodles & rice bowls.',
   },
   {
     sku: 'ZN-FILM-STRETCH', name_zh: '手工缠绕膜', name_en: 'Hand Stretch Wrap Film',
-    spec: '高8cm，厚2丝，可用长度300m/卷', category: 'film', showcase_category: 'film',
+    spec: '高8cm，厚2丝，可用长度300m/卷', category: 'supplies', showcase_category: 'supplies',
     base_price: 8.90, subscription_price: 7.90,
     description: '手动缠绕打包膜，用于货盘/箱体固定包装。Hand stretch wrap film for pallet & carton packaging.',
   },
   {
     sku: 'ZN-TAPE-PP', name_zh: 'PP打包带', name_en: 'PP Packing Tape / Strap',
-    spec: '宽12mm，厚0.9mm，10kg/卷（可定制颜色/规格）', category: 'tape', showcase_category: 'tape',
+    spec: '宽12mm，厚0.9mm，10kg/卷（可定制颜色/规格）', category: 'supplies', showcase_category: 'supplies',
     base_price: 19.90, subscription_price: 17.90,
     description: 'PP材质打包带，可定制颜色与规格。PP packing strap, customizable color & size.',
   },
   {
     sku: 'ZN-TAPE-CLOTH', name_zh: '彩色布基胶带', name_en: 'Colored Cloth (Duct) Tape',
-    spec: '高7.8cm，可用长度150m/卷', category: 'tape', showcase_category: 'tape',
+    spec: '高7.8cm，可用长度150m/卷', category: 'supplies', showcase_category: 'supplies',
     base_price: 6.90, subscription_price: 5.90,
     description: '彩色布基胶带，适合封箱/临时标记。Colored cloth duct tape for sealing & marking.',
   },
