@@ -132,6 +132,7 @@ exports.handler = async (event) => {
           beverages : '饮料 Beverages',
           fresh     : '生鲜 Fresh Produce',
           dry_goods : '南北干货 Dry Goods',
+          instant   : '方便食品 Instant Foods',
           grocery   : '百货 Grocery',
           // 非食品 · 餐厅耗材（Non-Food · Restaurant Supplies）
           mealbox   : '一次性餐盒 Disposable Meal Boxes',
