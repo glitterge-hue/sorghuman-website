@@ -437,7 +437,6 @@ var CAT_INFO = [
   {cat:'dry_goods',  icon:'🌰', zh:'南北干货', en:'Dry Goods'},
   {cat:'instant',    icon:'🍜', zh:'方便食品', en:'Instant Foods'},
   {cat:'grocery',    icon:'🛒', zh:'食品杂货', en:'Grocery'},
-  {cat:'food_contact', icon:'🥡', zh:'餐饮用品', en:'Food Service Supplies'},
   {cat:'non_food', icon:'🧹', zh:'日用百货', en:'Household Goods'},
   {cat:'supplies', icon:'📦', zh:'餐厅耗材', en:'Restaurant Supplies'},
   // 非食品 · 餐厅耗材（可订阅按月配送）
@@ -1101,7 +1100,7 @@ document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeDeta
 // Normalize known legacy values without changing ERP or stored product data.
 function categoryOf(p){
   var raw = String(p.category || '').trim();
-  var aliases = {frozen_food:'frozen', rice:'grains', '大米':'grains', '食品杂货':'grocery', mealbox:'supplies', film:'supplies', tape:'supplies'};
+  var aliases = {frozen_food:'frozen', rice:'grains', '大米':'grains', '食品杂货':'grocery', food_contact:'supplies', mealbox:'supplies', film:'supplies', tape:'supplies'};
   var cat = aliases[raw] || raw;
   return CAT_INFO.some(function(c){ return c.cat===cat && c.cat!=='featured'; }) ? cat : 'other';
 }

@@ -196,7 +196,7 @@ test('card categories cover legacy, missing and future category values without e
   assert.equal(count('grains'),2);
   assert.equal(count('grocery'),1);
   assert.equal(count('other'),2);
-  assert.equal(count('food_contact'),1);
+  assert.equal(count('supplies'),1);
   assert.equal(count('featured'),1);
   assert.equal(count('snacks'),0);
   assert.equal(count('beverages'),0);
