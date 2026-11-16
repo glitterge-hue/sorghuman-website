@@ -22,6 +22,7 @@ const CATEGORY_LABELS = {
   beverages : '饮品 Beverages',
   rice      : '优质大米 Premium Rice',
   grocery   : '百货 Grocery',
+  dry_goods : '南北干货 Dry Goods',
   // 非食品 · 餐厅耗材（Non-Food · Restaurant Supplies）
   mealbox   : '一次性餐盒 Disposable Meal Boxes',
   film      : '包装膜 Packaging Film',

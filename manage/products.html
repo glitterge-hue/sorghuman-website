@@ -54,6 +54,7 @@ td{padding:10px 14px;vertical-align:middle;}
 .badge-snacks{background:#fff8e8;color:#8a6d1f;}
 .badge-condiments{background:#f0f7f2;color:#2A6B3A;}
 .badge-fresh{background:#f0fff0;color:#1a7a1a;}
+.badge-dry_goods{background:#fdf3e6;color:#8a5a1a;}
 .badge-grocery{background:#f5f0ff;color:#5a3a9a;}
 .badge-grains{background:#fdf6e3;color:#9a7b1a;}
 .badge-beverages{background:#e8f7fb;color:#1a7a8a;}
@@ -118,6 +119,7 @@ td{padding:10px 14px;vertical-align:middle;}
       <option value="snacks">零食</option>
       <option value="beverages">饮料</option>
       <option value="fresh">生鲜</option>
+      <option value="dry_goods">南北干货</option>
       <option value="grocery">百货</option>
       <option value="dry_food">食品干货（ERP）</option>
       <option value="frozen_food">食品冷冻（ERP）</option>
@@ -175,6 +177,7 @@ td{padding:10px 14px;vertical-align:middle;}
           <option value="snacks">零食 Snacks</option>
           <option value="beverages">饮料 Beverages</option>
           <option value="fresh">生鲜 Fresh</option>
+          <option value="dry_goods">南北干货 Dry Goods</option>
           <option value="grocery">百货 Grocery</option>
           <option value="dry_food">食品干货 Dry / Shelf-stable (ERP)</option>
           <option value="frozen_food">食品冷冻 Frozen food (ERP)</option>
@@ -293,7 +296,7 @@ td{padding:10px 14px;vertical-align:middle;}
       <strong>商品图片：</strong>可直接把图片插入 Excel 对应商品所在行（普通 Excel 浮动图片或 WPS 单元格图片均可），导入时会自动上传到 Supabase 并写入该商品的 <code>image_url</code>。同一行有嵌入图片时，优先使用嵌入图片；没有嵌入图片时才读取 <code>image_url</code> 链接。<br>
       <code>units_per_case</code>（装箱数）：选填，填写后 base_price 视为单件价，网站同时提供单件/整箱购买，整箱价=单件价×装箱数×95%（所有门店统一）。<br>
       <code>gallery</code> 多图：一个单元格内每行一个链接（单元格内换行用 Alt+Enter），或用逗号分隔多个链接。<br>
-      品类可选值：<code>frozen</code> / <code>grains</code> / <code>condiments</code> / <code>snacks</code> / <code>beverages</code> / <code>fresh</code> / <code>grocery</code><br>
+      品类可选值：<code>frozen</code> / <code>grains</code> / <code>condiments</code> / <code>snacks</code> / <code>beverages</code> / <code>fresh</code> / <code>dry_goods</code> / <code>grocery</code><br>
       已存在的 SKU 会自动更新（upsert）。<br>
       💡 最省事：先点「一键导出 Excel」下载现有产品，在 Excel 里改完再传回来。
     </div>
@@ -319,7 +322,7 @@ async function initSupabase(){
 
 const CAT_LABELS = {
   frozen:'冷冻食品', grains:'米面粮油', condiments:'调味品',
-  snacks:'零食', beverages:'饮料', fresh:'生鲜', grocery:'百货',
+  snacks:'零食', beverages:'饮料', fresh:'生鲜', dry_goods:'南北干货', grocery:'百货',
   dry_food:'食品干货(ERP)', frozen_food:'食品冷冻(ERP)',
   non_food:'非食品(ERP)', food_contact:'食品接触材料(ERP)'
 };

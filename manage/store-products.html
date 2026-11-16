@@ -49,6 +49,7 @@ td input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#2A6B
 .badge-snacks{background:#fff8e8;color:#8a6d1f;}
 .badge-condiments{background:#f0f7f2;color:#2A6B3A;}
 .badge-fresh{background:#f0fff0;color:#1a7a1a;}
+.badge-dry_goods{background:#fdf3e6;color:#8a5a1a;}
 .badge-grocery{background:#f5f0ff;color:#5a3a9a;}
 .save-bar{position:sticky;bottom:0;background:#fff;border-top:1px solid #e8e8e0;padding:14px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px;box-shadow:0 -2px 8px rgba(0,0,0,.06);}
 .save-bar span{font-size:13px;color:#888;}
@@ -103,6 +104,7 @@ td input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#2A6B
       <option value="snacks">零食和饮料</option>
       <option value="condiments">米面粮油调味</option>
       <option value="fresh">生鲜</option>
+      <option value="dry_goods">南北干货</option>
       <option value="grocery">百货</option>
     </select>
     <select id="selFilter" onchange="renderTable()">
@@ -126,7 +128,7 @@ td input[type=checkbox]{width:16px;height:16px;cursor:pointer;accent-color:#2A6B
 </div>
 
 <script>
-const CAT = {frozen:'冷冻食品',snacks:'零食饮料',condiments:'粮油调味',fresh:'生鲜',grocery:'百货'};
+const CAT = {frozen:'冷冻食品',snacks:'零食饮料',condiments:'粮油调味',fresh:'生鲜',dry_goods:'南北干货',grocery:'百货'};
 let sb;
 let allProducts = [];      // 全部商品库
 let storeSet = {};         // {sku: {in: bool, price: num|null}} 当前门店
