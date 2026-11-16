@@ -198,8 +198,10 @@ test('card categories cover legacy, missing and future category values without e
   assert.equal(count('other'),2);
   assert.equal(count('food_contact'),1);
   assert.equal(count('featured'),1);
-  assert.equal(count('snacks'),undefined);
-  assert.equal(count('beverages'),undefined);
+  assert.equal(count('snacks'),0);
+  assert.equal(count('beverages'),0);
+  assert.equal(count('instant'),0);
+  assert.equal(count('dry_goods'),0);
   assert.equal(cards.filter(x=>!['featured','all'].includes(x.cat)).reduce((n,x)=>n+x.count,0),8);
   c.setCat('frozen');
   assert.equal(c.activeCat,'frozen');

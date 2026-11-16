@@ -1117,8 +1117,9 @@ function categoryCards(){
     if(p.featured) counts.featured++;
   });
   return [{cat:'all',icon:'🛍',zh:'全部商品',en:'All Products'}].concat(CAT_INFO)
-    .filter(function(c){ return counts[c.cat]>0; })
-    .map(function(c){ return Object.assign({},c,{count:counts[c.cat]}); });
+    // 所有分类都展示，不论是否已上架；仅 全部/爆品/其他 在没有商品时隐藏
+    .filter(function(c){ return counts[c.cat]>0 || !{all:1,featured:1,other:1}[c.cat]; })
+    .map(function(c){ return Object.assign({},c,{count:counts[c.cat]||0}); });
 }
 function renderProducts(){
   var col = document.getElementById('productsCol');
@@ -1133,7 +1134,7 @@ function renderProducts(){
       card.setAttribute('data-cat', c.cat);
       card.onclick = function(){ setCat(c.cat); };
       [['cat-card-icon',c.icon],['cat-card-zh',c.zh],['cat-card-en',c.en],
-       ['cat-count',c.count+' 件商品 · '+c.count+' items']].forEach(function(part){
+       ['cat-count',c.count>0 ? c.count+' 件商品 · '+c.count+' items' : '即将上架 · Coming Soon']].forEach(function(part){
         var span = document.createElement('span');
         span.className = part[0]; span.textContent = part[1]; card.appendChild(span);
       });
