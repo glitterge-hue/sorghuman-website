@@ -110,6 +110,23 @@ a.card{text-decoration:none;color:inherit;}
 .order-apply a{color:var(--green);font-weight:500;}
 @media(max-width:560px){.order-btn{min-width:100%;}}
 
+/* 产品故事 · Product story */
+.card-body .story-prev{font-size:12.5px;color:var(--muted);line-height:1.65;margin-bottom:8px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.story-btn{align-self:flex-start;margin-top:4px;padding:6px 14px;border:1px solid var(--gold);background:#fff;color:#7a5414;border-radius:20px;font:500 12px 'DM Sans',sans-serif;cursor:pointer;}
+.story-btn:hover{background:var(--gold);color:#fff;}
+dialog.story{border:0;border-radius:6px;padding:0;width:min(640px,92vw);max-height:88vh;background:#fff;color:var(--dark);box-shadow:0 20px 60px rgba(0,0,0,.35);}
+dialog.story::backdrop{background:rgba(26,26,24,.55);}
+.story-wrap{display:flex;flex-direction:column;max-height:88vh;overflow:auto;}
+.story-img{width:100%;aspect-ratio:16/10;object-fit:contain;background:#FAF7F2;display:block;}
+.story-body{padding:1.4rem 1.6rem 1.6rem;}
+.story-body h3{font-family:'DM Serif Display',serif;font-size:24px;line-height:1.25;}
+.story-body .zh-name{font-size:15px;color:var(--muted);margin:2px 0 1rem;}
+.story-body p{font-size:15px;line-height:1.85;margin-bottom:.9rem;}
+.story-body p.en{font-size:14px;color:#4a4a43;}
+.story-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:1rem;}
+.story-actions a,.story-actions button{padding:9px 18px;border-radius:2px;font:500 13px 'DM Sans',sans-serif;text-decoration:none;cursor:pointer;border:1.5px solid var(--green);}
+.story-actions a{background:var(--green);color:#fff;}
+.story-actions button{background:#fff;color:var(--green);}
 footer{background:#1A1A18;color:rgba(255,255,255,0.4);text-align:center;padding:20px 5%;font-size:13px;margin-top:40px;}
 footer a{color:rgba(255,255,255,0.4);}
 
@@ -217,6 +234,8 @@ footer a{color:rgba(255,255,255,0.4);}
   </div>
 </div>
 
+<dialog id="storyDlg" class="story" aria-label="产品故事 Product story"></dialog>
+
 <footer>
   <p>&copy; 2025 Sorghuman Holding LLC &middot; Sorghuman Holding LLC &middot; 高仁控股国际有限公司 &middot;
   <a href="mailto:info@sorghuman.com">info@sorghuman.com</a></p>
@@ -245,6 +264,7 @@ var GROUPS = [
   { key:'nonfood', zh:'餐厅耗材', en:'Restaurant Supplies', nonfood:true, cats:['food_contact','non_food','mealbox','film','tape','supplies'] }
 ];
 var OTHER = { key:'other', zh:'更多商品', en:'More Products', intro:'' };
+var STORIES = {};   // sku → { zh, en, name, img }：产品故事（description_zh / description_en），点卡片上的按钮弹出
 
 function esc(s){ return (s==null?'':String(s)).replace(/[<>&"]/g,function(c){return {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c];}); }
 function clean(v){ v = v==null ? '' : String(v).trim(); return (v==='None'||v==='null') ? '' : v; }
@@ -303,7 +323,15 @@ function cardHtml(item){
     : '<div class="ph"><span class="ph-zh">'+esc(n.zh||n.en)+'</span><span class="ph-note">Photo coming soon · 图片更新中</span></div>';
   var specs = item.specs.slice(0,3).map(function(s){ return '<span class="tag">'+esc(s)+'</span>'; }).join('');
   if (item.sub) specs += '<span class="tag sub">📅 可订阅 Subscribe</span>';
-  var desc = clean(p.description) ? '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>' : '';
+  var storyZh = clean(p.description_zh), storyEn = clean(p.description_en);
+  var desc = '';
+  if (storyZh || storyEn) {
+    STORIES[clean(p.sku)] = { zh:storyZh, en:storyEn, name:n.en, nameZh:n.zh, img:item.img, href:href };
+    desc = '<p class="story-prev">'+esc(storyZh || storyEn)+'</p>'
+         + '<button type="button" class="story-btn" data-story="'+esc(clean(p.sku))+'">产品故事 · Read the story</button>';
+  } else if (clean(p.description)) {
+    desc = '<p class="desc">'+esc(p.description).replace(/\n/g,'<br>')+'</p>';
+  }
   return (href ? '<a class="card" href="'+href+'">' : '<div class="card">')
     + '<div class="card-media'+(external?' contain':'')+'">'+media+'</div>'
     + '<div class="card-body">'
@@ -367,6 +395,34 @@ async function loadProducts(){
   }
 }
 loadProducts();
+
+// 产品故事弹层 · Story dialog（事件委托；按钮在卡片链接里，要拦掉跳转）
+(function(){
+  var dlg = document.getElementById('storyDlg'), box = document.getElementById('productSections');
+  if (!dlg || !dlg.addEventListener || !box || !box.addEventListener) return;
+  function para(cls, t){ return t ? '<p class="'+cls+'">'+esc(t).replace(/\n/g,'<br>')+'</p>' : ''; }
+  function open(sku){
+    var s = STORIES[sku]; if (!s) return;
+    dlg.innerHTML = '<div class="story-wrap">'
+      + (s.img ? productImgHtml(s.img, 960, 'class="story-img" alt="'+esc(s.nameZh||s.name)+'"') : '')
+      + '<div class="story-body"><h3>'+esc(s.name)+'</h3>'
+      + (s.nameZh ? '<div class="zh-name">'+esc(s.nameZh)+'</div>' : '')
+      + para('zh', s.zh) + para('en', s.en)
+      + '<div class="story-actions">'
+      + (s.href ? '<a href="'+s.href+'">去商城看看 · View in shop</a>' : '')
+      + '<button type="button" data-close>关闭 · Close</button></div></div></div>';
+    if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open','');
+  }
+  box.addEventListener('click', function(e){
+    var b = e.target.closest && e.target.closest('.story-btn');
+    if (!b) return;
+    e.preventDefault(); e.stopPropagation();
+    open(b.getAttribute('data-story'));
+  });
+  dlg.addEventListener('click', function(e){
+    if (e.target === dlg || (e.target.closest && e.target.closest('[data-close]'))) dlg.close ? dlg.close() : dlg.removeAttribute('open');
+  });
+})();
 </script>
 </body>
 </html>

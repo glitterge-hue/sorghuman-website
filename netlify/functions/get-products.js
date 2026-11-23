@@ -37,7 +37,7 @@ exports.handler = async (event) => {
   try {
     const res = await fetch(
       `${SUPA_URL}/rest/v1/products?active=eq.true&showcase=eq.true` +
-      `&select=sku,name_zh,name_en,spec,category,showcase_category,image_url,description,sort_order,` +
+      `&select=sku,name_zh,name_en,spec,category,showcase_category,image_url,description,description_zh,description_en,sort_order,` +
       `product_line,subscription_enabled,subscription_interval,subscription_interval_count,subscription_price,base_price` +
       `&order=sort_order.asc`,
       { headers: { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` } }
